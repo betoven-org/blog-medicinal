@@ -1,9 +1,182 @@
-/* Force white background on login page */
-[data-theme="light"] .login,
-[data-theme="light"] .login__wrapper {
-  background: #fff;
+/* ═══════════════════════════════════════════════
+   Medicinal Admin — Custom Theme
+   ═══════════════════════════════════════════════ */
+
+:root {
+  /* Brand colors */
+  --theme-elevation-0: #ffffff;
+  --theme-elevation-50: #f9fafb;
+  --theme-elevation-100: #f3f4f6;
+  --theme-elevation-150: #e5e7eb;
+  --theme-elevation-200: #d1d5db;
+  --theme-elevation-300: #9ca3af;
+  --theme-elevation-400: #6b7280;
+  --theme-elevation-500: #374151;
+  --theme-elevation-600: #1f2937;
+  --theme-elevation-700: #111827;
+  --theme-elevation-800: #030712;
+  --theme-elevation-900: #000000;
+  --theme-elevation-1000: #000000;
+
+  /* Override Payload blue with brand blue */
+  --theme-success-500: #0d61ac;
+  --theme-text: #1f2937;
 }
 
+/* ── Login page ── */
+.login,
+.login__wrapper,
 .template-default.template-default--has-bg .template-default__wrapper {
-  background: #fff;
+  background: #fff !important;
+}
+
+.login__form {
+  max-width: 420px;
+}
+
+/* ── Nav sidebar ── */
+.nav {
+  border-right: 1px solid var(--theme-elevation-150);
+}
+
+.nav__label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--theme-elevation-300);
+  padding: 16px 16px 8px;
+}
+
+/* Nav links */
+.nav-group__content .nav__link {
+  border-radius: 6px;
+  margin: 1px 8px;
+  padding: 8px 12px;
+  transition: background 0.15s ease;
+}
+
+.nav-group__content .nav__link:hover {
+  background: var(--theme-elevation-50);
+}
+
+.nav-group__content .nav__link.active {
+  background: rgba(13, 97, 172, 0.08);
+  color: #0d61ac;
+  font-weight: 600;
+}
+
+/* ── Buttons ── */
+.btn.btn--style-primary {
+  background: #0d61ac;
+  border-color: #0d61ac;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.btn.btn--style-primary:hover {
+  background: #0a4f8c;
+  border-color: #0a4f8c;
+}
+
+.btn.btn--style-primary:active {
+  transform: scale(0.98);
+}
+
+.btn.btn--style-secondary {
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+/* ── Document header ── */
+.doc-header__title h1 {
+  font-weight: 700;
+}
+
+/* ── Table / list view ── */
+.table .row-1:hover {
+  background: var(--theme-elevation-50);
+}
+
+.cell-title {
+  font-weight: 600;
+}
+
+/* ── Cards on dashboard ── */
+.dashboard__card-list .card {
+  border-radius: 12px;
+  border: 1px solid var(--theme-elevation-150);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.dashboard__card-list .card:hover {
+  border-color: #0d61ac;
+  box-shadow: 0 2px 8px rgba(13, 97, 172, 0.08);
+}
+
+.dashboard__card-list .card__title {
+  font-weight: 600;
+}
+
+/* ── Form fields ── */
+.field-type.text input,
+.field-type.textarea textarea,
+.field-type.email input,
+.field-type.select .rs__control {
+  border-radius: 8px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.field-type.text input:focus,
+.field-type.textarea textarea:focus,
+.field-type.email input:focus {
+  border-color: #0d61ac;
+  box-shadow: 0 0 0 3px rgba(13, 97, 172, 0.1);
+}
+
+/* ── Tabs ── */
+.tabs-field__tabs .tabs-field__tab-button--active {
+  color: #0d61ac;
+  border-bottom-color: #0d61ac;
+}
+
+/* ── Status badges ── */
+.pill--style-light-success {
+  background: rgba(13, 97, 172, 0.1);
+  color: #0d61ac;
+}
+
+/* ── Breadcrumbs ── */
+.step-nav a {
+  color: var(--theme-elevation-400);
+  transition: color 0.15s ease;
+}
+
+.step-nav a:hover {
+  color: #0d61ac;
+}
+
+/* ── Checkbox toggle ── */
+.custom-checkbox input:checked + .custom-checkbox__icon {
+  background: #0d61ac;
+  border-color: #0d61ac;
+}
+
+/* ── Pagination ── */
+.paginator .paginator__page.paginator__page--is-current {
+  background: #0d61ac;
+  border-color: #0d61ac;
+}
+
+/* ── Upload thumbnail ── */
+.upload__thumbnail {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* ── Smooth transitions ── */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }

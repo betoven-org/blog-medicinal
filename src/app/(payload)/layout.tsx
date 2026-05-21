@@ -2,6 +2,7 @@ import configPromise from "@/payload.config";
 import { RootLayout, handleServerFunctions } from "@payloadcms/next/layouts";
 import { importMap } from "./admin/importMap";
 import "@payloadcms/next/css";
+import "@/styles/admin.css";
 
 type Args = {
   children: React.ReactNode;
