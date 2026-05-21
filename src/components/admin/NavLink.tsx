@@ -42,6 +42,15 @@ export default function NavLink() {
         }
       />
       <NavItem
+        href="/admin/analytics"
+        label="Analytics"
+        icon={
+          <svg width="16" height="16" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true">
+            <path d="M224,200H32V40a8,8,0,0,0-16,0V208a8,8,0,0,0,8,8H224a8,8,0,0,0,0-16ZM64,168V128a8,8,0,0,1,16,0v40a8,8,0,0,1-16,0Zm40,0V104a8,8,0,0,1,16,0v64a8,8,0,0,1-16,0Zm40,0V88a8,8,0,0,1,16,0v80a8,8,0,0,1-16,0Zm40,0V72a8,8,0,0,1,16,0v96a8,8,0,0,1-16,0Z" />
+          </svg>
+        }
+      />
+      <NavItem
         href="/admin/domains"
         label="Dominios"
         icon={

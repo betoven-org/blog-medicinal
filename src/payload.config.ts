@@ -43,6 +43,11 @@ export default buildConfig({
           path: "/domains",
           meta: { title: "Dominios" },
         },
+        analytics: {
+          Component: "./components/admin/AnalyticsView",
+          path: "/analytics",
+          meta: { title: "Analytics" },
+        },
       },
     },
     importMap: {
