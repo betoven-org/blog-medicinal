@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import { HeroArticle } from "@/components/HeroArticle";
 import { ArticleCard } from "@/components/ArticleCard";
@@ -12,10 +13,30 @@ import {
   getCategories,
 } from "@/lib/queries";
 import Link from "next/link";
+import { resolveRelation } from "@/lib/utils";
+import { getSiteSettings } from "@/lib/queries";
 
-function resolveRelation<T>(value: T | string | number): T | null {
-  if (typeof value === "object" && value !== null) return value as T;
-  return null;
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getSiteSettings() as any;
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  return {
+    title: settings.seoTitle || "Medicinal na Web | Portal de Saude e Bem-estar",
+    description: settings.seoDescription || "Portal de saude, suplementos naturais, fitoterapia e bem-estar.",
+    keywords: settings.seoKeywords || "saude, suplementos, fitoterapia, bem-estar",
+    alternates: { canonical: baseUrl },
+    openGraph: {
+      title: settings.seoTitle || "Medicinal na Web",
+      description: settings.seoDescription || "Portal de saude e bem-estar.",
+      type: "website",
+      url: baseUrl,
+      siteName: settings.siteName || "Medicinal na Web",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: settings.seoTitle || "Medicinal na Web",
+      description: settings.seoDescription || "Portal de saude e bem-estar.",
+    },
+  };
 }
 
 const categoryIcons: Record<string, React.ReactNode> = {

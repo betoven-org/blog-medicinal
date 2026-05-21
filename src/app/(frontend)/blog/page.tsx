@@ -3,16 +3,12 @@ import Link from "next/link";
 import { ArticleCard } from "@/components/ArticleCard";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { getLatestPosts, getCategories } from "@/lib/queries";
+import { resolveRelation } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Todos os Posts",
   description: "Confira todos os artigos sobre saúde, suplementos e bem-estar.",
 };
-
-function resolveRelation<T>(value: T | string | number): T | null {
-  if (typeof value === "object" && value !== null) return value as T;
-  return null;
-}
 
 type Props = {
   searchParams: Promise<{ page?: string }>;

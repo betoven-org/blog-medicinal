@@ -9,6 +9,7 @@ import { Authors } from "./collections/Authors";
 import { Categories } from "./collections/Categories";
 import { Media } from "./collections/Media";
 import { Posts } from "./collections/Posts";
+import { Subscribers } from "./collections/Subscribers";
 import { Users } from "./collections/Users";
 import { SiteSettings } from "./globals/SiteSettings";
 
@@ -29,7 +30,7 @@ export default buildConfig({
     supportedLanguages: { pt },
     fallbackLanguage: "pt",
   },
-  collections: [Users, Authors, Categories, Media, Posts],
+  collections: [Users, Authors, Categories, Media, Posts, Subscribers],
   globals: [SiteSettings],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || "",

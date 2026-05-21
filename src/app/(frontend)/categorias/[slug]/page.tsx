@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ArticleCard } from "@/components/ArticleCard";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { getPostsByCategory, getCategories } from "@/lib/queries";
+import { resolveRelation } from "@/lib/utils";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -16,11 +17,6 @@ export async function generateMetadata({ params }: Props) {
     title: category.name,
     description: `Artigos sobre ${category.name.toLowerCase()} - Medicinal na Web`,
   };
-}
-
-function resolveRelation<T>(value: T | string | number): T | null {
-  if (typeof value === "object" && value !== null) return value as T;
-  return null;
 }
 
 export default async function CategoryPage({ params }: Props) {

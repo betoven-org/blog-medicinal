@@ -64,7 +64,8 @@
       "Bash(ls /Users/wesleymoraesserafim/blog-medicinal/.env*)",
       "Bash(ls -la public/favicon* public/apple-touch-icon.png public/og-image.png src/app/favicon.ico)",
       "Bash(npm uninstall:*)",
-      "Bash(git:*)"
+      "Bash(git:*)",
+      "Bash(git -C /Users/wesleymoraesserafim/blog-medicinal add src/collections/Posts.ts src/components/ArticleCard.tsx src/components/HeroArticle.tsx src/components/TrendCard.tsx src/components/ArticleCardCompact.tsx src/app/\\\\\\(frontend\\\\\\)/page.tsx src/app/\\\\\\(frontend\\\\\\)/blog/page.tsx src/app/\\\\\\(frontend\\\\\\)/categorias/[slug]/page.tsx src/app/\\\\\\(frontend\\\\\\)/posts/[slug]/page.tsx)"
     ]
   }
 }

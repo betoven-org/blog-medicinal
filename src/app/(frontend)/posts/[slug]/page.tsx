@@ -7,6 +7,7 @@ import { CategoryBadge } from "@/components/CategoryBadge";
 import { ArticleCard } from "@/components/ArticleCard";
 import { formatDate } from "@/lib/formatDate";
 import { getPostBySlug, getLatestPosts } from "@/lib/queries";
+import { resolveRelation } from "@/lib/utils";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -51,16 +52,13 @@ export async function generateStaticParams() {
   return posts.docs.map((post) => ({ slug: post.slug }));
 }
 
-function resolveRelation<T>(value: T | string | number): T | null {
-  if (typeof value === "object" && value !== null) return value as T;
-  return null;
-}
-
 export default async function PostPage({ params }: Props) {
   const { slug } = await params;
   const post = await getPostBySlug(slug);
   if (!post) notFound();
 
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const postUrl = `${baseUrl}/posts/${post.slug}`;
   const heroImage = resolveRelation(post.heroImage);
   const category = resolveRelation(post.category);
   const author = resolveRelation(post.author);
@@ -175,7 +173,7 @@ export default async function PostPage({ params }: Props) {
         <div className="flex items-center gap-4 border-t border-gray-100 pt-6">
           <span className="text-sm font-medium text-gray-500">Compartilhar:</span>
           <a
-            href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(`/posts/${post.slug}`)}`}
+            href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(postUrl)}`}
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Compartilhar no Facebook"
@@ -186,7 +184,7 @@ export default async function PostPage({ params }: Props) {
             </svg>
           </a>
           <a
-            href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(post.title)}&url=${encodeURIComponent(`/posts/${post.slug}`)}`}
+            href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(post.title)}&url=${encodeURIComponent(postUrl)}`}
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Compartilhar no X"
@@ -197,7 +195,7 @@ export default async function PostPage({ params }: Props) {
             </svg>
           </a>
           <a
-            href={`https://wa.me/?text=${encodeURIComponent(`${post.title} /posts/${post.slug}`)}`}
+            href={`https://wa.me/?text=${encodeURIComponent(`${post.title} ${postUrl}`)}`}
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Compartilhar no WhatsApp"
