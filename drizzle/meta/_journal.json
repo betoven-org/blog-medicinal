@@ -15,6 +15,13 @@
       "when": 1779364110422,
       "tag": "0001_little_slipstream",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1779365721331,
+      "tag": "0002_petite_doctor_strange",
+      "breakpoints": true
     }
   ]
 }

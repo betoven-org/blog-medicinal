@@ -139,6 +139,10 @@ export const siteSettings = pgTable("site_settings", {
   seoTitle: varchar("seo_title", { length: 255 }),
   seoDescription: text("seo_description"),
   seoKeywords: text("seo_keywords"),
+  supabaseUrl: text("supabase_url"),
+  supabaseAnonKey: text("supabase_anon_key"),
+  supabaseServiceRoleKey: text("supabase_service_role_key"),
+  supabaseSyncEnabled: boolean("supabase_sync_enabled").default(false),
   updatedAt: timestamp("updated_at", { mode: "string" }).defaultNow().notNull(),
 });
 

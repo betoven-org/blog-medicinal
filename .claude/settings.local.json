@@ -80,7 +80,17 @@
       "Bash(git -C /Users/wesleymoraesserafim/blog-medicinal add src/app/\\\\\\(frontend\\\\\\)/layout.tsx package.json package-lock.json)",
       "Bash(git -C /Users/wesleymoraesserafim/blog-medicinal add src/app/\\\\\\(payload\\\\\\)/api/analytics/route.ts src/components/admin/AnalyticsView.tsx src/components/admin/NavLink.tsx src/payload.config.ts src/app/\\\\\\(payload\\\\\\)/admin/importMap.js)",
       "Bash(curl -s http://localhost:3000/admin/env-vars)",
-      "Bash(curl -s http://localhost:3000/admin)"
+      "Bash(curl -s http://localhost:3000/admin)",
+      "Bash(git -C /Users/wesleymoraesserafim/blog-medicinal add src/app/\\\\\\(payload\\\\\\)/api/analytics/route.ts src/components/admin/Dashboard.tsx)",
+      "Bash(git -C /Users/wesleymoraesserafim/blog-medicinal add src/app/\\\\\\(payload\\\\\\)/api/analytics/route.ts)",
+      "Bash(find /Users/wesleymoraesserafim/blog-medicinal/src -type f -name payload* -o -name payload.config.*)",
+      "Bash(ls -la /Users/wesleymoraesserafim/blog-medicinal/src/app/\\\\\\(payload\\\\\\)/admin/importMap*)",
+      "Bash(mkdir -p /Users/wesleymoraesserafim/blog-medicinal/src/app/\\\\\\(admin\\\\\\)/admin/posts/[id])",
+      "Bash(mkdir -p /Users/wesleymoraesserafim/blog-medicinal/src/app/\\\\\\(admin\\\\\\)/admin/categorias/[id])",
+      "Bash(mkdir -p /Users/wesleymoraesserafim/blog-medicinal/src/app/\\\\\\(admin\\\\\\)/admin/autores/[id])",
+      "Bash(mkdir -p /Users/wesleymoraesserafim/blog-medicinal/src/app/api/auth/[...nextauth])",
+      "Bash(mkdir -p /Users/wesleymoraesserafim/blog-medicinal/src/app/api/admin/posts/[id])",
+      "Bash(npx drizzle-kit:*)"
     ]
   }
 }

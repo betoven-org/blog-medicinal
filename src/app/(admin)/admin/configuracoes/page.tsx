@@ -5,6 +5,7 @@ import AdminShell from "@/components/admin/AdminShell";
 import FormField from "@/components/admin/FormField";
 import ImageUpload from "@/components/admin/ImageUpload";
 import AssinaturaSection from "@/components/admin/AssinaturaSection";
+import DeleteConfirm from "@/components/admin/DeleteConfirm";
 
 type MediaRelation = {
   id: number;
@@ -30,6 +31,10 @@ type Settings = {
   seoTitle: string;
   seoDescription: string;
   seoKeywords: string;
+  supabaseUrl: string;
+  supabaseAnonKey: string;
+  supabaseServiceRoleKey: string;
+  supabaseSyncEnabled: boolean;
 };
 
 const EMPTY_SETTINGS: Settings = {
@@ -48,6 +53,10 @@ const EMPTY_SETTINGS: Settings = {
   seoTitle: "",
   seoDescription: "",
   seoKeywords: "",
+  supabaseUrl: "",
+  supabaseAnonKey: "",
+  supabaseServiceRoleKey: "",
+  supabaseSyncEnabled: false,
 };
 
 const TABS = [
@@ -56,6 +65,7 @@ const TABS = [
   { key: "footer", label: "Footer" },
   { key: "newsletter", label: "Newsletter" },
   { key: "seo", label: "SEO" },
+  { key: "supabase", label: "Supabase" },
   { key: "assinatura", label: "Assinatura" },
 ] as const;
 
@@ -70,6 +80,16 @@ export default function ConfiguracoesPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState<{
+    posts: number;
+    categories: number;
+    authors: number;
+  } | null>(null);
+  const [syncError, setSyncError] = useState<string | null>(null);
+  const [lastSyncAt, setLastSyncAt] = useState<string | null>(null);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [clearing, setClearing] = useState(false);
 
   const fetchSettings = useCallback(async () => {
     setLoading(true);
@@ -95,6 +115,10 @@ export default function ConfiguracoesPage() {
           seoTitle: json.seoTitle || "",
           seoDescription: json.seoDescription || "",
           seoKeywords: json.seoKeywords || "",
+          supabaseUrl: json.supabaseUrl || "",
+          supabaseAnonKey: json.supabaseAnonKey || "",
+          supabaseServiceRoleKey: json.supabaseServiceRoleKey || "",
+          supabaseSyncEnabled: json.supabaseSyncEnabled ?? false,
         });
         setLogoPreview(json.logo?.url || null);
         setFaviconPreview(json.favicon?.url || null);
@@ -113,9 +137,45 @@ export default function ConfiguracoesPage() {
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
-    const { name, value } = e.target;
-    setSettings((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type } = e.target;
+    const newValue =
+      type === "checkbox" ? (e.target as HTMLInputElement).checked : value;
+    setSettings((prev) => ({ ...prev, [name]: newValue }));
     setSuccess(false);
+  };
+
+  const handleSync = async () => {
+    setSyncing(true);
+    setSyncResult(null);
+    setSyncError(null);
+    try {
+      const res = await fetch("/api/admin/supabase-sync", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Erro na sincronizacao.");
+      setSyncResult(data.synced);
+      setLastSyncAt(new Date().toLocaleString("pt-BR"));
+    } catch (err) {
+      setSyncError(err instanceof Error ? err.message : "Erro desconhecido.");
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const handleClearContent = async () => {
+    setClearing(true);
+    setSyncError(null);
+    setSyncResult(null);
+    try {
+      const res = await fetch("/api/admin/supabase-sync", { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Erro ao limpar dados.");
+      setSyncResult(null);
+      setLastSyncAt(null);
+    } catch (err) {
+      setSyncError(err instanceof Error ? err.message : "Erro desconhecido.");
+    } finally {
+      setClearing(false);
+    }
   };
 
   const handleSave = async () => {
@@ -346,6 +406,209 @@ export default function ConfiguracoesPage() {
               onChange={handleChange}
               placeholder="saude, plantas medicinais, suplementos, nutricao"
               description="Separe as palavras-chave por virgula."
+            />
+          </div>
+        )}
+
+        {/* Tab: Supabase */}
+        {activeTab === "supabase" && (
+          <div className="space-y-6">
+            <div className="rounded-md border border-gray-200 bg-gray-50 p-4">
+              <p className="text-sm text-gray-600">
+                Configure a conexao com o Supabase do cliente para sincronizar conteudo
+                (posts, autores e categorias). O Supabase e a fonte de verdade para conteudo
+                -- nosso banco armazena uma copia sincronizada.
+              </p>
+            </div>
+
+            <FormField
+              label="URL do Supabase"
+              name="supabaseUrl"
+              value={settings.supabaseUrl}
+              onChange={handleChange}
+              placeholder="https://xyzcompany.supabase.co"
+            />
+            <FormField
+              label="Anon Key"
+              name="supabaseAnonKey"
+              value={settings.supabaseAnonKey}
+              onChange={handleChange}
+              placeholder="eyJhbGciOi..."
+            />
+            <FormField
+              label="Service Role Key"
+              name="supabaseServiceRoleKey"
+              value={settings.supabaseServiceRoleKey}
+              onChange={handleChange}
+              placeholder="eyJhbGciOi..."
+              description="Necessario para sincronizacao completa"
+            />
+            <FormField
+              label="Sincronizacao ativa"
+              name="supabaseSyncEnabled"
+              type="checkbox"
+              value={settings.supabaseSyncEnabled}
+              onChange={handleChange}
+              description="Quando ativo, webhooks do Supabase serao processados automaticamente."
+            />
+
+            {/* Sync actions */}
+            <div className="border-t border-gray-200 pt-6">
+              <h3 className="mb-4 text-sm font-semibold text-gray-900">
+                Acoes de Sincronizacao
+              </h3>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={handleSync}
+                  disabled={syncing || !settings.supabaseUrl || !settings.supabaseServiceRoleKey}
+                  className="inline-flex items-center gap-2 rounded-md bg-[#0d61ac] px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-[#0a4f8c] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {syncing ? (
+                    <svg
+                      className="h-4 w-4 animate-spin"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      aria-hidden="true"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                      />
+                    </svg>
+                  ) : (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 256 256"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path d="M197.67,186.37a8,8,0,0,1,0,11.29C196.58,198.73,170.82,224,128,224c-37.39,0-64.53-22.4-80-39.85V208a8,8,0,0,1-16,0V160a8,8,0,0,1,8-8H88a8,8,0,0,1,0,16H55.44C67.76,183.35,93,208,128,208c36,0,58.14-21.46,58.36-21.68A8,8,0,0,1,197.67,186.37ZM216,40a8,8,0,0,0-8,8V71.85C192.53,54.4,165.39,32,128,32,85.18,32,59.42,57.27,58.34,58.34a8,8,0,0,0,11.3,11.34C69.86,69.46,92,48,128,48c35,0,60.24,24.65,72.56,40H168a8,8,0,0,0,0,16h48a8,8,0,0,0,8-8V48A8,8,0,0,0,216,40Z" />
+                    </svg>
+                  )}
+                  {syncing ? "Sincronizando..." : "Sincronizar agora"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowClearConfirm(true)}
+                  disabled={clearing}
+                  className="inline-flex items-center gap-2 rounded-md border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-600 shadow-sm transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {clearing ? (
+                    <svg
+                      className="h-4 w-4 animate-spin"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      aria-hidden="true"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                      />
+                    </svg>
+                  ) : (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 256 256"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path d="M216,48H176V40a24,24,0,0,0-24-24H104A24,24,0,0,0,80,40v8H40a8,8,0,0,0,0,16h8V208a16,16,0,0,0,16,16H192a16,16,0,0,0,16-16V64h8a8,8,0,0,0,0-16ZM96,40a8,8,0,0,1,8-8h48a8,8,0,0,1,8,8v8H96Zm96,168H64V64H192ZM112,104v64a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Zm48,0v64a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Z" />
+                    </svg>
+                  )}
+                  {clearing ? "Limpando..." : "Limpar dados de conteudo"}
+                </button>
+              </div>
+
+              {/* Sync result */}
+              {syncResult && (
+                <div className="mt-4 rounded-md border border-green-200 bg-green-50 p-4">
+                  <div className="flex items-center gap-2 text-sm font-medium text-green-800">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 256 256"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z" />
+                    </svg>
+                    Sincronizacao concluida
+                  </div>
+                  <div className="mt-2 grid grid-cols-3 gap-4 text-sm text-green-700">
+                    <div>
+                      <span className="font-semibold">{syncResult.categories}</span>{" "}
+                      categorias
+                    </div>
+                    <div>
+                      <span className="font-semibold">{syncResult.authors}</span>{" "}
+                      autores
+                    </div>
+                    <div>
+                      <span className="font-semibold">{syncResult.posts}</span>{" "}
+                      posts
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Sync error */}
+              {syncError && (
+                <div className="mt-4 rounded-md border border-red-200 bg-red-50 p-4">
+                  <div className="flex items-center gap-2 text-sm font-medium text-red-800">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 256 256"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm-8,56a8,8,0,0,1,16,0v56a8,8,0,0,1-16,0Zm8,104a12,12,0,1,1,12-12A12,12,0,0,1,128,184Z" />
+                    </svg>
+                    {syncError}
+                  </div>
+                </div>
+              )}
+
+              {/* Last sync */}
+              {lastSyncAt && (
+                <p className="mt-3 text-xs text-gray-500">
+                  Ultima sincronizacao: {lastSyncAt}
+                </p>
+              )}
+            </div>
+
+            <DeleteConfirm
+              open={showClearConfirm}
+              onClose={() => setShowClearConfirm(false)}
+              onConfirm={handleClearContent}
+              title="Limpar dados de conteudo?"
+              description="Isso ira apagar todos os posts, autores e categorias do banco. Os dados serao re-sincronizados do Supabase na proxima sincronizacao."
             />
           </div>
         )}
