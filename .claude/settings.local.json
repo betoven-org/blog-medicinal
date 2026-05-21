@@ -63,7 +63,8 @@
       "Bash(docker ps:*)",
       "Bash(ls /Users/wesleymoraesserafim/blog-medicinal/.env*)",
       "Bash(ls -la public/favicon* public/apple-touch-icon.png public/og-image.png src/app/favicon.ico)",
-      "Bash(npm uninstall:*)"
+      "Bash(npm uninstall:*)",
+      "Bash(git:*)"
     ]
   }
 }
