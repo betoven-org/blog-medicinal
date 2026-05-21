@@ -21,6 +21,14 @@ export default buildConfig({
     user: Users.slug,
     meta: {
       titleSuffix: " | Medicinal Admin",
+      icons: [{ url: "/favicon.png" }],
+    },
+    components: {
+      graphics: {
+        Logo: "./components/admin/Logo",
+        Icon: "./components/admin/Icon",
+      },
+      beforeLogin: ["./components/admin/BeforeLogin"],
     },
     importMap: {
       baseDir: path.resolve(dirname),
