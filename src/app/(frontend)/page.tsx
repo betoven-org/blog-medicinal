@@ -11,22 +11,26 @@ import {
   getRecentPosts,
   getPostsByCategorySlug,
   getCategories,
+  getSiteSettings,
 } from "@/lib/queries";
 import Link from "next/link";
 import { resolveRelation } from "@/lib/utils";
-import { getSiteSettings } from "@/lib/queries";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const settings = await getSiteSettings() as any;
+  const settings = (await getSiteSettings()) as any;
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
   return {
-    title: settings.seoTitle || "Medicinal na Web | Portal de Saude e Bem-estar",
-    description: settings.seoDescription || "Portal de saude, suplementos naturais, fitoterapia e bem-estar.",
-    keywords: settings.seoKeywords || "saude, suplementos, fitoterapia, bem-estar",
+    title:
+      settings.seoTitle || "Medicinal na Web | Portal de Saude e Bem-estar",
+    description:
+      settings.seoDescription ||
+      "Portal de saude, suplementos naturais, fitoterapia e bem-estar.",
+    keywords: settings.seoKeywords || "saude, suplementos, fitoterapia",
     alternates: { canonical: baseUrl },
     openGraph: {
       title: settings.seoTitle || "Medicinal na Web",
-      description: settings.seoDescription || "Portal de saude e bem-estar.",
+      description:
+        settings.seoDescription || "Portal de saude e bem-estar.",
       type: "website",
       url: baseUrl,
       siteName: settings.siteName || "Medicinal na Web",
@@ -34,31 +38,60 @@ export async function generateMetadata(): Promise<Metadata> {
     twitter: {
       card: "summary_large_image",
       title: settings.seoTitle || "Medicinal na Web",
-      description: settings.seoDescription || "Portal de saude e bem-estar.",
+      description:
+        settings.seoDescription || "Portal de saude e bem-estar.",
     },
   };
 }
 
+/* ── Icon generico por slug ── */
 const categoryIcons: Record<string, React.ReactNode> = {
-  saude: <svg width="16" height="16" viewBox="0 0 256 256" fill="currentColor"><path d="M216,80H176V56a24,24,0,0,0-24-24H104A24,24,0,0,0,80,56V80H40A16,16,0,0,0,24,96v48a16,16,0,0,0,16,16v48a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V160a16,16,0,0,0,16-16V96A16,16,0,0,0,216,80ZM96,56a8,8,0,0,1,8-8h48a8,8,0,0,1,8,8V80H96ZM200,208H56V160H200Zm16-64H40V96H216Zm-104-8a8,8,0,0,1,8-8h16a8,8,0,0,1,0,16H136A8,8,0,0,1,128,136Z"/></svg>,
-  suplementos: <svg width="16" height="16" viewBox="0 0 256 256" fill="currentColor"><path d="M216.42,39.6a53.26,53.26,0,0,0-75.32,0L39.6,141.09a53.26,53.26,0,0,0,75.32,75.31h0L216.42,114.91A53.26,53.26,0,0,0,216.42,39.6ZM103.61,205.09h0a37.26,37.26,0,0,1-52.7-52.69L96,107.31,155.31,166.6l-45.09,45.1ZM205.11,103.6,166.6,142.11,107.31,82.8l38.52-38.51a37.26,37.26,0,0,1,52.69,52.7Z"/></svg>,
-  nutricao: <svg width="16" height="16" viewBox="0 0 256 256" fill="currentColor"><path d="M168,32a8,8,0,0,1-8,8,48.05,48.05,0,0,0-48,48,8,8,0,0,1-16,0A64.07,64.07,0,0,1,160,24,8,8,0,0,1,168,32ZM223.3,169.32a8.07,8.07,0,0,1,.7,3.28V200a32,32,0,0,1-32,32H64a32,32,0,0,1-32-32V172.6a8,8,0,0,1,.7-3.28L57.08,113A87.46,87.46,0,0,1,80,79.24V56a8,8,0,0,1,16,0V72.43A88.22,88.22,0,0,1,128,64a88.22,88.22,0,0,1,32,8.43V56a8,8,0,0,1,16,0V79.24A87.46,87.46,0,0,1,198.92,113ZM48,200a16,16,0,0,0,16,16H192a16,16,0,0,0,16-16V176H48Zm138.94-40L164.18,113a72,72,0,0,0-72.36,0L69.06,160Z"/></svg>,
-  "bem-estar": <svg width="16" height="16" viewBox="0 0 256 256" fill="currentColor"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216ZM80,108a12,12,0,1,1,12,12A12,12,0,0,1,80,108Zm72,0a12,12,0,1,1,12,12A12,12,0,0,1,152,108Zm24,52a8,8,0,0,1-6.4,3.2,60,60,0,0,1-83.2,0A8,8,0,0,1,99.2,150.4a44,44,0,0,0,57.6,0A8,8,0,0,1,176,160Z"/></svg>,
-  receitas: <svg width="16" height="16" viewBox="0 0 256 256" fill="currentColor"><path d="M80,56V24a8,8,0,0,1,16,0V56a8,8,0,0,1-16,0Zm40,8a8,8,0,0,0,8-8V24a8,8,0,0,0-16,0V56A8,8,0,0,0,120,64Zm32,0a8,8,0,0,0,8-8V24a8,8,0,0,0-16,0V56A8,8,0,0,0,152,64Zm96,56v8a40,40,0,0,1-37.51,39.91,96.13,96.13,0,0,1-27,40.09H208a8,8,0,0,1,0,16H48a8,8,0,0,1,0-16H72.54a96.13,96.13,0,0,1-27-40.09A40,40,0,0,1,8,128v-8a8,8,0,0,1,8-8H240A8,8,0,0,1,248,120Zm-16,8H24v0a24,24,0,0,0,24,24,8,8,0,0,1,8,8,80,80,0,0,0,144,0,8,8,0,0,1,8-8,24,24,0,0,0,24-24Z"/></svg>,
-  colunistas: <svg width="16" height="16" viewBox="0 0 256 256" fill="currentColor"><path d="M227.32,73.37,182.63,28.69a16,16,0,0,0-22.63,0L36.69,152a15.86,15.86,0,0,0-4.69,11.31V208a16,16,0,0,0,16,16H92.69A15.86,15.86,0,0,0,104,219.31L227.32,96a16,16,0,0,0,0-22.63ZM92.69,208H48V163.31l88-88L180.69,120ZM192,108.69,147.32,64l24-24L216,84.69Z"/></svg>,
+  saude: (
+    <svg width="16" height="16" viewBox="0 0 256 256" fill="currentColor">
+      <path d="M216,80H176V56a24,24,0,0,0-24-24H104A24,24,0,0,0,80,56V80H40A16,16,0,0,0,24,96v48a16,16,0,0,0,16,16v48a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V160a16,16,0,0,0,16-16V96A16,16,0,0,0,216,80ZM96,56a8,8,0,0,1,8-8h48a8,8,0,0,1,8,8V80H96ZM200,208H56V160H200Zm16-64H40V96H216Zm-104-8a8,8,0,0,1,8-8h16a8,8,0,0,1,0,16H136A8,8,0,0,1,128,136Z" />
+    </svg>
+  ),
+  emagrecedor: (
+    <svg width="16" height="16" viewBox="0 0 256 256" fill="currentColor">
+      <path d="M208,80a16,16,0,0,0-16-16H168V48a16,16,0,0,0-16-16H104A16,16,0,0,0,88,48V64H64A16,16,0,0,0,48,80V208a16,16,0,0,0,16,16H192a16,16,0,0,0,16-16Zm-56,88H136v16a8,8,0,0,1-16,0V168H104a8,8,0,0,1,0-16h16V136a8,8,0,0,1,16,0v16h16a8,8,0,0,1,0,16ZM104,64V48h48V64Z" />
+    </svg>
+  ),
+  nutricosmetico: (
+    <svg width="16" height="16" viewBox="0 0 256 256" fill="currentColor">
+      <path d="M216.42,39.6a53.26,53.26,0,0,0-75.32,0L39.6,141.09a53.26,53.26,0,0,0,75.32,75.31h0L216.42,114.91A53.26,53.26,0,0,0,216.42,39.6ZM103.61,205.09h0a37.26,37.26,0,0,1-52.7-52.69L96,107.31,155.31,166.6l-45.09,45.1ZM205.11,103.6,166.6,142.11,107.31,82.8l38.52-38.51a37.26,37.26,0,0,1,52.69,52.7Z" />
+    </svg>
+  ),
+  ativos: (
+    <svg width="16" height="16" viewBox="0 0 256 256" fill="currentColor">
+      <path d="M168,32a8,8,0,0,1-8,8,48.05,48.05,0,0,0-48,48,8,8,0,0,1-16,0A64.07,64.07,0,0,1,160,24,8,8,0,0,1,168,32ZM223.3,169.32a8.07,8.07,0,0,1,.7,3.28V200a32,32,0,0,1-32,32H64a32,32,0,0,1-32-32V172.6a8,8,0,0,1,.7-3.28L57.08,113A87.46,87.46,0,0,1,80,79.24V56a8,8,0,0,1,16,0V72.43A88.22,88.22,0,0,1,128,64a88.22,88.22,0,0,1,32,8.43V56a8,8,0,0,1,16,0V79.24A87.46,87.46,0,0,1,198.92,113ZM48,200a16,16,0,0,0,16,16H192a16,16,0,0,0,16-16V176H48Zm138.94-40L164.18,113a72,72,0,0,0-72.36,0L69.06,160Z" />
+    </svg>
+  ),
+  fit: (
+    <svg width="16" height="16" viewBox="0 0 256 256" fill="currentColor">
+      <path d="M200,64H180.53a48,48,0,0,0-90.06-8H56A16,16,0,0,0,40,72V200a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V80A16,16,0,0,0,200,64Zm-72-24a32,32,0,0,1,29.52,20H98.48A32,32,0,0,1,128,40ZM200,200H56V80H200Z" />
+    </svg>
+  ),
+  dermocosmeticos: (
+    <svg width="16" height="16" viewBox="0 0 256 256" fill="currentColor">
+      <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216ZM80,108a12,12,0,1,1,12,12A12,12,0,0,1,80,108Zm72,0a12,12,0,1,1,12,12A12,12,0,0,1,152,108Zm24,52a8,8,0,0,1-6.4,3.2,60,60,0,0,1-83.2,0A8,8,0,0,1,99.2,150.4a44,44,0,0,0,57.6,0A8,8,0,0,1,176,160Z" />
+    </svg>
+  ),
+  geral: (
+    <svg width="16" height="16" viewBox="0 0 256 256" fill="currentColor">
+      <path d="M227.32,73.37,182.63,28.69a16,16,0,0,0-22.63,0L36.69,152a15.86,15.86,0,0,0-4.69,11.31V208a16,16,0,0,0,16,16H92.69A15.86,15.86,0,0,0,104,219.31L227.32,96a16,16,0,0,0,0-22.63ZM92.69,208H48V163.31l88-88L180.69,120ZM192,108.69,147.32,64l24-24L216,84.69Z" />
+    </svg>
+  ),
 };
 
 function CategoryIcon({ slug }: { slug: string }) {
-  return <span aria-hidden="true" className="flex shrink-0">{categoryIcons[slug] ?? categoryIcons.saude}</span>;
+  return (
+    <span aria-hidden="true" className="flex shrink-0">
+      {categoryIcons[slug] ?? categoryIcons.saude}
+    </span>
+  );
 }
 
-function SectionHeader({
-  title,
-  href,
-}: {
-  title: string;
-  href: string;
-}) {
+function SectionHeader({ title, href }: { title: string; href: string }) {
   return (
     <div className="mb-4 flex items-center justify-between border-b-2 border-[#0d61ac] pb-2">
       <h2 className="text-sm font-bold uppercase tracking-wider text-gray-900">
@@ -75,17 +108,14 @@ function SectionHeader({
 }
 
 export default async function HomePage() {
-  const [featured, latest, recent, suplementos, receitas, bemEstar, categories] =
-    await Promise.all([
-      getFeaturedPost(),
-      getLatestPosts(20),
-      getRecentPosts(5),
-      getPostsByCategorySlug("suplementos", 3),
-      getPostsByCategorySlug("receitas", 3),
-      getPostsByCategorySlug("bem-estar", 3),
-      getCategories(),
-    ]);
+  const [featured, latest, recent, categories] = await Promise.all([
+    getFeaturedPost(),
+    getLatestPosts(20),
+    getRecentPosts(5),
+    getCategories(),
+  ]);
 
+  const allCategories = categories.docs;
   const posts = latest.docs;
   const editorPicks = posts.slice(0, 3);
   const trendPosts = posts.slice(3, 11);
@@ -93,9 +123,25 @@ export default async function HomePage() {
   const noveltyPosts = posts.slice(11, 19);
   const maisLidas = posts.slice(0, 5);
 
+  // Pick top 3 categories with most posts for dedicated sections
+  const topCategorySlugs = allCategories
+    .map((c) => c.slug as string)
+    .slice(0, 3);
+
+  const categorySections = await Promise.all(
+    topCategorySlugs.map(async (slug) => {
+      const result = await getPostsByCategorySlug(slug, 3);
+      const cat = allCategories.find((c) => c.slug === slug);
+      return {
+        slug,
+        name: (cat?.name as string) ?? slug,
+        docs: result.docs,
+      };
+    })
+  );
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-6">
-
       {/* ── 1. HERO ── */}
       {featured && (
         <div className="mb-6">
@@ -104,7 +150,12 @@ export default async function HomePage() {
             slug={featured.slug}
             coverUrl={featured.coverUrl ?? null}
             heroImage={resolveRelation(featured.heroImage) ?? { url: null }}
-            category={resolveRelation(featured.category) ?? { name: "Geral", slug: "geral" }}
+            category={
+              resolveRelation(featured.category) ?? {
+                name: "Geral",
+                slug: "geral",
+              }
+            }
             author={resolveRelation(featured.author) ?? { name: "Redacao" }}
             publishedAt={featured.publishedAt ?? null}
           />
@@ -146,11 +197,11 @@ export default async function HomePage() {
         )}
       </section>
 
-      {/* ── 3. CATEGORIAS ── */}
-      {categories.docs.length > 0 && (
+      {/* ── 3. CATEGORIAS (dinamico do DB) ── */}
+      {allCategories.length > 0 && (
         <section className="mb-8 -mx-4 bg-gray-50 px-4 py-6">
           <div className="flex gap-3 overflow-x-auto pb-1">
-            {categories.docs.map((cat) => {
+            {allCategories.map((cat) => {
               const slug = cat.slug as string;
               return (
                 <Link
@@ -167,7 +218,7 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* ── 4. TENDÊNCIAS + POSTS RECENTES ── */}
+      {/* ── 4. TENDENCIAS + POSTS RECENTES ── */}
       <div className="mb-8 grid gap-8 lg:grid-cols-[1fr_280px]">
         {trendPosts.length > 0 && (
           <section>
@@ -213,127 +264,98 @@ export default async function HomePage() {
         </aside>
       </div>
 
-      {/* ── 4. BANNER DE DESTAQUE ── */}
-      {bannerPost && (() => {
-        const bannerImage = resolveRelation(bannerPost.heroImage);
-        const bannerCategory = resolveRelation(bannerPost.category);
-        const imageUrl =
-          bannerPost.coverUrl ||
-          (bannerImage as { sizes?: { card?: { url?: string | null } }; url?: string | null } | null)
-            ?.sizes?.card?.url ||
-          (bannerImage as { url?: string | null } | null)?.url ||
-          "/placeholder.svg";
-        return (
-          <section className="mb-8">
-            <Link href={`/posts/${bannerPost.slug}`} className="group block">
-              <article className="flex flex-col overflow-hidden rounded-xl bg-gray-50 sm:flex-row">
-                <div className="relative h-56 w-full shrink-0 sm:h-auto sm:w-1/2">
-                  <Image
-                    src={imageUrl}
-                    alt={(bannerImage as { alt?: string } | null)?.alt || bannerPost.title}
-                    fill
-                    sizes="(max-width: 640px) 100vw, 50vw"
-                    className="object-cover transition-transform duration-300 group-hover:scale-105"
-                  />
-                </div>
-                <div className="flex flex-col justify-center gap-3 p-6 sm:w-1/2">
-                  {bannerCategory && (
-                    <span className="w-fit rounded-full bg-blue-100 px-3 py-0.5 text-xs font-semibold uppercase text-[#0d61ac]">
-                      {bannerCategory.name}
+      {/* ── 5. BANNER DE DESTAQUE ── */}
+      {bannerPost &&
+        (() => {
+          const bannerImage = resolveRelation(bannerPost.heroImage);
+          const bannerCategory = resolveRelation(bannerPost.category);
+          const imageUrl =
+            bannerPost.coverUrl ||
+            (
+              bannerImage as {
+                sizes?: { card?: { url?: string | null } };
+                url?: string | null;
+              } | null
+            )?.sizes?.card?.url ||
+            (bannerImage as { url?: string | null } | null)?.url ||
+            "/placeholder.svg";
+          return (
+            <section className="mb-8">
+              <Link
+                href={`/posts/${bannerPost.slug}`}
+                className="group block"
+              >
+                <article className="flex flex-col overflow-hidden rounded-xl bg-gray-50 sm:flex-row">
+                  <div className="relative h-56 w-full shrink-0 sm:h-auto sm:w-1/2">
+                    <Image
+                      src={imageUrl}
+                      alt={
+                        (bannerImage as { alt?: string } | null)?.alt ||
+                        bannerPost.title
+                      }
+                      fill
+                      sizes="(max-width: 640px) 100vw, 50vw"
+                      className="object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                  </div>
+                  <div className="flex flex-col justify-center gap-3 p-6 sm:w-1/2">
+                    {bannerCategory && (
+                      <span className="w-fit rounded-full bg-blue-100 px-3 py-0.5 text-xs font-semibold uppercase text-[#0d61ac]">
+                        {(bannerCategory as { name: string }).name}
+                      </span>
+                    )}
+                    <h2 className="text-base font-bold leading-snug text-gray-900 transition-colors group-hover:text-[#0d61ac]">
+                      {bannerPost.title}
+                    </h2>
+                    {bannerPost.excerpt && (
+                      <p className="line-clamp-3 text-sm text-gray-600">
+                        {bannerPost.excerpt}
+                      </p>
+                    )}
+                    <span className="text-xs font-semibold uppercase tracking-wider text-[#0d61ac]">
+                      Leia mais &rarr;
                     </span>
-                  )}
-                  <h2 className="text-base font-bold leading-snug text-gray-900 transition-colors group-hover:text-[#0d61ac]">
-                    {bannerPost.title}
-                  </h2>
-                  {bannerPost.excerpt && (
-                    <p className="line-clamp-3 text-sm text-gray-600">
-                      {bannerPost.excerpt}
-                    </p>
-                  )}
-                  <span className="text-xs font-semibold uppercase tracking-wider text-[#0d61ac]">
-                    Leia mais &rarr;
-                  </span>
-                </div>
-              </article>
-            </Link>
-          </section>
-        );
-      })()}
+                  </div>
+                </article>
+              </Link>
+            </section>
+          );
+        })()}
 
-      {/* ── 5. SUPLEMENTOS ── */}
-      {suplementos.docs.length > 0 && (
+      {/* ── 6. SECOES POR CATEGORIA (dinamico do DB) ── */}
+      {categorySections.filter((s) => s.docs.length > 0).length > 0 && (
         <section className="mb-8">
-          <SectionHeader title="Suplementos" href="/blog/categoria/suplementos" />
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {suplementos.docs.map((post) => {
-              const category = resolveRelation(post.category);
-              const author = resolveRelation(post.author);
-              const heroImage = resolveRelation(post.heroImage);
-              return (
-                <ArticleCard
-                  key={post.id}
-                  title={post.title}
-                  slug={post.slug}
-                  excerpt={post.excerpt ?? ""}
-                  coverUrl={post.coverUrl ?? null}
-                  heroImage={heroImage ?? { url: null }}
-                  category={category ?? { name: "Suplementos", slug: "suplementos" }}
-                  author={author ?? { name: "Redacao" }}
-                  publishedAt={post.publishedAt ?? null}
-                />
-              );
-            })}
-          </div>
-        </section>
-      )}
-
-      {/* ── 6. RECEITAS & BEM-ESTAR ── */}
-      {(receitas.docs.length > 0 || bemEstar.docs.length > 0) && (
-        <section className="mb-8">
-          <div className="grid gap-8 md:grid-cols-2">
-            {receitas.docs.length > 0 && (
-              <div>
-                <SectionHeader title="Receitas" href="/blog/categoria/receitas" />
-                <div className="space-y-0">
-                  {receitas.docs.map((post) => {
-                    const author = resolveRelation(post.author);
-                    return (
-                      <ArticleCardSmall
-                        key={post.id}
-                        title={post.title}
-                        slug={post.slug}
-                        author={author ?? { name: "Redacao" }}
-                        publishedAt={post.publishedAt ?? null}
-                      />
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-            {bemEstar.docs.length > 0 && (
-              <div>
-                <SectionHeader title="Bem-estar" href="/blog/categoria/bem-estar" />
-                <div className="space-y-0">
-                  {bemEstar.docs.map((post) => {
-                    const author = resolveRelation(post.author);
-                    return (
-                      <ArticleCardSmall
-                        key={post.id}
-                        title={post.title}
-                        slug={post.slug}
-                        author={author ?? { name: "Redacao" }}
-                        publishedAt={post.publishedAt ?? null}
-                      />
-                    );
-                  })}
-                </div>
-              </div>
+          <div className="grid gap-8 md:grid-cols-3">
+            {categorySections.map(
+              (section) =>
+                section.docs.length > 0 && (
+                  <div key={section.slug}>
+                    <SectionHeader
+                      title={section.name}
+                      href={`/categorias/${section.slug}`}
+                    />
+                    <div className="space-y-0">
+                      {section.docs.map((post) => {
+                        const author = resolveRelation(post.author);
+                        return (
+                          <ArticleCardSmall
+                            key={post.id}
+                            title={post.title}
+                            slug={post.slug}
+                            author={author ?? { name: "Redacao" }}
+                            publishedAt={post.publishedAt ?? null}
+                          />
+                        );
+                      })}
+                    </div>
+                  </div>
+                )
             )}
           </div>
         </section>
       )}
 
-      {/* ── 7. NOVIDADES (grid 4 colunas, 8 posts) ── */}
+      {/* ── 7. NOVIDADES ── */}
       {noveltyPosts.length > 0 && (
         <section className="mb-8">
           <SectionHeader title="Novidades" href="/blog" />
@@ -348,7 +370,7 @@ export default async function HomePage() {
                   slug={post.slug}
                   coverUrl={post.coverUrl ?? null}
                   heroImage={heroImage ?? { url: null }}
-                  category={category ?? { name: "Saude", slug: "saude" }}
+                  category={category ?? { name: "Geral", slug: "geral" }}
                 />
               );
             })}
