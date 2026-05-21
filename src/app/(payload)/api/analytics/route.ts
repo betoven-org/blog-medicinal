@@ -9,13 +9,13 @@ const VALID_GROUP_BY = [
 ];
 
 export async function GET(req: NextRequest) {
-  const token = process.env.VERCEL_API_TOKEN || process.env.VERCEL_TOKEN;
-  const projectId = process.env.VERCEL_PROJECT_ID;
-  const teamId = process.env.VERCEL_TEAM_ID;
+  const token = process.env.ANALYTICS_TOKEN || process.env.VERCEL_API_TOKEN;
+  const projectId = process.env.ANALYTICS_PROJECT_ID;
+  const teamId = process.env.ANALYTICS_TEAM_ID;
 
   if (!token || !projectId) {
     return NextResponse.json(
-      { error: "VERCEL_API_TOKEN and VERCEL_PROJECT_ID are required" },
+      { error: "ANALYTICS_TOKEN and ANALYTICS_PROJECT_ID are required" },
       { status: 500 }
     );
   }
