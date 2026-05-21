@@ -25,10 +25,16 @@ export default async function CategoryPage({ params, searchParams }: Props) {
   const { page: pageParam } = await searchParams;
   const page = Math.max(1, parseInt(pageParam ?? "1", 10) || 1);
 
-  const [{ docs, category, totalPages, totalDocs }, categoriesResult] = await Promise.all([
+  const [categoryResult, categoriesResult] = await Promise.all([
     getPostsByCategory(slug, 12, page),
     getCategories(),
   ]);
+  const { docs, category, totalPages, totalDocs } = categoryResult as {
+    docs: any[];
+    category: any;
+    totalPages: number;
+    totalDocs: number;
+  };
 
   if (!category) notFound();
 
