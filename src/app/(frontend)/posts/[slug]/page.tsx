@@ -146,7 +146,7 @@ export default async function PostPage({ params }: Props) {
       {post.tags && post.tags.length > 0 && (
         <div className="mx-auto max-w-7xl px-4 pb-6">
           <div className="flex flex-wrap gap-2">
-            {post.tags.map((t, i) => (
+            {post.tags.map((t: { tag?: string | null }, i: number) => (
               <span
                 key={i}
                 className="rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-600"
