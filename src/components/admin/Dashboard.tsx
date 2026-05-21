@@ -15,11 +15,12 @@ type RankedItem = { key: string; value: number };
 type TimeseriesPoint = { key: string; total: number; devices: number };
 type AnalyticsData = {
   timeseries: TimeseriesPoint[];
+  overview: { total: number; devices: number; bounceRate: number };
   pages: RankedItem[];
   referrers: RankedItem[];
   countries: RankedItem[];
-  devices: RankedItem[];
-  os: RankedItem[];
+  deviceTypes: RankedItem[];
+  osList: RankedItem[];
   browsers: RankedItem[];
 };
 
@@ -153,26 +154,29 @@ export default function Dashboard() {
     const to = new Date().toISOString();
     const base = `/api/analytics?from=${from}&to=${to}`;
     try {
-      const eps = ["timeseries", "pages", "referrers", "countries", "devices", "os", "browsers"];
-      const results = await Promise.all(
-        eps.map((ep) =>
-          fetch(`${base}&endpoint=${ep}`)
-            .then((r) => (r.ok ? r.json() : { data: [] }))
-            .catch(() => ({ data: [] }))
-        )
-      );
-      const d: AnalyticsData = {
-        timeseries: results[0].data || [],
-        pages: results[1].data || [],
-        referrers: results[2].data || [],
-        countries: results[3].data || [],
-        devices: results[4].data || [],
-        os: results[5].data || [],
-        browsers: results[6].data || [],
-      };
-      const hasData = d.timeseries.length > 0 || d.pages.length > 0;
-      if (hasData) setAnalytics(d);
-      else setAnalyticsError(true);
+      const [tsRes, ovRes, ...groupRes] = await Promise.all([
+        fetch(`${base}&type=timeseries`).then((r) => r.ok ? r.json() : null),
+        fetch(`${base}&type=overview`).then((r) => r.ok ? r.json() : null),
+        ...["path", "referrer", "country", "device_type", "os_name", "client_name"].map((g) =>
+          fetch(`${base}&groupBy=${g}&limit=15`).then((r) => r.ok ? r.json() : { ranked: [] }).catch(() => ({ ranked: [] }))
+        ),
+      ]);
+
+      if (!tsRes && !ovRes) {
+        setAnalyticsError(true);
+        return;
+      }
+
+      setAnalytics({
+        timeseries: tsRes?.timeseries || [],
+        overview: ovRes || { total: 0, devices: 0, bounceRate: 0 },
+        pages: groupRes[0]?.ranked || [],
+        referrers: groupRes[1]?.ranked || [],
+        countries: groupRes[2]?.ranked || [],
+        deviceTypes: groupRes[3]?.ranked || [],
+        osList: groupRes[4]?.ranked || [],
+        browsers: groupRes[5]?.ranked || [],
+      });
     } catch {
       setAnalyticsError(true);
     } finally {
@@ -183,9 +187,6 @@ export default function Dashboard() {
   useEffect(() => {
     fetchAnalytics();
   }, [fetchAnalytics]);
-
-  const totalViews = analytics?.timeseries.reduce((a, p) => a + (p.total || 0), 0) ?? 0;
-  const totalVisitors = analytics?.timeseries.reduce((a, p) => a + (p.devices || 0), 0) ?? 0;
 
   const cmsCards = cms
     ? [
@@ -262,38 +263,46 @@ export default function Dashboard() {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 10, marginBottom: 16 }}>
             <div style={card}>
               <div style={metricLabel}>Page Views</div>
-              <div style={metricValue}>{fmt(totalViews)}</div>
+              <div style={metricValue}>{fmt(analytics.overview.total)}</div>
             </div>
             <div style={card}>
               <div style={metricLabel}>Visitantes</div>
-              <div style={metricValue}>{fmt(totalVisitors)}</div>
+              <div style={metricValue}>{fmt(analytics.overview.devices)}</div>
             </div>
             <div style={card}>
-              <div style={metricLabel}>Pagina Top</div>
-              <div style={{ ...metricValue, fontSize: 15, marginTop: 6, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={analytics.pages[0]?.key}>
-                {analytics.pages[0]?.key ?? "-"}
-              </div>
+              <div style={metricLabel}>Bounce Rate</div>
+              <div style={metricValue}>{(analytics.overview.bounceRate * 100).toFixed(0)}%</div>
             </div>
-            <div style={card}>
-              <div style={metricLabel}>Pais Top</div>
-              <div style={{ ...metricValue, fontSize: 15, marginTop: 6 }}>
-                {analytics.countries[0]?.key ?? "-"}
+            {analytics.pages[0] && (
+              <div style={card}>
+                <div style={metricLabel}>Pagina Top</div>
+                <div style={{ ...metricValue, fontSize: 15, marginTop: 6, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={analytics.pages[0].key}>
+                  {analytics.pages[0].key}
+                </div>
               </div>
-            </div>
+            )}
+            {analytics.countries[0] && (
+              <div style={card}>
+                <div style={metricLabel}>Pais Top</div>
+                <div style={{ ...metricValue, fontSize: 15, marginTop: 6 }}>{analytics.countries[0].key}</div>
+              </div>
+            )}
           </div>
 
           {/* Chart */}
-          <div style={{ marginBottom: 16 }}>
-            <MiniChart data={analytics.timeseries} />
-          </div>
+          {analytics.timeseries.length > 0 && (
+            <div style={{ marginBottom: 16 }}>
+              <MiniChart data={analytics.timeseries} />
+            </div>
+          )}
 
           {/* Panels */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12 }}>
             <RankedList title="Paginas" items={analytics.pages} max={10} />
             <RankedList title="Paises" items={analytics.countries} />
             <RankedList title="Referrers" items={analytics.referrers} />
-            <RankedList title="Dispositivos" items={analytics.devices} />
-            <RankedList title="Sistemas Operacionais" items={analytics.os} />
+            <RankedList title="Dispositivos" items={analytics.deviceTypes} />
+            <RankedList title="Sistemas Operacionais" items={analytics.osList} />
             <RankedList title="Navegadores" items={analytics.browsers} />
           </div>
         </>

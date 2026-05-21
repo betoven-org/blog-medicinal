@@ -1,16 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const VERCEL_API = "https://vercel.com/api/web-analytics";
-const VALID_ENDPOINTS = [
-  "timeseries",
-  "pages",
-  "referrers",
-  "countries",
-  "cities",
-  "devices",
-  "os",
-  "browsers",
-  "events",
+
+const VALID_GROUP_BY = [
+  "path", "route", "country", "os_name", "device_type",
+  "client_name", "referrer", "utm", "ref", "hostname",
+  "event_name", "flags",
 ];
 
 export async function GET(req: NextRequest) {
@@ -26,14 +21,14 @@ export async function GET(req: NextRequest) {
   }
 
   const { searchParams } = new URL(req.url);
-  const endpoint = searchParams.get("endpoint") || "timeseries";
-
-  if (!VALID_ENDPOINTS.includes(endpoint)) {
-    return NextResponse.json({ error: "Invalid endpoint" }, { status: 400 });
-  }
-
+  const type = searchParams.get("type") || "timeseries"; // "timeseries" | "overview"
+  const groupBy = searchParams.get("groupBy") || "";
   const from = searchParams.get("from") || new Date(Date.now() - 7 * 86400000).toISOString();
   const to = searchParams.get("to") || new Date().toISOString();
+
+  if (groupBy && !VALID_GROUP_BY.includes(groupBy)) {
+    return NextResponse.json({ error: "Invalid groupBy" }, { status: 400 });
+  }
 
   const params = new URLSearchParams({
     projectId,
@@ -42,6 +37,10 @@ export async function GET(req: NextRequest) {
     environment: "production",
   });
   if (teamId) params.set("teamId", teamId);
+  if (groupBy) params.set("groupBy", groupBy);
+  if (searchParams.get("limit")) params.set("limit", searchParams.get("limit")!);
+
+  const endpoint = type === "overview" ? "overview" : "timeseries";
 
   try {
     const res = await fetch(`${VERCEL_API}/${endpoint}?${params}`, {
@@ -50,14 +49,34 @@ export async function GET(req: NextRequest) {
 
     if (!res.ok) {
       const text = await res.text();
-      return NextResponse.json(
-        { error: `Vercel API ${res.status}: ${text}` },
-        { status: res.status }
-      );
+      return NextResponse.json({ error: `Vercel API ${res.status}: ${text}` }, { status: res.status });
     }
 
-    const data = await res.json();
-    return NextResponse.json(data);
+    const raw = await res.json();
+
+    // Normalize response format
+    if (type === "overview") {
+      return NextResponse.json(raw);
+    }
+
+    // Timeseries: raw.data.groups is { [groupKey]: TimeseriesPoint[] }
+    const groups = raw?.data?.groups || {};
+
+    if (!groupBy) {
+      // No groupBy: groups has "all" key
+      return NextResponse.json({ timeseries: groups.all || [] });
+    }
+
+    // With groupBy: aggregate each group's totals
+    const ranked = Object.entries(groups)
+      .filter(([key]) => key !== "")
+      .map(([key, points]) => ({
+        key,
+        value: (points as any[]).reduce((sum: number, p: any) => sum + (p.total || 0), 0),
+      }))
+      .sort((a, b) => b.value - a.value);
+
+    return NextResponse.json({ ranked });
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Unknown error" },
