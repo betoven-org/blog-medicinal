@@ -30,7 +30,17 @@ export default buildConfig({
         Icon: "./components/admin/Icon",
       },
       beforeLogin: ["./components/admin/BeforeLogin"],
+      afterNavLinks: ["./components/admin/NavLink"],
       beforeDashboard: ["./components/admin/Dashboard"],
+      views: {
+        envVars: {
+          Component: "./components/admin/EnvVarsView",
+          path: "/env-vars",
+          meta: {
+            title: "Variaveis de Ambiente",
+          },
+        },
+      },
     },
     importMap: {
       baseDir: path.resolve(dirname),

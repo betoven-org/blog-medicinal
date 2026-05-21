@@ -23,7 +23,10 @@ import { BoldFeatureClient as BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864
 import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { default as default_03ec9ad23b0bb66bfcac66241d9063eb } from '../../../components/admin/Icon'
 import { default as default_078be3ac59220a397a1074e5597d364f } from '../../../components/admin/Logo'
+import { default as default_a8e80b433985fd2b74f574665a06b5cb } from '../../../components/admin/NavLink'
+import { default as default_f0f8d4a7080efd2cd25bb6be37c094c0 } from '../../../components/admin/Dashboard'
 import { default as default_437b3ecbde60fc8598a1c9679e03fce3 } from '../../../components/admin/BeforeLogin'
+import { default as default_792c4267e73b0a848911a2b4bcb4387c } from '../../../components/admin/EnvVarsView'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 
 /** @type import('payload').ImportMap */
@@ -53,6 +56,9 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#ItalicFeatureClient": ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "./components/admin/Icon#default": default_03ec9ad23b0bb66bfcac66241d9063eb,
   "./components/admin/Logo#default": default_078be3ac59220a397a1074e5597d364f,
+  "./components/admin/NavLink#default": default_a8e80b433985fd2b74f574665a06b5cb,
+  "./components/admin/Dashboard#default": default_f0f8d4a7080efd2cd25bb6be37c094c0,
   "./components/admin/BeforeLogin#default": default_437b3ecbde60fc8598a1c9679e03fce3,
+  "./components/admin/EnvVarsView#default": default_792c4267e73b0a848911a2b4bcb4387c,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }

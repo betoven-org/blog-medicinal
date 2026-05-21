@@ -69,7 +69,14 @@
       "Bash(ls:*)",
       "Bash(git -C /Users/wesleymoraesserafim/blog-medicinal add next.config.ts src/app/\\\\\\(frontend\\\\\\)/api/newsletter/route.ts src/app/\\\\\\(frontend\\\\\\)/api/revalidate/ src/app/\\\\\\(frontend\\\\\\)/posts/[slug]/page.tsx src/app/\\\\\\(frontend\\\\\\)/categorias/loading.tsx src/app/\\\\\\(frontend\\\\\\)/categorias/page.tsx src/collections/Posts.ts src/collections/Subscribers.ts src/components/NavigationProgress.tsx src/components/NewsletterForm.tsx src/components/Skeleton.tsx src/lib/queries.ts gen-map.mjs)",
       "Bash(git -C /Users/wesleymoraesserafim/blog-medicinal add next.config.ts src/app/\\\\\\(frontend\\\\\\)/api/newsletter/route.ts src/app/\\\\\\(frontend\\\\\\)/api/revalidate/route.ts src/app/\\\\\\(frontend\\\\\\)/posts/[slug]/page.tsx src/app/\\\\\\(frontend\\\\\\)/categorias/loading.tsx src/app/\\\\\\(frontend\\\\\\)/categorias/page.tsx src/collections/Posts.ts src/collections/Subscribers.ts src/components/NavigationProgress.tsx src/components/NewsletterForm.tsx src/components/Skeleton.tsx src/lib/queries.ts)",
-      "Bash(git -C /Users/wesleymoraesserafim/blog-medicinal add src/app/\\\\\\(frontend\\\\\\)/categorias/[slug]/page.tsx)"
+      "Bash(git -C /Users/wesleymoraesserafim/blog-medicinal add src/app/\\\\\\(frontend\\\\\\)/categorias/[slug]/page.tsx)",
+      "mcp__chrome-devtools__list_pages",
+      "Bash(pkill -f \"chrome-devtools-mcp\")",
+      "Bash(pkill -f \"Chrome.*chrome-devtools-mcp\")",
+      "Bash(npx vercel:*)",
+      "Bash(curl:*)",
+      "Bash(git -C /Users/wesleymoraesserafim/blog-medicinal add src/app/\\\\\\(payload\\\\\\)/layout.tsx src/payload.config.ts src/styles/admin.css src/components/admin/Dashboard.tsx src/app/\\\\\\(payload\\\\\\)/admin/importMap.js gen-map.mjs)",
+      "Bash(git -C /Users/wesleymoraesserafim/blog-medicinal add src/app/\\\\\\(frontend\\\\\\)/page.tsx src/app/\\\\\\(payload\\\\\\)/layout.tsx src/payload.config.ts src/styles/admin.css src/components/admin/Dashboard.tsx src/app/\\\\\\(payload\\\\\\)/admin/importMap.js gen-map.mjs)"
     ]
   }
 }
