@@ -110,7 +110,7 @@ export default function EnvVarsView() {
   };
 
   return (
-    <div style={{ maxWidth: 900, margin: "0 auto", padding: "40px 20px" }}>
+    <div className="gutter--default" style={{ maxWidth: 900, margin: "0 auto" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
         <div>
           <h1 style={{ fontSize: 24, fontWeight: 700, margin: 0 }}>Variaveis de Ambiente</h1>

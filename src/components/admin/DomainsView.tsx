@@ -81,7 +81,7 @@ export default function DomainsView() {
   };
 
   return (
-    <div style={{ maxWidth: 900, margin: "0 auto", padding: "40px 20px" }}>
+    <div className="gutter--default" style={{ maxWidth: 900, margin: "0 auto" }}>
       <h1 style={{ fontSize: 24, fontWeight: 700, margin: 0 }}>Dominios</h1>
       <p style={{ color: "#6b7280", fontSize: 14, marginTop: 4, marginBottom: 24 }}>
         Gerencie os dominios apontados para o projeto na Vercel

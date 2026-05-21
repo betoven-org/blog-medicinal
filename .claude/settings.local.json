@@ -76,7 +76,11 @@
       "Bash(npx vercel:*)",
       "Bash(curl:*)",
       "Bash(git -C /Users/wesleymoraesserafim/blog-medicinal add src/app/\\\\\\(payload\\\\\\)/layout.tsx src/payload.config.ts src/styles/admin.css src/components/admin/Dashboard.tsx src/app/\\\\\\(payload\\\\\\)/admin/importMap.js gen-map.mjs)",
-      "Bash(git -C /Users/wesleymoraesserafim/blog-medicinal add src/app/\\\\\\(frontend\\\\\\)/page.tsx src/app/\\\\\\(payload\\\\\\)/layout.tsx src/payload.config.ts src/styles/admin.css src/components/admin/Dashboard.tsx src/app/\\\\\\(payload\\\\\\)/admin/importMap.js gen-map.mjs)"
+      "Bash(git -C /Users/wesleymoraesserafim/blog-medicinal add src/app/\\\\\\(frontend\\\\\\)/page.tsx src/app/\\\\\\(payload\\\\\\)/layout.tsx src/payload.config.ts src/styles/admin.css src/components/admin/Dashboard.tsx src/app/\\\\\\(payload\\\\\\)/admin/importMap.js gen-map.mjs)",
+      "Bash(git -C /Users/wesleymoraesserafim/blog-medicinal add src/app/\\\\\\(frontend\\\\\\)/layout.tsx package.json package-lock.json)",
+      "Bash(git -C /Users/wesleymoraesserafim/blog-medicinal add src/app/\\\\\\(payload\\\\\\)/api/analytics/route.ts src/components/admin/AnalyticsView.tsx src/components/admin/NavLink.tsx src/payload.config.ts src/app/\\\\\\(payload\\\\\\)/admin/importMap.js)",
+      "Bash(curl -s http://localhost:3000/admin/env-vars)",
+      "Bash(curl -s http://localhost:3000/admin)"
     ]
   }
 }

@@ -21,7 +21,7 @@ const PERIODS = [
 ];
 
 const s = {
-  container: { fontFamily: "system-ui, -apple-system, sans-serif" } as React.CSSProperties,
+  container: { fontFamily: "system-ui, -apple-system, sans-serif", maxWidth: 1100, margin: "0 auto" } as React.CSSProperties,
   header: {
     display: "flex",
     alignItems: "center",
