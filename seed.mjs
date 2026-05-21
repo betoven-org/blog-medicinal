@@ -1,97 +1,29 @@
+/**
+ * Seed script — imports posts from spreadsheet into PostgreSQL.
+ * Images are stored as external URLs (Framer CDN), not uploaded locally.
+ *
+ * Usage: node seed.mjs
+ */
 import { readFileSync } from "fs";
-
-// Load .env manually
-const envContent = readFileSync(new URL(".env", import.meta.url), "utf-8");
-for (const line of envContent.split("\n")) {
-  const trimmed = line.trim();
-  if (!trimmed || trimmed.startsWith("#")) continue;
-  const eqIdx = trimmed.indexOf("=");
-  if (eqIdx === -1) continue;
-  const key = trimmed.slice(0, eqIdx);
-  const val = trimmed.slice(eqIdx + 1);
-  if (!process.env[key]) process.env[key] = val;
-}
-
-import { getPayload } from "payload";
-import { buildConfig } from "payload";
-import { postgresAdapter } from "@payloadcms/db-postgres";
-import { lexicalEditor } from "@payloadcms/richtext-lexical";
-import sharp from "sharp";
-import XLSX from "xlsx";
 import path from "path";
 import { fileURLToPath } from "url";
-import fs from "fs";
-import https from "https";
-import http from "http";
+import XLSX from "xlsx";
+import pg from "pg";
+import crypto from "crypto";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const SPREADSHEET_PATH = path.resolve(
-  process.env.HOME,
-  "Downloads/medicinal_blog_posts.xlsx"
-);
+// Load .env
+const envContent = readFileSync(path.resolve(__dirname, ".env"), "utf-8");
+for (const line of envContent.split("\n")) {
+  const t = line.trim();
+  if (!t || t.startsWith("#")) continue;
+  const i = t.indexOf("=");
+  if (i === -1) continue;
+  if (!process.env[t.slice(0, i)]) process.env[t.slice(0, i)] = t.slice(i + 1);
+}
 
-// Inline collections to avoid .ts import issues
-const collections = [
-  {
-    slug: "users",
-    auth: true,
-    fields: [],
-  },
-  {
-    slug: "authors",
-    fields: [
-      { name: "name", type: "text", required: true },
-      { name: "avatar", type: "upload", relationTo: "media" },
-      { name: "bio", type: "textarea" },
-    ],
-  },
-  {
-    slug: "categories",
-    fields: [
-      { name: "name", type: "text", required: true },
-      { name: "slug", type: "text", required: true, unique: true },
-    ],
-  },
-  {
-    slug: "media",
-    upload: {
-      staticDir: path.resolve(__dirname, "public/media"),
-      mimeTypes: ["image/*"],
-      imageSizes: [
-        { name: "thumbnail", width: 400, height: 300 },
-        { name: "card", width: 768, height: 432 },
-        { name: "hero", width: 1920, height: 800 },
-      ],
-    },
-    fields: [{ name: "alt", type: "text", required: true }],
-  },
-  {
-    slug: "posts",
-    fields: [
-      { name: "title", type: "text", required: true },
-      { name: "slug", type: "text", required: true, unique: true },
-      { name: "excerpt", type: "textarea", required: true },
-      { name: "heroImage", type: "upload", relationTo: "media" },
-      { name: "content", type: "richText", required: true },
-      { name: "category", type: "relationship", relationTo: "categories", required: true },
-      { name: "author", type: "relationship", relationTo: "authors", required: true },
-      { name: "tags", type: "array", fields: [{ name: "tag", type: "text" }] },
-      {
-        name: "status",
-        type: "select",
-        defaultValue: "draft",
-        options: [
-          { label: "Rascunho", value: "draft" },
-          { label: "Publicado", value: "published" },
-        ],
-      },
-      { name: "featured", type: "checkbox", defaultValue: false },
-      { name: "publishedAt", type: "date" },
-    ],
-  },
-];
+const SPREADSHEET = path.resolve(process.env.HOME, "Downloads/medicinal_blog_posts.xlsx");
 
 function slugify(text) {
   return text
@@ -113,7 +45,7 @@ function parseDate(dateStr) {
 }
 
 function makeLexicalContent(text) {
-  return {
+  return JSON.stringify({
     root: {
       type: "root",
       children: [
@@ -131,175 +63,122 @@ function makeLexicalContent(text) {
       indent: 0,
       version: 1,
     },
-  };
-}
-
-function downloadFile(url) {
-  return new Promise((resolve, reject) => {
-    const client = url.startsWith("https") ? https : http;
-    client.get(url, { headers: { "User-Agent": "Mozilla/5.0" } }, (res) => {
-      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-        return downloadFile(res.headers.location).then(resolve).catch(reject);
-      }
-      if (res.statusCode !== 200) {
-        return reject(new Error(`HTTP ${res.statusCode} for ${url}`));
-      }
-      const chunks = [];
-      res.on("data", (chunk) => chunks.push(chunk));
-      res.on("end", () => resolve(Buffer.concat(chunks)));
-      res.on("error", reject);
-    }).on("error", reject);
   });
 }
 
-async function seed() {
-  const config = buildConfig({
-    secret: process.env.PAYLOAD_SECRET || "seed-secret-key-min-length-32-chars",
-    collections,
-    editor: lexicalEditor(),
-    db: postgresAdapter({
-      pool: { connectionString: process.env.DATABASE_URI || "" },
-    }),
-    sharp,
-    typescript: { outputFile: path.resolve(__dirname, "src/payload-types.ts") },
-  });
-
-  const payload = await getPayload({ config });
-
-  // Read spreadsheet
-  const wb = XLSX.readFile(SPREADSHEET_PATH);
+async function run() {
+  const wb = XLSX.readFile(SPREADSHEET);
   const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
   console.log(`Read ${rows.length} rows from spreadsheet`);
 
-  // 1. Delete existing data
+  const client = new pg.Client({ connectionString: process.env.DATABASE_URI });
+  await client.connect();
+
+  // 1. Clean existing data (order matters for FK constraints)
   console.log("Cleaning existing data...");
-  const existingPosts = await payload.find({ collection: "posts", limit: 1000 });
-  for (const post of existingPosts.docs) {
-    await payload.delete({ collection: "posts", id: post.id });
-  }
-  console.log(`  Deleted ${existingPosts.docs.length} posts`);
+  await client.query("DELETE FROM posts_tags");
+  await client.query("DELETE FROM payload_locked_documents_rels");
+  await client.query("DELETE FROM payload_locked_documents");
+  await client.query("DELETE FROM posts");
+  await client.query("DELETE FROM media");
+  await client.query("DELETE FROM authors");
+  await client.query("DELETE FROM categories");
 
-  const existingMedia = await payload.find({ collection: "media", limit: 1000 });
-  for (const media of existingMedia.docs) {
-    await payload.delete({ collection: "media", id: media.id });
-  }
-  console.log(`  Deleted ${existingMedia.docs.length} media`);
-
-  const existingAuthors = await payload.find({ collection: "authors", limit: 1000 });
-  for (const author of existingAuthors.docs) {
-    await payload.delete({ collection: "authors", id: author.id });
-  }
-  console.log(`  Deleted ${existingAuthors.docs.length} authors`);
-
-  const existingCats = await payload.find({ collection: "categories", limit: 1000 });
-  for (const cat of existingCats.docs) {
-    await payload.delete({ collection: "categories", id: cat.id });
-  }
-  console.log(`  Deleted ${existingCats.docs.length} categories`);
-
-  // Clean leftover media files
-  const mediaDir = path.resolve(__dirname, "public/media");
-  if (fs.existsSync(mediaDir)) {
-    fs.rmSync(mediaDir, { recursive: true, force: true });
-    fs.mkdirSync(mediaDir, { recursive: true });
-    console.log("  Cleaned public/media directory");
-  }
+  // Reset sequences
+  await client.query("ALTER SEQUENCE posts_id_seq RESTART WITH 1");
+  await client.query("ALTER SEQUENCE media_id_seq RESTART WITH 1");
+  await client.query("ALTER SEQUENCE authors_id_seq RESTART WITH 1");
+  await client.query("ALTER SEQUENCE categories_id_seq RESTART WITH 1");
+  console.log("  Done");
 
   // 2. Create categories
   console.log("Creating categories...");
   const uniqueCategories = [...new Set(rows.map((r) => r.Category).filter(Boolean))];
   const categoryMap = {};
   for (const name of uniqueCategories) {
-    const cat = await payload.create({
-      collection: "categories",
-      data: { name, slug: slugify(name) },
-    });
-    categoryMap[name] = cat.id;
-    console.log(`  Created category: ${name}`);
+    const slug = slugify(name);
+    const res = await client.query(
+      "INSERT INTO categories (name, slug, updated_at, created_at) VALUES ($1, $2, NOW(), NOW()) RETURNING id",
+      [name, slug]
+    );
+    categoryMap[name] = res.rows[0].id;
+    console.log(`  ${name} (id: ${res.rows[0].id})`);
   }
 
   // 3. Create author
   console.log("Creating author...");
-  const author = await payload.create({
-    collection: "authors",
-    data: {
-      name: "Equipe Atendimento Medicinal",
-      bio: "Equipe de conteúdo do blog Medicinal.",
-    },
-  });
-  console.log(`  Created author: ${author.name}`);
+  const authorRes = await client.query(
+    "INSERT INTO authors (name, bio, updated_at, created_at) VALUES ($1, $2, NOW(), NOW()) RETURNING id",
+    ["Equipe Atendimento Medicinal", "Equipe de conteudo do blog Medicinal."]
+  );
+  const authorId = authorRes.rows[0].id;
+  console.log(`  id: ${authorId}`);
 
-  // 4. Create posts with images
+  // 4. Create media records (external URLs only, no file upload)
+  console.log("Creating media from external URLs...");
+  const mediaMap = {}; // imageUrl -> mediaId
+  for (const row of rows) {
+    const url = row["Cover Image URL"];
+    if (!url || mediaMap[url]) continue;
+
+    const alt = row["Cover Image Alt"] || row.Title;
+    const filename = url.split("/").pop() || "image.png";
+
+    const res = await client.query(
+      `INSERT INTO media (alt, url, filename, mime_type, updated_at, created_at)
+       VALUES ($1, $2, $3, $4, NOW(), NOW()) RETURNING id`,
+      [alt, url, filename, "image/png"]
+    );
+    mediaMap[url] = res.rows[0].id;
+  }
+  console.log(`  Created ${Object.keys(mediaMap).length} media records`);
+
+  // 5. Create posts
   console.log("Creating posts...");
   let created = 0;
-  let imageErrors = 0;
 
   for (const row of rows) {
     const title = row.Title;
     if (!title) continue;
 
-    let heroImageId = null;
+    const slug = row.Slug || slugify(title);
+    const excerpt = row.Excerpt || row["Meta Description"] || "";
+    const content = makeLexicalContent(excerpt);
+    const categoryId = categoryMap[row.Category] || Object.values(categoryMap)[0];
+    const heroImageId = row["Cover Image URL"] ? mediaMap[row["Cover Image URL"]] : null;
+    const publishedAt = parseDate(row["Published Date"]);
 
-    // Download and upload cover image
-    if (row["Cover Image URL"]) {
-      try {
-        const buffer = await downloadFile(row["Cover Image URL"]);
-        const ext = row["Cover Image URL"].match(/\.(png|jpg|jpeg|webp|gif)/i)?.[1] || "png";
-        const tempPath = path.resolve(__dirname, `temp-seed-image.${ext}`);
-        fs.writeFileSync(tempPath, buffer);
+    const postRes = await client.query(
+      `INSERT INTO posts (title, slug, excerpt, hero_image_id, content, category_id, author_id, status, featured, published_at, updated_at, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW()) RETURNING id`,
+      [title, slug, excerpt, heroImageId, content, categoryId, authorId, "published", false, publishedAt]
+    );
+    const postId = postRes.rows[0].id;
 
-        const media = await payload.create({
-          collection: "media",
-          data: { alt: row["Cover Image Alt"] || title },
-          filePath: tempPath,
-        });
-        heroImageId = media.id;
-        fs.unlinkSync(tempPath);
-      } catch (err) {
-        console.warn(`  Warning: Failed to download image for "${title}": ${err.message}`);
-        imageErrors++;
-      }
-    }
-
-    // Parse tags
+    // Insert tags
     const tags = row.Tags
-      ? row.Tags.split(",")
-          .map((t) => t.trim())
-          .filter(Boolean)
-          .map((tag) => ({ tag }))
+      ? row.Tags.split(",").map((t) => t.trim()).filter(Boolean)
       : [];
-
-    const postData = {
-      title,
-      slug: row.Slug || slugify(title),
-      excerpt: row.Excerpt || row["Meta Description"] || "",
-      content: makeLexicalContent(row.Excerpt || row["Meta Description"] || ""),
-      category: categoryMap[row.Category] || Object.values(categoryMap)[0],
-      author: author.id,
-      tags,
-      status: "published",
-      featured: false,
-      publishedAt: parseDate(row["Published Date"]),
-    };
-
-    if (heroImageId) {
-      postData.heroImage = heroImageId;
+    let tagOrder = 0;
+    for (const tag of tags) {
+      await client.query(
+        "INSERT INTO posts_tags (id, _parent_id, _order, tag) VALUES ($1, $2, $3, $4)",
+        [crypto.randomUUID(), postId, tagOrder++, tag]
+      );
     }
 
-    try {
-      await payload.create({ collection: "posts", data: postData });
-      created++;
-      console.log(`  [${created}/${rows.length}] ${title}`);
-    } catch (err) {
-      console.error(`  Error creating post "${title}": ${err.message}`);
+    created++;
+    if (created % 20 === 0 || created === rows.length) {
+      console.log(`  ${created}/${rows.length}`);
     }
   }
 
-  console.log(`\nDone! Created ${created} posts (${imageErrors} image errors)`);
+  await client.end();
+  console.log(`\nDone! ${created} posts created with external image URLs.`);
   process.exit(0);
 }
 
-seed().catch((err) => {
+run().catch((err) => {
   console.error("Seed failed:", err);
   process.exit(1);
 });
