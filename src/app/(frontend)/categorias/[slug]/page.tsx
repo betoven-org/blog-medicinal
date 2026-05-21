@@ -7,6 +7,7 @@ import { resolveRelation } from "@/lib/utils";
 
 type Props = {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ page?: string }>;
 };
 
 export async function generateMetadata({ params }: Props) {
@@ -19,11 +20,13 @@ export async function generateMetadata({ params }: Props) {
   };
 }
 
-export default async function CategoryPage({ params }: Props) {
+export default async function CategoryPage({ params, searchParams }: Props) {
   const { slug } = await params;
+  const { page: pageParam } = await searchParams;
+  const page = Math.max(1, parseInt(pageParam ?? "1", 10) || 1);
 
-  const [{ docs, category }, categoriesResult] = await Promise.all([
-    getPostsByCategory(slug),
+  const [{ docs, category, totalPages, totalDocs }, categoriesResult] = await Promise.all([
+    getPostsByCategory(slug, 12, page),
     getCategories(),
   ]);
 
@@ -62,7 +65,7 @@ export default async function CategoryPage({ params }: Props) {
               aria-current={isActive ? "page" : undefined}
               className={
                 isActive
-                  ? "rounded-full px-4 py-1.5 text-sm font-medium bg-[#0d61ac] text-white"
+                  ? "rounded-full border border-[#0d61ac] px-4 py-1.5 text-sm font-medium bg-[#0d61ac] text-white"
                   : "rounded-full border border-gray-200 px-4 py-1.5 text-sm font-medium text-gray-600 transition-colors hover:border-[#0d61ac] hover:text-[#0d61ac]"
               }
             >
@@ -76,7 +79,7 @@ export default async function CategoryPage({ params }: Props) {
       <div className="mb-8 border-b-2 border-[#0d61ac] pb-3">
         <h1 className="text-2xl font-bold text-gray-900">{category.name}</h1>
         <p className="mt-1 text-sm font-semibold text-[#0d61ac]">
-          {docs.length} {docs.length === 1 ? "artigo" : "artigos"}
+          {totalDocs} {totalDocs === 1 ? "artigo" : "artigos"}
         </p>
       </div>
 
@@ -104,6 +107,31 @@ export default async function CategoryPage({ params }: Props) {
         </div>
       ) : (
         <p className="text-gray-400">Nenhum artigo nesta categoria ainda.</p>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="mt-12 flex items-center justify-center gap-4">
+          {page > 1 && (
+            <Link
+              href={`/categorias/${slug}?page=${page - 1}`}
+              className="rounded-lg border border-gray-300 px-5 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-[#0d61ac] hover:text-[#0d61ac]"
+            >
+              Anterior
+            </Link>
+          )}
+          <span className="text-sm text-gray-500">
+            Pagina {page} de {totalPages}
+          </span>
+          {page < totalPages && (
+            <Link
+              href={`/categorias/${slug}?page=${page + 1}`}
+              className="rounded-lg border border-gray-300 px-5 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-[#0d61ac] hover:text-[#0d61ac]"
+            >
+              Proximo
+            </Link>
+          )}
+        </div>
       )}
     </div>
   );
