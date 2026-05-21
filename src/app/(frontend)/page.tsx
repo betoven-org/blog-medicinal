@@ -183,7 +183,7 @@ export default async function HomePage() {
                 );
               })
             ) : (
-              <p className="text-sm text-gray-400">Nenhum post recente.</p>
+              <p className="text-sm text-gray-500">Nenhum post recente.</p>
             )}
           </div>
         </aside>

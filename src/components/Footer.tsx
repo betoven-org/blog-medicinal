@@ -39,7 +39,7 @@ export async function Footer() {
                 "Receba os melhores conteúdos diretamente no seu e-mail."}
             </p>
             <NewsletterForm />
-            <p className="mt-3 text-xs text-gray-400">
+            <p className="mt-3 text-xs text-gray-500">
               {s.newsletterConsent ||
                 "Ao se inscrever, você concorda em receber comunicações."}
             </p>
@@ -49,7 +49,7 @@ export async function Footer() {
 
       <div className="border-t border-gray-200">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-5">
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-gray-500">
             &copy; {new Date().getFullYear()}{" "}
             {s.copyrightText ||
               "Medicinal na Web. Todos os direitos reservados."}

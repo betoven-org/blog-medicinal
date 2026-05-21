@@ -49,7 +49,7 @@ export function ArticleCard({
             {title}
           </h3>
           <p className="mt-1 line-clamp-2 text-sm text-gray-500">{excerpt}</p>
-          <div className="mt-3 flex items-center gap-2 text-xs text-gray-400">
+          <div className="mt-3 flex items-center gap-2 text-xs text-gray-500">
             <span>{author.name}</span>
             {publishedAt && (
               <>

@@ -14,10 +14,10 @@ export function ArticleCardSmall({ title, slug, author, publishedAt }: Props) {
       href={`/posts/${slug}`}
       className="group block border-b border-gray-100 py-3 last:border-0"
     >
-      <h4 className="line-clamp-2 text-sm font-bold text-gray-900 transition-colors group-hover:text-blue-700">
+      <h3 className="line-clamp-2 text-sm font-bold text-gray-900 transition-colors group-hover:text-blue-700">
         {title}
-      </h4>
-      <div className="mt-1 flex items-center gap-2 text-xs text-gray-400">
+      </h3>
+      <div className="mt-1 flex items-center gap-2 text-xs text-gray-500">
         {author && <span>{author.name}</span>}
         {author && publishedAt && <span>·</span>}
         {publishedAt && (

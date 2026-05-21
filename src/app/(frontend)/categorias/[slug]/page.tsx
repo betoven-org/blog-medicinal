@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArticleCard } from "@/components/ArticleCard";
+import { Breadcrumb } from "@/components/Breadcrumb";
 import { getPostsByCategory, getCategories } from "@/lib/queries";
 
 type Props = {
@@ -36,36 +37,13 @@ export default async function CategoryPage({ params }: Props) {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10">
-      {/* Breadcrumb */}
-      <nav aria-label="Breadcrumb" className="mb-6">
-        <ol className="flex items-center gap-1.5 text-sm text-gray-500">
-          <li>
-            <Link href="/" className="transition-colors hover:text-[#0d61ac]">
-              Home
-            </Link>
-          </li>
-          <li aria-hidden="true" className="select-none">
-            /
-          </li>
-          <li>
-            <Link
-              href="/categorias"
-              className="transition-colors hover:text-[#0d61ac]"
-            >
-              Categorias
-            </Link>
-          </li>
-          <li aria-hidden="true" className="select-none">
-            /
-          </li>
-          <li
-            className="font-medium text-gray-900"
-            aria-current="page"
-          >
-            {category.name}
-          </li>
-        </ol>
-      </nav>
+      <Breadcrumb
+        items={[
+          { label: "Home", href: "/" },
+          { label: "Categorias", href: "/categorias" },
+          { label: category.name },
+        ]}
+      />
 
       {/* Category pills */}
       <div

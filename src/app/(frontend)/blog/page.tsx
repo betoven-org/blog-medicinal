@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import { ArticleCard } from "@/components/ArticleCard";
+import { Breadcrumb } from "@/components/Breadcrumb";
 import { getLatestPosts, getCategories } from "@/lib/queries";
 
 export const metadata: Metadata = {
@@ -31,6 +32,13 @@ export default async function BlogPage({ searchParams }: Props) {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10">
+      <Breadcrumb
+        items={[
+          { label: "Home", href: "/" },
+          { label: "Todos os Posts" },
+        ]}
+      />
+
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Todos os Posts</h1>
