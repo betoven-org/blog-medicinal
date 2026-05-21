@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { RichText } from "@payloadcms/richtext-lexical/react";
+import { TipTapRenderer } from "@/components/TipTapRenderer";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { CategoryBadge } from "@/components/CategoryBadge";
 import { ArticleCard } from "@/components/ArticleCard";
@@ -41,15 +41,14 @@ export async function generateMetadata({ params }: Props) {
 }
 
 export async function generateStaticParams() {
-  const { getPayloadClient } = await import("@/payload-utils");
-  const payload = await getPayloadClient();
-  const posts = await payload.find({
-    collection: "posts",
-    where: { status: { equals: "published" } },
-    limit: 1000,
-    depth: 0,
-  });
-  return posts.docs.map((post) => ({ slug: post.slug }));
+  const { db } = await import("@/db");
+  const { posts } = await import("@/db/schema");
+  const { eq } = await import("drizzle-orm");
+  const rows = await db
+    .select({ slug: posts.slug })
+    .from(posts)
+    .where(eq(posts.status, "published"));
+  return rows.map((row) => ({ slug: row.slug }));
 }
 
 export default async function PostPage({ params }: Props) {
@@ -153,7 +152,7 @@ export default async function PostPage({ params }: Props) {
       {/* Rich Text Content */}
       <div className="mx-auto max-w-7xl px-4 ">
         <div className="prose prose-lg prose-gray mt-6 max-w-none">
-          {post.content && <RichText data={post.content} />}
+          {post.content && <TipTapRenderer content={post.content} />}
         </div>
       </div>
 

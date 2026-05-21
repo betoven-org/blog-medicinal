@@ -6,11 +6,11 @@ import { getSiteSettings } from "@/lib/queries";
 export async function Header() {
   const settings = await getSiteSettings();
   const logoUrl =
-    typeof settings.logo === "object" && settings.logo?.url
+    settings && typeof settings.logo === "object" && settings.logo?.url
       ? settings.logo.url
       : "/logo.svg";
   const siteName =
-    (settings as any).siteName || "Medicinal na Web";
+    (settings as any)?.siteName || "Medicinal na Web";
 
   return (
     <header className="sticky top-0 z-50 border-b border-gray-200 bg-white">

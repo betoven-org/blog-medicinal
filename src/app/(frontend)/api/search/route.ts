@@ -1,36 +1,40 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getPayloadClient } from '@/payload-utils';
+import { NextRequest, NextResponse } from "next/server";
+import { db } from "@/db";
+import { posts, categories } from "@/db/schema";
+import { eq, and, or, ilike, desc } from "drizzle-orm";
 
 export async function GET(req: NextRequest) {
-  const q = req.nextUrl.searchParams.get('q');
+  const q = req.nextUrl.searchParams.get("q");
   if (!q || q.length < 2) return NextResponse.json({ docs: [] });
 
-  const payload = await getPayloadClient();
-  const results = await payload.find({
-    collection: 'posts',
-    where: {
-      and: [
-        { status: { equals: 'published' } },
-        {
-          or: [
-            { title: { contains: q } },
-            { excerpt: { contains: q } },
-          ],
-        },
-      ],
-    },
-    limit: 10,
-    depth: 1,
-    sort: '-publishedAt',
-  });
+  const searchPattern = `%${q}%`;
+
+  const rows = await db
+    .select({
+      id: posts.id,
+      title: posts.title,
+      slug: posts.slug,
+      excerpt: posts.excerpt,
+      categoryName: categories.name,
+    })
+    .from(posts)
+    .leftJoin(categories, eq(posts.categoryId, categories.id))
+    .where(
+      and(
+        eq(posts.status, "published"),
+        or(ilike(posts.title, searchPattern), ilike(posts.excerpt, searchPattern)),
+      ),
+    )
+    .orderBy(desc(posts.publishedAt))
+    .limit(10);
 
   return NextResponse.json({
-    docs: results.docs.map((p) => ({
-      id: p.id,
-      title: p.title,
-      slug: p.slug,
-      excerpt: p.excerpt,
-      category: typeof p.category === 'object' && p.category !== null ? (p.category as { name?: string }).name ?? null : null,
+    docs: rows.map((r) => ({
+      id: r.id,
+      title: r.title,
+      slug: r.slug,
+      excerpt: r.excerpt,
+      category: r.categoryName ?? null,
     })),
   });
 }

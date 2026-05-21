@@ -27,7 +27,7 @@ export default function EnvVarsView() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/env-vars");
+      const res = await fetch("/api/admin/env-vars");
       if (!res.ok) throw new Error("Failed to fetch");
       const data = await res.json();
       setEnvs(data.envs || []);
@@ -52,7 +52,7 @@ export default function EnvVarsView() {
   const handleSave = async (env: EnvVar) => {
     setSaving(true);
     try {
-      const res = await fetch("/api/env-vars", {
+      const res = await fetch("/api/admin/env-vars", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: env.id, key: env.key, value: editValue, target: env.target }),
@@ -73,7 +73,7 @@ export default function EnvVarsView() {
     if (!newKey || !newValue) return;
     setSaving(true);
     try {
-      const res = await fetch("/api/env-vars", {
+      const res = await fetch("/api/admin/env-vars", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ key: newKey, value: newValue }),
@@ -95,7 +95,7 @@ export default function EnvVarsView() {
   const handleDelete = async (env: EnvVar) => {
     if (!confirm(`Tem certeza que deseja remover ${env.key}?`)) return;
     try {
-      const res = await fetch("/api/env-vars", {
+      const res = await fetch("/api/admin/env-vars", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: env.id, key: env.key }),
@@ -110,7 +110,7 @@ export default function EnvVarsView() {
   };
 
   return (
-    <div className="gutter--default" style={{ maxWidth: 900, margin: "0 auto" }}>
+    <div style={{ maxWidth: 900, margin: "0 auto" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
         <div>
           <h1 style={{ fontSize: 24, fontWeight: 700, margin: 0 }}>Variaveis de Ambiente</h1>

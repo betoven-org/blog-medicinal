@@ -5,6 +5,7 @@ import { getSiteSettings } from "@/lib/queries";
 
 export async function Footer() {
   const settings = await getSiteSettings();
+  if (!settings) return null;
   const s = settings as any;
   const logoUrl =
     typeof settings.logo === "object" && settings.logo?.url

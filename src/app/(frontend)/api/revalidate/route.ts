@@ -3,16 +3,17 @@ import { revalidateTag } from "next/cache";
 
 export async function POST(req: NextRequest) {
   const secret = req.headers.get("x-revalidate-secret");
-  if (secret !== process.env.PAYLOAD_SECRET) {
+  if (secret !== process.env.REVALIDATE_SECRET) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const body = await req.json();
-  const collection = body.collection as string;
+  const tag = body.tag as string;
 
-  if (collection === "posts") revalidateTag("posts");
-  else if (collection === "categories") revalidateTag("categories");
-  else if (collection === "site-settings") revalidateTag("settings");
+  if (tag) {
+    revalidateTag(tag);
+    return NextResponse.json({ revalidated: true, tag });
+  }
 
-  return NextResponse.json({ revalidated: true, collection });
+  return NextResponse.json({ error: "Missing tag" }, { status: 400 });
 }

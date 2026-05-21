@@ -1,143 +1,275 @@
 import { unstable_cache } from "next/cache";
-import { getPayloadClient } from "@/payload-utils";
+import { db } from "@/db";
+import {
+  posts,
+  categories,
+  authors,
+  media,
+  tags,
+  siteSettings,
+} from "@/db/schema";
+import { eq, and, ne, desc, asc, ilike, or, count, sql } from "drizzle-orm";
+
+// ── Helpers ─────────────────────────────────────────────────────────────────────
+
+type MediaRow = typeof media.$inferSelect;
+
+function mapMedia(m: MediaRow | null | undefined) {
+  if (!m) return null;
+  return {
+    id: m.id,
+    url: m.url,
+    alt: m.alt,
+    sizes: {
+      thumbnail: { url: m.thumbnailUrl },
+      card: { url: m.cardUrl },
+      hero: { url: m.heroUrl },
+    },
+  };
+}
+
+function mapPost(row: any) {
+  return {
+    id: row.id,
+    title: row.title,
+    slug: row.slug,
+    excerpt: row.excerpt,
+    content: row.content,
+    coverUrl: row.coverUrl,
+    status: row.status,
+    featured: row.featured,
+    publishedAt: row.publishedAt,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+    category: row.category ?? row.categoryId,
+    author: row.author
+      ? {
+          id: row.author.id,
+          name: row.author.name,
+          slug: row.author.slug,
+          bio: row.author.bio,
+          avatar: row.author.avatar
+            ? { url: row.author.avatar.url }
+            : null,
+        }
+      : row.authorId,
+    heroImage: mapMedia(row.heroImage),
+    tags: (row.tags ?? []).map((t: any) => ({ tag: t.tag })),
+  };
+}
+
+// ── Queries ─────────────────────────────────────────────────────────────────────
 
 export const getSiteSettings = unstable_cache(
   async () => {
-    const payload = await getPayloadClient();
-    return payload.findGlobal({ slug: "site-settings" as any, depth: 1 });
+    const row = await db.query.siteSettings.findFirst({
+      with: {
+        logo: true,
+        favicon: true,
+      },
+    });
+    if (!row) return null;
+    return {
+      ...row,
+      logo: mapMedia(row.logo),
+      favicon: mapMedia(row.favicon),
+    };
   },
   ["site-settings"],
-  { revalidate: 3600, tags: ["settings"] }
+  { revalidate: 3600, tags: ["settings"] },
 );
 
 export const getFeaturedPost = unstable_cache(
   async () => {
-    const payload = await getPayloadClient();
-    const result = await payload.find({
-      collection: "posts",
-      where: {
-        status: { equals: "published" },
-        featured: { equals: true },
-      },
+    const rows = await db.query.posts.findMany({
+      where: and(
+        eq(posts.status, "published"),
+        eq(posts.featured, true),
+      ),
+      orderBy: [desc(posts.publishedAt)],
       limit: 1,
-      depth: 2,
-      sort: "-publishedAt",
+      with: {
+        category: true,
+        author: { with: { avatar: true } },
+        heroImage: true,
+        tags: true,
+      },
     });
-    return result.docs[0] ?? null;
+    if (!rows[0]) return null;
+    return mapPost(rows[0]);
   },
   ["featured-post"],
-  { revalidate: 300, tags: ["posts"] }
+  { revalidate: 300, tags: ["posts"] },
 );
 
 export async function getLatestPosts(limit = 9, page = 1) {
   return unstable_cache(
     async () => {
-      const payload = await getPayloadClient();
-      return payload.find({
-        collection: "posts",
-        where: { status: { equals: "published" } },
+      const offset = (page - 1) * limit;
+
+      const whereCondition = eq(posts.status, "published");
+
+      const [{ total }] = await db
+        .select({ total: count() })
+        .from(posts)
+        .where(whereCondition);
+
+      const rows = await db.query.posts.findMany({
+        where: whereCondition,
+        orderBy: [desc(posts.publishedAt)],
         limit,
-        page,
-        depth: 2,
-        sort: "-publishedAt",
+        offset,
+        with: {
+          category: true,
+          author: { with: { avatar: true } },
+          heroImage: true,
+          tags: true,
+        },
       });
+
+      const totalDocs = total;
+      const totalPages = Math.ceil(totalDocs / limit);
+
+      return {
+        docs: rows.map(mapPost),
+        totalDocs,
+        totalPages,
+        page,
+        limit,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1,
+      };
     },
     ["latest-posts", String(limit), String(page)],
-    { revalidate: 300, tags: ["posts"] }
+    { revalidate: 300, tags: ["posts"] },
   )();
 }
 
 export const getRecentPosts = unstable_cache(
   async (limit = 5) => {
-    const payload = await getPayloadClient();
-    return payload.find({
-      collection: "posts",
-      where: { status: { equals: "published" } },
+    const rows = await db.query.posts.findMany({
+      where: eq(posts.status, "published"),
+      orderBy: [desc(posts.createdAt)],
       limit,
-      depth: 1,
-      sort: "-createdAt",
+      with: {
+        category: true,
+        author: { with: { avatar: true } },
+        heroImage: true,
+        tags: true,
+      },
     });
+
+    return { docs: rows.map(mapPost) };
   },
   ["recent-posts"],
-  { revalidate: 300, tags: ["posts"] }
+  { revalidate: 300, tags: ["posts"] },
 );
 
 export async function getPostBySlug(slug: string) {
   return unstable_cache(
     async () => {
-      const payload = await getPayloadClient();
-      const result = await payload.find({
-        collection: "posts",
-        where: { slug: { equals: slug } },
-        limit: 1,
-        depth: 2,
+      const row = await db.query.posts.findFirst({
+        where: eq(posts.slug, slug),
+        with: {
+          category: true,
+          author: { with: { avatar: true } },
+          heroImage: true,
+          tags: true,
+        },
       });
-      return result.docs[0] ?? null;
+      if (!row) return null;
+      return mapPost(row);
     },
     ["post-by-slug", slug],
-    { revalidate: 600, tags: ["posts"] }
+    { revalidate: 600, tags: ["posts"] },
   )();
 }
 
-export async function getPostsByCategory(categorySlug: string, limit = 12, page = 1) {
+export async function getPostsByCategory(
+  categorySlug: string,
+  limit = 12,
+  page = 1,
+) {
   return unstable_cache(
     async () => {
-      const payload = await getPayloadClient();
-      const category = await payload.find({
-        collection: "categories",
-        where: { slug: { equals: categorySlug } },
-        limit: 1,
+      const category = await db.query.categories.findFirst({
+        where: eq(categories.slug, categorySlug),
       });
-      if (!category.docs[0]) return { docs: [], category: null, totalPages: 0, totalDocs: 0 };
 
-      const posts = await payload.find({
-        collection: "posts",
-        where: {
-          status: { equals: "published" },
-          category: { equals: category.docs[0].id },
-        },
+      if (!category)
+        return { docs: [], category: null, totalPages: 0, totalDocs: 0 };
+
+      const whereCondition = and(
+        eq(posts.status, "published"),
+        eq(posts.categoryId, category.id),
+      );
+
+      const [{ total }] = await db
+        .select({ total: count() })
+        .from(posts)
+        .where(whereCondition);
+
+      const offset = (page - 1) * limit;
+
+      const rows = await db.query.posts.findMany({
+        where: whereCondition,
+        orderBy: [desc(posts.publishedAt)],
         limit,
-        page,
-        depth: 2,
-        sort: "-publishedAt",
+        offset,
+        with: {
+          category: true,
+          author: { with: { avatar: true } },
+          heroImage: true,
+          tags: true,
+        },
       });
+
+      const totalDocs = total;
+      const totalPages = Math.ceil(totalDocs / limit);
+
       return {
-        docs: posts.docs,
-        category: category.docs[0],
-        totalPages: posts.totalPages,
-        totalDocs: posts.totalDocs,
+        docs: rows.map(mapPost),
+        category,
+        totalPages,
+        totalDocs,
       };
     },
     ["posts-by-category", categorySlug, String(limit), String(page)],
-    { revalidate: 300, tags: ["posts", "categories"] }
+    { revalidate: 300, tags: ["posts", "categories"] },
   )();
 }
 
-export async function getPostsByCategorySlug(categorySlug: string, limit = 6) {
+export async function getPostsByCategorySlug(
+  categorySlug: string,
+  limit = 6,
+) {
   return unstable_cache(
     async () => {
-      const payload = await getPayloadClient();
-      const categoryResult = await payload.find({
-        collection: "categories",
-        where: { slug: { equals: categorySlug } },
-        limit: 1,
+      const category = await db.query.categories.findFirst({
+        where: eq(categories.slug, categorySlug),
       });
-      if (!categoryResult.docs[0]) return { docs: [] };
 
-      const posts = await payload.find({
-        collection: "posts",
-        where: {
-          status: { equals: "published" },
-          category: { equals: categoryResult.docs[0].id },
-        },
+      if (!category) return { docs: [] };
+
+      const rows = await db.query.posts.findMany({
+        where: and(
+          eq(posts.status, "published"),
+          eq(posts.categoryId, category.id),
+        ),
+        orderBy: [desc(posts.publishedAt)],
         limit,
-        depth: 2,
-        sort: "-publishedAt",
+        with: {
+          category: true,
+          author: { with: { avatar: true } },
+          heroImage: true,
+          tags: true,
+        },
       });
-      return { docs: posts.docs };
+
+      return { docs: rows.map(mapPost) };
     },
     ["posts-by-cat-slug", categorySlug, String(limit)],
-    { revalidate: 300, tags: ["posts"] }
+    { revalidate: 300, tags: ["posts"] },
   )();
 }
 
@@ -148,63 +280,198 @@ export async function getRelatedPosts(
 ) {
   return unstable_cache(
     async () => {
-      const payload = await getPayloadClient();
-      return payload.find({
-        collection: "posts",
-        where: {
-          and: [
-            { status: { equals: "published" } },
-            { category: { equals: categoryId } },
-            { id: { not_equals: excludePostId } },
-          ],
-        },
+      const rows = await db.query.posts.findMany({
+        where: and(
+          eq(posts.status, "published"),
+          eq(posts.categoryId, Number(categoryId)),
+          ne(posts.id, Number(excludePostId)),
+        ),
+        orderBy: [desc(posts.publishedAt)],
         limit,
-        depth: 2,
-        sort: "-publishedAt",
+        with: {
+          category: true,
+          author: { with: { avatar: true } },
+          heroImage: true,
+          tags: true,
+        },
       });
+
+      return {
+        docs: rows.map(mapPost),
+        totalDocs: rows.length,
+        totalPages: 1,
+      };
     },
     ["related-posts", String(categoryId), String(excludePostId)],
-    { revalidate: 300, tags: ["posts"] }
+    { revalidate: 300, tags: ["posts"] },
+  )();
+}
+
+export async function searchPosts(
+  query: string,
+  categorySlug?: string,
+  limit = 12,
+  page = 1,
+) {
+  return unstable_cache(
+    async () => {
+      const searchPattern = `%${query}%`;
+      const conditions = [
+        eq(posts.status, "published"),
+        or(
+          ilike(posts.title, searchPattern),
+          ilike(posts.excerpt, searchPattern),
+        )!,
+      ];
+
+      if (categorySlug) {
+        const category = await db.query.categories.findFirst({
+          where: eq(categories.slug, categorySlug),
+        });
+        if (category) {
+          conditions.push(eq(posts.categoryId, category.id));
+        }
+      }
+
+      const whereCondition = and(...conditions);
+      const offset = (page - 1) * limit;
+
+      const [{ total }] = await db
+        .select({ total: count() })
+        .from(posts)
+        .where(whereCondition);
+
+      const rows = await db.query.posts.findMany({
+        where: whereCondition,
+        orderBy: [desc(posts.publishedAt)],
+        limit,
+        offset,
+        with: {
+          category: true,
+          author: { with: { avatar: true } },
+          heroImage: true,
+          tags: true,
+        },
+      });
+
+      const totalDocs = total;
+      const totalPages = Math.ceil(totalDocs / limit);
+
+      return {
+        docs: rows.map(mapPost),
+        totalDocs,
+        totalPages,
+        page,
+        limit,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1,
+      };
+    },
+    ["search-posts", query, categorySlug ?? "", String(limit), String(page)],
+    { revalidate: 120, tags: ["posts"] },
+  )();
+}
+
+export async function getPostsByAuthor(
+  authorId: string | number,
+  limit = 12,
+  page = 1,
+) {
+  return unstable_cache(
+    async () => {
+      const whereCondition = and(
+        eq(posts.status, "published"),
+        eq(posts.authorId, Number(authorId)),
+      );
+
+      const offset = (page - 1) * limit;
+
+      const [{ total }] = await db
+        .select({ total: count() })
+        .from(posts)
+        .where(whereCondition);
+
+      const rows = await db.query.posts.findMany({
+        where: whereCondition,
+        orderBy: [desc(posts.publishedAt)],
+        limit,
+        offset,
+        with: {
+          category: true,
+          author: { with: { avatar: true } },
+          heroImage: true,
+          tags: true,
+        },
+      });
+
+      const totalDocs = total;
+      const totalPages = Math.ceil(totalDocs / limit);
+
+      return {
+        docs: rows.map(mapPost),
+        totalDocs,
+        totalPages,
+        page,
+        limit,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1,
+      };
+    },
+    ["posts-by-author", String(authorId), String(limit), String(page)],
+    { revalidate: 300, tags: ["posts"] },
+  )();
+}
+
+export async function getAuthorBySlug(slug: string) {
+  return unstable_cache(
+    async () => {
+      const row = await db.query.authors.findFirst({
+        where: eq(authors.slug, slug),
+        with: { avatar: true },
+      });
+      if (!row) return null;
+      return {
+        ...row,
+        avatar: row.avatar ? { url: row.avatar.url } : null,
+      };
+    },
+    ["author-by-slug", slug],
+    { revalidate: 600, tags: ["authors"] },
   )();
 }
 
 export const getCategories = unstable_cache(
   async () => {
-    const payload = await getPayloadClient();
-    return payload.find({
-      collection: "categories",
-      limit: 50,
-      sort: "name",
+    const rows = await db.query.categories.findMany({
+      orderBy: [asc(categories.name)],
     });
+    return { docs: rows };
   },
   ["categories"],
-  { revalidate: 3600, tags: ["categories"] }
+  { revalidate: 3600, tags: ["categories"] },
 );
 
 export const getCategoriesWithCount = unstable_cache(
   async () => {
-    const payload = await getPayloadClient();
-    const categories = await payload.find({
-      collection: "categories",
-      limit: 50,
-      sort: "name",
-    });
+    const rows = await db
+      .select({
+        id: categories.id,
+        name: categories.name,
+        slug: categories.slug,
+        createdAt: categories.createdAt,
+        updatedAt: categories.updatedAt,
+        postCount: count(posts.id),
+      })
+      .from(categories)
+      .leftJoin(
+        posts,
+        and(eq(posts.categoryId, categories.id), eq(posts.status, "published")),
+      )
+      .groupBy(categories.id)
+      .orderBy(asc(categories.name));
 
-    const counts = await Promise.all(
-      categories.docs.map(async (cat) => {
-        const posts = await payload.count({
-          collection: "posts",
-          where: {
-            status: { equals: "published" },
-            category: { equals: cat.id },
-          },
-        });
-        return { ...cat, postCount: posts.totalDocs };
-      }),
-    );
-
-    return counts;
+    return rows;
   },
   ["categories-with-count"],
-  { revalidate: 600, tags: ["posts", "categories"] }
+  { revalidate: 600, tags: ["posts", "categories"] },
 );

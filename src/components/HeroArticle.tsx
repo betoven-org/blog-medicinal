@@ -39,6 +39,7 @@ export function HeroArticle({
           alt={heroImage?.alt || title}
           fill
           priority
+          fetchPriority="high"
           sizes="100vw"
           className="object-cover transition-transform duration-500 group-hover:scale-105"
         />

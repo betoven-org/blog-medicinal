@@ -152,7 +152,7 @@ export default function Dashboard() {
     setAnalyticsError(false);
     const from = new Date(Date.now() - days * 86400000).toISOString();
     const to = new Date().toISOString();
-    const base = `/api/analytics?from=${from}&to=${to}`;
+    const base = `/api/admin/analytics?from=${from}&to=${to}`;
     try {
       const [tsRes, ovRes, ...groupRes] = await Promise.all([
         fetch(`${base}&type=timeseries`).then((r) => r.ok ? r.json() : null),
