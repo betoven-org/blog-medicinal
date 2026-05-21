@@ -35,7 +35,6 @@ function fmt(n: number): string {
   return n.toLocaleString("pt-BR");
 }
 
-/* ── Styles ── */
 const card: React.CSSProperties = {
   background: "#f9fafb",
   border: "1px solid #f3f4f6",
@@ -69,7 +68,6 @@ const metricValue: React.CSSProperties = {
   fontVariantNumeric: "tabular-nums",
 };
 
-/* ── Ranked list ── */
 function RankedList({ title, items, max = 8 }: { title: string; items: RankedItem[]; max?: number }) {
   const top = items.slice(0, max);
   const highest = top[0]?.value || 1;
@@ -80,17 +78,7 @@ function RankedList({ title, items, max = 8 }: { title: string; items: RankedIte
       {top.map((item, i) => (
         <div key={i} style={{ marginBottom: i < top.length - 1 ? 6 : 0 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 2 }}>
-            <span
-              style={{
-                fontSize: 13,
-                color: "#374151",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-                maxWidth: "72%",
-              }}
-              title={item.key}
-            >
+            <span style={{ fontSize: 13, color: "#374151", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "72%" }} title={item.key}>
               {item.key || "(direto)"}
             </span>
             <span style={{ fontSize: 13, fontWeight: 600, color: "#374151", fontVariantNumeric: "tabular-nums" }}>
@@ -98,18 +86,7 @@ function RankedList({ title, items, max = 8 }: { title: string; items: RankedIte
             </span>
           </div>
           <div style={{ height: 3, borderRadius: 2, background: "#e5e7eb", position: "relative", overflow: "hidden" }}>
-            <div
-              style={{
-                position: "absolute",
-                left: 0,
-                top: 0,
-                bottom: 0,
-                width: `${(item.value / highest) * 100}%`,
-                background: "#0d61ac",
-                borderRadius: 2,
-                transition: "width 0.3s ease",
-              }}
-            />
+            <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: `${(item.value / highest) * 100}%`, background: "#0d61ac", borderRadius: 2, transition: "width 0.3s" }} />
           </div>
         </div>
       ))}
@@ -117,7 +94,6 @@ function RankedList({ title, items, max = 8 }: { title: string; items: RankedIte
   );
 }
 
-/* ── Mini bar chart (timeseries) ── */
 function MiniChart({ data }: { data: TimeseriesPoint[] }) {
   if (data.length === 0) return null;
   const max = Math.max(...data.map((d) => d.total), 1);
@@ -129,15 +105,7 @@ function MiniChart({ data }: { data: TimeseriesPoint[] }) {
           <div
             key={i}
             title={`${d.key?.split("T")[0] ?? ""}: ${d.total} views`}
-            style={{
-              flex: 1,
-              minWidth: 0,
-              background: "#0d61ac",
-              borderRadius: "2px 2px 0 0",
-              height: `${Math.max((d.total / max) * 100, 2)}%`,
-              opacity: 0.75,
-              transition: "height 0.3s ease",
-            }}
+            style={{ flex: 1, minWidth: 0, background: "#0d61ac", borderRadius: "2px 2px 0 0", height: `${Math.max((d.total / max) * 100, 2)}%`, opacity: 0.75, transition: "height 0.3s" }}
           />
         ))}
       </div>
@@ -152,11 +120,10 @@ function MiniChart({ data }: { data: TimeseriesPoint[] }) {
 export default function Dashboard() {
   const [cms, setCms] = useState<CmsStats | null>(null);
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(true);
   const [analyticsError, setAnalyticsError] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [days, setDays] = useState(7);
 
-  // CMS stats
   useEffect(() => {
     Promise.all([
       fetch("/api/posts?limit=0&depth=0").then((r) => r.json()),
@@ -179,9 +146,8 @@ export default function Dashboard() {
       .catch(() => {});
   }, []);
 
-  // Analytics
   const fetchAnalytics = useCallback(async () => {
-    setLoading(true);
+    setAnalyticsLoading(true);
     setAnalyticsError(false);
     const from = new Date(Date.now() - days * 86400000).toISOString();
     const to = new Date().toISOString();
@@ -204,17 +170,13 @@ export default function Dashboard() {
         os: results[5].data || [],
         browsers: results[6].data || [],
       };
-      // Check if we got any real data
       const hasData = d.timeseries.length > 0 || d.pages.length > 0;
-      if (hasData) {
-        setAnalytics(d);
-      } else {
-        setAnalyticsError(true);
-      }
+      if (hasData) setAnalytics(d);
+      else setAnalyticsError(true);
     } catch {
       setAnalyticsError(true);
     } finally {
-      setLoading(false);
+      setAnalyticsLoading(false);
     }
   }, [days]);
 
@@ -252,7 +214,7 @@ export default function Dashboard() {
                   onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#f3f4f6"; e.currentTarget.style.background = "#f9fafb"; }}
                 >
                   <div style={metricLabel}>{c.label}</div>
-                  <div style={metricValue}>{c.value}</div>
+                  <div style={metricValue}>{fmt(c.value)}</div>
                 </a>
               ))
             : Array.from({ length: 6 }).map((_, i) => (
@@ -288,7 +250,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {loading ? (
+      {analyticsLoading ? (
         <div style={{ color: "#9ca3af", fontSize: 13, padding: "24px 0" }}>Carregando analytics...</div>
       ) : analyticsError || !analytics ? (
         <div style={{ color: "#9ca3af", fontSize: 13, padding: "24px 0", background: "#f9fafb", borderRadius: 8, textAlign: "center" }}>
@@ -326,7 +288,7 @@ export default function Dashboard() {
           </div>
 
           {/* Panels */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12, marginBottom: 16 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12 }}>
             <RankedList title="Paginas" items={analytics.pages} max={10} />
             <RankedList title="Paises" items={analytics.countries} />
             <RankedList title="Referrers" items={analytics.referrers} />

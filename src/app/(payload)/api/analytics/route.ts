@@ -14,7 +14,7 @@ const VALID_ENDPOINTS = [
 ];
 
 export async function GET(req: NextRequest) {
-  const token = process.env.VERCEL_API_TOKEN;
+  const token = process.env.VERCEL_API_TOKEN || process.env.VERCEL_TOKEN;
   const projectId = process.env.VERCEL_PROJECT_ID;
   const teamId = process.env.VERCEL_TEAM_ID;
 
