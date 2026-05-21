@@ -13,7 +13,6 @@
     "@payloadcms/db-postgres": "^3.84.1",
     "@payloadcms/next": "^3.84.1",
     "@payloadcms/richtext-lexical": "^3.84.1",
-    "@payloadcms/storage-vercel-blob": "^3.84.1",
     "@payloadcms/translations": "^3.84.1",
     "@supabase/supabase-js": "^2.106.1",
     "@tailwindcss/typography": "^0.5.19",
