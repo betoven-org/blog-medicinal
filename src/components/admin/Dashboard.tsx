@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
-type Stats = {
+type CmsStats = {
   posts: number;
   published: number;
   drafts: number;
@@ -11,153 +11,331 @@ type Stats = {
   media: number;
 };
 
-export default function Dashboard() {
-  const [stats, setStats] = useState<Stats | null>(null);
-  const [loading, setLoading] = useState(true);
+type RankedItem = { key: string; value: number };
+type TimeseriesPoint = { key: string; total: number; devices: number };
+type AnalyticsData = {
+  timeseries: TimeseriesPoint[];
+  pages: RankedItem[];
+  referrers: RankedItem[];
+  countries: RankedItem[];
+  devices: RankedItem[];
+  os: RankedItem[];
+  browsers: RankedItem[];
+};
 
+const PERIODS = [
+  { label: "7d", days: 7 },
+  { label: "30d", days: 30 },
+  { label: "90d", days: 90 },
+];
+
+function fmt(n: number): string {
+  if (n >= 1000000) return (n / 1000000).toFixed(1) + "M";
+  if (n >= 1000) return (n / 1000).toFixed(1) + "K";
+  return n.toLocaleString("pt-BR");
+}
+
+/* ── Styles ── */
+const card: React.CSSProperties = {
+  background: "#f9fafb",
+  border: "1px solid #f3f4f6",
+  borderRadius: 8,
+  padding: "14px 18px",
+};
+
+const sectionTitle: React.CSSProperties = {
+  fontSize: 11,
+  fontWeight: 700,
+  textTransform: "uppercase",
+  letterSpacing: "0.08em",
+  color: "#9ca3af",
+  margin: "0 0 12px",
+};
+
+const metricLabel: React.CSSProperties = {
+  fontSize: 12,
+  fontWeight: 500,
+  color: "#6b7280",
+  textTransform: "uppercase",
+  letterSpacing: "0.04em",
+};
+
+const metricValue: React.CSSProperties = {
+  fontSize: 26,
+  fontWeight: 700,
+  color: "#111827",
+  lineHeight: 1,
+  marginTop: 4,
+  fontVariantNumeric: "tabular-nums",
+};
+
+/* ── Ranked list ── */
+function RankedList({ title, items, max = 8 }: { title: string; items: RankedItem[]; max?: number }) {
+  const top = items.slice(0, max);
+  const highest = top[0]?.value || 1;
+  if (top.length === 0) return null;
+  return (
+    <div style={card}>
+      <h3 style={{ ...sectionTitle, margin: "0 0 10px" }}>{title}</h3>
+      {top.map((item, i) => (
+        <div key={i} style={{ marginBottom: i < top.length - 1 ? 6 : 0 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 2 }}>
+            <span
+              style={{
+                fontSize: 13,
+                color: "#374151",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                maxWidth: "72%",
+              }}
+              title={item.key}
+            >
+              {item.key || "(direto)"}
+            </span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: "#374151", fontVariantNumeric: "tabular-nums" }}>
+              {fmt(item.value)}
+            </span>
+          </div>
+          <div style={{ height: 3, borderRadius: 2, background: "#e5e7eb", position: "relative", overflow: "hidden" }}>
+            <div
+              style={{
+                position: "absolute",
+                left: 0,
+                top: 0,
+                bottom: 0,
+                width: `${(item.value / highest) * 100}%`,
+                background: "#0d61ac",
+                borderRadius: 2,
+                transition: "width 0.3s ease",
+              }}
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ── Mini bar chart (timeseries) ── */
+function MiniChart({ data }: { data: TimeseriesPoint[] }) {
+  if (data.length === 0) return null;
+  const max = Math.max(...data.map((d) => d.total), 1);
+  return (
+    <div style={{ ...card, padding: "14px 18px 10px" }}>
+      <h3 style={{ ...sectionTitle, margin: "0 0 10px" }}>Page Views por dia</h3>
+      <div style={{ display: "flex", alignItems: "flex-end", gap: 2, height: 64 }}>
+        {data.map((d, i) => (
+          <div
+            key={i}
+            title={`${d.key?.split("T")[0] ?? ""}: ${d.total} views`}
+            style={{
+              flex: 1,
+              minWidth: 0,
+              background: "#0d61ac",
+              borderRadius: "2px 2px 0 0",
+              height: `${Math.max((d.total / max) * 100, 2)}%`,
+              opacity: 0.75,
+              transition: "height 0.3s ease",
+            }}
+          />
+        ))}
+      </div>
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
+        <span style={{ fontSize: 10, color: "#9ca3af" }}>{data[0]?.key?.split("T")[0] ?? ""}</span>
+        <span style={{ fontSize: 10, color: "#9ca3af" }}>{data[data.length - 1]?.key?.split("T")[0] ?? ""}</span>
+      </div>
+    </div>
+  );
+}
+
+export default function Dashboard() {
+  const [cms, setCms] = useState<CmsStats | null>(null);
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
+  const [analyticsError, setAnalyticsError] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [days, setDays] = useState(7);
+
+  // CMS stats
   useEffect(() => {
-    async function fetchStats() {
-      try {
-        const [postsAll, postsPub, postsDraft, cats, subs, media] =
-          await Promise.all([
-            fetch("/api/posts?limit=0&depth=0").then((r) => r.json()),
-            fetch("/api/posts?limit=0&depth=0&where[status][equals]=published").then((r) => r.json()),
-            fetch("/api/posts?limit=0&depth=0&where[status][equals]=draft").then((r) => r.json()),
-            fetch("/api/categories?limit=0&depth=0").then((r) => r.json()),
-            fetch("/api/subscribers?limit=0&depth=0").then((r) => r.json()),
-            fetch("/api/media?limit=0&depth=0").then((r) => r.json()),
-          ]);
-        setStats({
-          posts: postsAll.totalDocs ?? 0,
-          published: postsPub.totalDocs ?? 0,
-          drafts: postsDraft.totalDocs ?? 0,
+    Promise.all([
+      fetch("/api/posts?limit=0&depth=0").then((r) => r.json()),
+      fetch("/api/posts?limit=0&depth=0&where[status][equals]=published").then((r) => r.json()),
+      fetch("/api/posts?limit=0&depth=0&where[status][equals]=draft").then((r) => r.json()),
+      fetch("/api/categories?limit=0&depth=0").then((r) => r.json()),
+      fetch("/api/subscribers?limit=0&depth=0").then((r) => r.json()),
+      fetch("/api/media?limit=0&depth=0").then((r) => r.json()),
+    ])
+      .then(([all, pub, draft, cats, subs, media]) => {
+        setCms({
+          posts: all.totalDocs ?? 0,
+          published: pub.totalDocs ?? 0,
+          drafts: draft.totalDocs ?? 0,
           categories: cats.totalDocs ?? 0,
           subscribers: subs.totalDocs ?? 0,
           media: media.totalDocs ?? 0,
         });
-      } catch {
-        /* silent */
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchStats();
+      })
+      .catch(() => {});
   }, []);
 
-  const cards = stats
+  // Analytics
+  const fetchAnalytics = useCallback(async () => {
+    setLoading(true);
+    setAnalyticsError(false);
+    const from = new Date(Date.now() - days * 86400000).toISOString();
+    const to = new Date().toISOString();
+    const base = `/api/analytics?from=${from}&to=${to}`;
+    try {
+      const eps = ["timeseries", "pages", "referrers", "countries", "devices", "os", "browsers"];
+      const results = await Promise.all(
+        eps.map((ep) =>
+          fetch(`${base}&endpoint=${ep}`)
+            .then((r) => (r.ok ? r.json() : { data: [] }))
+            .catch(() => ({ data: [] }))
+        )
+      );
+      const d: AnalyticsData = {
+        timeseries: results[0].data || [],
+        pages: results[1].data || [],
+        referrers: results[2].data || [],
+        countries: results[3].data || [],
+        devices: results[4].data || [],
+        os: results[5].data || [],
+        browsers: results[6].data || [],
+      };
+      // Check if we got any real data
+      const hasData = d.timeseries.length > 0 || d.pages.length > 0;
+      if (hasData) {
+        setAnalytics(d);
+      } else {
+        setAnalyticsError(true);
+      }
+    } catch {
+      setAnalyticsError(true);
+    } finally {
+      setLoading(false);
+    }
+  }, [days]);
+
+  useEffect(() => {
+    fetchAnalytics();
+  }, [fetchAnalytics]);
+
+  const totalViews = analytics?.timeseries.reduce((a, p) => a + (p.total || 0), 0) ?? 0;
+  const totalVisitors = analytics?.timeseries.reduce((a, p) => a + (p.devices || 0), 0) ?? 0;
+
+  const cmsCards = cms
     ? [
-        { label: "Total de Posts", value: stats.posts, href: "/admin/collections/posts" },
-        { label: "Publicados", value: stats.published, href: "/admin/collections/posts" },
-        { label: "Rascunhos", value: stats.drafts, href: "/admin/collections/posts" },
-        { label: "Categorias", value: stats.categories, href: "/admin/collections/categories" },
-        { label: "Inscritos", value: stats.subscribers, href: "/admin/collections/subscribers" },
-        { label: "Arquivos", value: stats.media, href: "/admin/collections/media" },
+        { label: "Posts", value: cms.posts, href: "/admin/collections/posts" },
+        { label: "Publicados", value: cms.published, href: "/admin/collections/posts" },
+        { label: "Rascunhos", value: cms.drafts, href: "/admin/collections/posts" },
+        { label: "Categorias", value: cms.categories, href: "/admin/collections/categories" },
+        { label: "Inscritos", value: cms.subscribers, href: "/admin/collections/subscribers" },
+        { label: "Arquivos", value: cms.media, href: "/admin/collections/media" },
       ]
     : [];
 
   return (
     <div>
-      {/* Header */}
-      <div
-        style={{
-          marginBottom: 28,
-          borderBottom: "1px solid #e5e7eb",
-          paddingBottom: 20,
-        }}
-      >
-        <p
-          style={{
-            fontSize: 13,
-            fontWeight: 600,
-            textTransform: "uppercase",
-            letterSpacing: "0.06em",
-            color: "#9ca3af",
-            margin: "0 0 6px",
-          }}
-        >
-          Dashboard
-        </p>
-        <h1
-          style={{
-            fontSize: 22,
-            fontWeight: 700,
-            color: "#111827",
-            margin: 0,
-            lineHeight: 1.3,
-          }}
-        >
-          Visao geral
-        </h1>
+      {/* ── CMS Stats ── */}
+      <div style={{ marginBottom: 28 }}>
+        <p style={sectionTitle}>Conteudo</p>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 10 }}>
+          {cms
+            ? cmsCards.map((c) => (
+                <a
+                  key={c.label}
+                  href={c.href}
+                  style={{ ...card, display: "block", textDecoration: "none", transition: "border-color 0.15s, background 0.15s" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#d1d5db"; e.currentTarget.style.background = "#fff"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#f3f4f6"; e.currentTarget.style.background = "#f9fafb"; }}
+                >
+                  <div style={metricLabel}>{c.label}</div>
+                  <div style={metricValue}>{c.value}</div>
+                </a>
+              ))
+            : Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} style={{ ...card, height: 72 }} />
+              ))}
+        </div>
       </div>
 
-      {/* Stats grid */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
-          gap: 12,
-        }}
-      >
-        {loading
-          ? Array.from({ length: 6 }).map((_, i) => (
-              <div
-                key={i}
-                style={{
-                  background: "#f9fafb",
-                  borderRadius: 8,
-                  padding: "18px 20px",
-                  height: 88,
-                }}
-              />
-            ))
-          : cards.map((card) => (
-              <a
-                key={card.label}
-                href={card.href}
-                style={{
-                  display: "block",
-                  background: "#f9fafb",
-                  border: "1px solid #f3f4f6",
-                  borderRadius: 8,
-                  padding: "18px 20px",
-                  textDecoration: "none",
-                  transition: "border-color 0.15s, background 0.15s",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = "#d1d5db";
-                  e.currentTarget.style.background = "#fff";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = "#f3f4f6";
-                  e.currentTarget.style.background = "#f9fafb";
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: 12,
-                    fontWeight: 500,
-                    color: "#6b7280",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.04em",
-                    marginBottom: 6,
-                  }}
-                >
-                  {card.label}
-                </div>
-                <div
-                  style={{
-                    fontSize: 28,
-                    fontWeight: 700,
-                    color: "#111827",
-                    lineHeight: 1,
-                    fontVariantNumeric: "tabular-nums",
-                  }}
-                >
-                  {card.value}
-                </div>
-              </a>
-            ))}
+      {/* ── Analytics ── */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+        <p style={{ ...sectionTitle, margin: 0 }}>Analytics</p>
+        <div style={{ display: "flex", gap: 4 }}>
+          {PERIODS.map((p) => (
+            <button
+              key={p.days}
+              onClick={() => setDays(p.days)}
+              style={{
+                padding: "4px 12px",
+                fontSize: 12,
+                fontWeight: 500,
+                borderRadius: 5,
+                border: "1px solid",
+                borderColor: days === p.days ? "#0d61ac" : "#d1d5db",
+                background: days === p.days ? "#0d61ac" : "transparent",
+                color: days === p.days ? "#fff" : "#374151",
+                cursor: "pointer",
+                transition: "all 0.15s",
+              }}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
       </div>
+
+      {loading ? (
+        <div style={{ color: "#9ca3af", fontSize: 13, padding: "24px 0" }}>Carregando analytics...</div>
+      ) : analyticsError || !analytics ? (
+        <div style={{ color: "#9ca3af", fontSize: 13, padding: "24px 0", background: "#f9fafb", borderRadius: 8, textAlign: "center" }}>
+          Sem dados de analytics. Verifique VERCEL_API_TOKEN e VERCEL_PROJECT_ID.
+        </div>
+      ) : (
+        <>
+          {/* Summary */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 10, marginBottom: 16 }}>
+            <div style={card}>
+              <div style={metricLabel}>Page Views</div>
+              <div style={metricValue}>{fmt(totalViews)}</div>
+            </div>
+            <div style={card}>
+              <div style={metricLabel}>Visitantes</div>
+              <div style={metricValue}>{fmt(totalVisitors)}</div>
+            </div>
+            <div style={card}>
+              <div style={metricLabel}>Pagina Top</div>
+              <div style={{ ...metricValue, fontSize: 15, marginTop: 6, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={analytics.pages[0]?.key}>
+                {analytics.pages[0]?.key ?? "-"}
+              </div>
+            </div>
+            <div style={card}>
+              <div style={metricLabel}>Pais Top</div>
+              <div style={{ ...metricValue, fontSize: 15, marginTop: 6 }}>
+                {analytics.countries[0]?.key ?? "-"}
+              </div>
+            </div>
+          </div>
+
+          {/* Chart */}
+          <div style={{ marginBottom: 16 }}>
+            <MiniChart data={analytics.timeseries} />
+          </div>
+
+          {/* Panels */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12, marginBottom: 16 }}>
+            <RankedList title="Paginas" items={analytics.pages} max={10} />
+            <RankedList title="Paises" items={analytics.countries} />
+            <RankedList title="Referrers" items={analytics.referrers} />
+            <RankedList title="Dispositivos" items={analytics.devices} />
+            <RankedList title="Sistemas Operacionais" items={analytics.os} />
+            <RankedList title="Navegadores" items={analytics.browsers} />
+          </div>
+        </>
+      )}
     </div>
   );
 }
