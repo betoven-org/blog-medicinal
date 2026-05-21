@@ -1,0 +1,9 @@
+/* Force white background on login page */
+[data-theme="light"] .login,
+[data-theme="light"] .login__wrapper {
+  background: #fff;
+}
+
+.template-default.template-default--has-bg .template-default__wrapper {
+  background: #fff;
+}

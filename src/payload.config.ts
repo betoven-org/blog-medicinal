@@ -23,6 +23,8 @@ export default buildConfig({
       titleSuffix: " | Medicinal Admin",
       icons: [{ url: "/favicon.png" }],
     },
+    theme: "light",
+    css: path.resolve(dirname, "styles/admin.css"),
     components: {
       graphics: {
         Logo: "./components/admin/Logo",
