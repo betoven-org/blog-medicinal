@@ -81,6 +81,7 @@ export default async function HomePage() {
           <HeroArticle
             title={featured.title}
             slug={featured.slug}
+            coverUrl={featured.coverUrl ?? null}
             heroImage={resolveRelation(featured.heroImage) ?? { url: null }}
             category={resolveRelation(featured.category) ?? { name: "Geral", slug: "geral" }}
             author={resolveRelation(featured.author) ?? { name: "Redacao" }}
@@ -104,6 +105,7 @@ export default async function HomePage() {
                   title={post.title}
                   slug={post.slug}
                   excerpt={post.excerpt ?? ""}
+                  coverUrl={post.coverUrl ?? null}
                   heroImage={heroImage ?? { url: null }}
                   category={category ?? { name: "Geral", slug: "geral" }}
                   author={author ?? { name: "Redacao" }}
@@ -158,6 +160,7 @@ export default async function HomePage() {
                     title={post.title}
                     slug={post.slug}
                     excerpt={post.excerpt ?? ""}
+                    coverUrl={post.coverUrl ?? null}
                     heroImage={heroImage ?? { url: null }}
                   />
                 );
@@ -194,6 +197,7 @@ export default async function HomePage() {
         const bannerImage = resolveRelation(bannerPost.heroImage);
         const bannerCategory = resolveRelation(bannerPost.category);
         const imageUrl =
+          bannerPost.coverUrl ||
           (bannerImage as { sizes?: { card?: { url?: string | null } }; url?: string | null } | null)
             ?.sizes?.card?.url ||
           (bannerImage as { url?: string | null } | null)?.url ||
@@ -250,6 +254,7 @@ export default async function HomePage() {
                   title={post.title}
                   slug={post.slug}
                   excerpt={post.excerpt ?? ""}
+                  coverUrl={post.coverUrl ?? null}
                   heroImage={heroImage ?? { url: null }}
                   category={category ?? { name: "Suplementos", slug: "suplementos" }}
                   author={author ?? { name: "Redacao" }}
@@ -320,6 +325,7 @@ export default async function HomePage() {
                   key={post.id}
                   title={post.title}
                   slug={post.slug}
+                  coverUrl={post.coverUrl ?? null}
                   heroImage={heroImage ?? { url: null }}
                   category={category ?? { name: "Saude", slug: "saude" }}
                 />

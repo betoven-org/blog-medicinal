@@ -5,6 +5,7 @@ type Props = {
   title: string;
   slug: string;
   excerpt: string;
+  coverUrl?: string | null;
   heroImage: {
     url?: string | null;
     alt?: string;
@@ -14,9 +15,9 @@ type Props = {
   };
 };
 
-export function TrendCard({ title, slug, excerpt, heroImage }: Props) {
+export function TrendCard({ title, slug, excerpt, coverUrl, heroImage }: Props) {
   const imageUrl =
-    heroImage?.sizes?.card?.url || heroImage?.url || "/placeholder.svg";
+    coverUrl || heroImage?.sizes?.card?.url || heroImage?.url || "/placeholder.svg";
 
   return (
     <article className="group">

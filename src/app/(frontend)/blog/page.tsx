@@ -81,6 +81,7 @@ export default async function BlogPage({ searchParams }: Props) {
                 title={post.title}
                 slug={post.slug}
                 excerpt={post.excerpt}
+                coverUrl={post.coverUrl ?? null}
                 heroImage={heroImage ?? { url: null }}
                 category={cat ?? { name: "", slug: "" }}
                 author={author ?? { name: "Redacao" }}

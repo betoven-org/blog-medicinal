@@ -18,6 +18,7 @@ export async function generateMetadata({ params }: Props) {
   if (!post) return { title: "Post nao encontrado" };
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
   const heroImage = typeof post.heroImage === "object" ? post.heroImage : null;
+  const ogImageUrl = post.coverUrl || heroImage?.url || null;
   return {
     title: post.title,
     description: post.excerpt,
@@ -28,7 +29,7 @@ export async function generateMetadata({ params }: Props) {
       type: "article",
       publishedTime: post.publishedAt ?? undefined,
       authors: [typeof post.author === "object" ? post.author?.name : "Redação"],
-      images: heroImage?.url ? [{ url: heroImage.url, alt: heroImage.alt || post.title }] : [],
+      images: ogImageUrl ? [{ url: ogImageUrl, alt: heroImage?.alt || post.title }] : [],
     },
     twitter: {
       card: "summary_large_image",
@@ -64,7 +65,7 @@ export default async function PostPage({ params }: Props) {
   const category = resolveRelation(post.category);
   const author = resolveRelation(post.author);
   const imageUrl =
-    heroImage?.sizes?.hero?.url || heroImage?.url || null;
+    post.coverUrl || heroImage?.sizes?.hero?.url || heroImage?.url || null;
 
   const related = await getLatestPosts(4);
   const relatedPosts = related.docs.filter((p) => p.id !== post.id).slice(0, 3);
@@ -227,6 +228,7 @@ export default async function PostPage({ params }: Props) {
                     title={p.title}
                     slug={p.slug}
                     excerpt={p.excerpt}
+                    coverUrl={p.coverUrl ?? null}
                     heroImage={img ?? { url: null }}
                     category={cat ?? { name: "Geral", slug: "geral" }}
                     author={auth ?? { name: "Redacao" }}

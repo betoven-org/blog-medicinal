@@ -97,6 +97,7 @@ export default async function CategoryPage({ params }: Props) {
                 title={post.title}
                 slug={post.slug}
                 excerpt={post.excerpt}
+                coverUrl={post.coverUrl ?? null}
                 heroImage={heroImage ?? { url: null }}
                 category={cat ?? { name: category.name, slug: category.slug }}
                 author={author ?? { name: "Redacao" }}

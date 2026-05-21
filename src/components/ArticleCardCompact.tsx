@@ -5,6 +5,7 @@ import { CategoryBadge } from "./CategoryBadge";
 type Props = {
   title: string;
   slug: string;
+  coverUrl?: string | null;
   heroImage: {
     url?: string | null;
     alt?: string;
@@ -15,9 +16,9 @@ type Props = {
   category: { name: string; slug: string };
 };
 
-export function ArticleCardCompact({ title, slug, heroImage, category }: Props) {
+export function ArticleCardCompact({ title, slug, coverUrl, heroImage, category }: Props) {
   const imageUrl =
-    heroImage?.sizes?.card?.url || heroImage?.url || "/placeholder.svg";
+    coverUrl || heroImage?.sizes?.card?.url || heroImage?.url || "/placeholder.svg";
 
   return (
     <article className="group">

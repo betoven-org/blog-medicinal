@@ -6,6 +6,7 @@ import { formatDate } from "@/lib/formatDate";
 type Props = {
   title: string;
   slug: string;
+  coverUrl?: string | null;
   heroImage: {
     url?: string | null;
     alt?: string;
@@ -21,13 +22,14 @@ type Props = {
 export function HeroArticle({
   title,
   slug,
+  coverUrl,
   heroImage,
   category,
   author,
   publishedAt,
 }: Props) {
   const imageUrl =
-    heroImage?.sizes?.hero?.url || heroImage?.url || "/placeholder.svg";
+    coverUrl || heroImage?.sizes?.hero?.url || heroImage?.url || "/placeholder.svg";
 
   return (
     <Link href={`/posts/${slug}`} className="group block">

@@ -87,6 +87,15 @@ export const Posts: CollectionConfig = {
       relationTo: "media",
     },
     {
+      name: "coverUrl",
+      label: "URL externa da capa",
+      type: "text",
+      admin: {
+        description: "URL de imagem externa (ex: Framer CDN). Tem prioridade sobre o upload.",
+        position: "sidebar",
+      },
+    },
+    {
       name: "content",
       label: "Conteúdo",
       type: "richText",
