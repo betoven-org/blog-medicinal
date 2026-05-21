@@ -36,9 +36,12 @@ export default buildConfig({
         envVars: {
           Component: "./components/admin/EnvVarsView",
           path: "/env-vars",
-          meta: {
-            title: "Variaveis de Ambiente",
-          },
+          meta: { title: "Variaveis de Ambiente" },
+        },
+        domains: {
+          Component: "./components/admin/DomainsView",
+          path: "/domains",
+          meta: { title: "Dominios" },
         },
       },
     },
