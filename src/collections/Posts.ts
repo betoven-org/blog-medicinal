@@ -1,4 +1,4 @@
-import type { CollectionConfig, CollectionBeforeChangeHook, CollectionBeforeValidateHook } from "payload";
+import type { CollectionConfig, CollectionBeforeChangeHook, CollectionBeforeValidateHook, CollectionAfterChangeHook } from "payload";
 
 /**
  * Gera um slug em kebab-case a partir de um texto.
@@ -56,6 +56,23 @@ export const Posts: CollectionConfig = {
   hooks: {
     beforeValidate: [autoGenerateSlug],
     beforeChange: [autoSetPublishedAt],
+    afterChange: [
+      async () => {
+        try {
+          const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+          await fetch(`${siteUrl}/api/revalidate`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-revalidate-secret": process.env.PAYLOAD_SECRET || "",
+            },
+            body: JSON.stringify({ collection: "posts" }),
+          });
+        } catch {
+          // Cache will expire naturally
+        }
+      },
+    ],
   },
   fields: [
     {

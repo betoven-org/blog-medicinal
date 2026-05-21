@@ -7,7 +7,7 @@ export async function POST(req: NextRequest) {
 
     if (!email || typeof email !== "string" || !email.includes("@")) {
       return NextResponse.json(
-        { error: "E-mail invalido." },
+        { error: "E-mail inválido" },
         { status: 400 },
       );
     }
@@ -21,18 +21,21 @@ export async function POST(req: NextRequest) {
     });
 
     if (existing.docs.length > 0) {
-      return NextResponse.json({ message: "E-mail ja cadastrado." });
+      return NextResponse.json(
+        { error: "Este e-mail já está inscrito" },
+        { status: 409 },
+      );
     }
 
     await payload.create({
       collection: "subscribers",
-      data: { email: email.toLowerCase().trim() },
+      data: { email: email.toLowerCase().trim(), active: true },
     });
 
-    return NextResponse.json({ message: "Inscricao realizada com sucesso!" });
+    return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json(
-      { error: "Erro ao processar inscricao." },
+      { error: "Erro ao processar inscrição" },
       { status: 500 },
     );
   }

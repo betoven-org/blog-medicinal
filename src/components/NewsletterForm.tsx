@@ -4,12 +4,13 @@ import { useState } from "react";
 
 export function NewsletterForm() {
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
-  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setStatus("loading");
+    setLoading(true);
+    setMessage(null);
 
     try {
       const res = await fetch("/api/newsletter", {
@@ -21,45 +22,55 @@ export function NewsletterForm() {
       const data = await res.json();
 
       if (!res.ok) {
-        setStatus("error");
-        setMessage(data.error || "Erro ao inscrever.");
+        setMessage({ text: data.error || "Erro ao inscrever.", type: "error" });
+        setLoading(false);
         return;
       }
 
-      setStatus("success");
-      setMessage(data.message);
+      setMessage({ text: "Inscrito com sucesso!", type: "success" });
       setEmail("");
     } catch {
-      setStatus("error");
-      setMessage("Erro de conexao. Tente novamente.");
+      setMessage({ text: "Erro de conexão. Tente novamente.", type: "error" });
+    } finally {
+      setLoading(false);
     }
   }
 
+  if (message?.type === "success") {
+    return (
+      <p className="mt-3 text-sm font-medium text-green-600">
+        {message.text}
+      </p>
+    );
+  }
+
   return (
-    <form onSubmit={handleSubmit} className="flex gap-2">
-      <input
-        type="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        placeholder="seu@email.com"
-        required
-        disabled={status === "loading"}
-        className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[#0d61ac] focus:outline-none disabled:opacity-50"
-      />
-      <button
-        type="submit"
-        disabled={status === "loading"}
-        className="rounded-lg bg-[#0d61ac] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#0a4f8c] disabled:opacity-50"
-      >
-        {status === "loading" ? "Enviando..." : "Enviar"}
-      </button>
-      {message && (
-        <span
-          className={`self-center text-xs ${status === "error" ? "text-red-600" : "text-green-600"}`}
+    <div>
+      <form onSubmit={handleSubmit} className="flex gap-2">
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="seu@email.com"
+          required
+          disabled={loading}
+          className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[#0d61ac] focus:outline-none disabled:opacity-50"
+        />
+        <button
+          type="submit"
+          disabled={loading}
+          className={`rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 ${
+            loading ? "opacity-70 cursor-not-allowed" : ""
+          }`}
         >
-          {message}
-        </span>
+          {loading ? "Enviando..." : "Enviar"}
+        </button>
+      </form>
+      {message?.type === "error" && (
+        <p className="mt-3 text-sm font-medium text-red-600">
+          {message.text}
+        </p>
       )}
-    </form>
+    </div>
   );
 }

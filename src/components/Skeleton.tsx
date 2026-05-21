@@ -28,7 +28,7 @@ export function HeroSkeleton() {
 export function TrendSkeleton() {
   return (
     <div className="flex gap-4">
-      <Skeleton className="w-2/5 shrink-0 rounded-xl" style={{ aspectRatio: "4/3" }} />
+      <Skeleton className="aspect-[4/3] w-2/5 shrink-0 rounded-xl" />
       <div className="flex flex-1 flex-col justify-center gap-2">
         <Skeleton className="h-5 w-full" />
         <Skeleton className="h-5 w-3/4" />

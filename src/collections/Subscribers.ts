@@ -5,7 +5,7 @@ export const Subscribers: CollectionConfig = {
   labels: { singular: "Inscrito", plural: "Inscritos" },
   admin: {
     useAsTitle: "email",
-    group: "Marketing",
+    group: "Configurações",
     defaultColumns: ["email", "createdAt"],
   },
   fields: [
@@ -15,6 +15,13 @@ export const Subscribers: CollectionConfig = {
       type: "email",
       required: true,
       unique: true,
+    },
+    {
+      name: "active",
+      label: "Ativo",
+      type: "checkbox",
+      defaultValue: true,
+      admin: { position: "sidebar" },
     },
   ],
 };

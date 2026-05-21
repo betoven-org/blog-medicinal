@@ -9,7 +9,7 @@ export function NavigationProgress() {
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const prevPath = useRef(pathname + searchParams.toString());
-  const timerRef = useRef<ReturnType<typeof setInterval>>();
+  const timerRef = useRef<ReturnType<typeof setInterval>>(undefined);
 
   const start = useCallback(() => {
     setLoading(true);

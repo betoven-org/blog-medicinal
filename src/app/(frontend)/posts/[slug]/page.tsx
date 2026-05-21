@@ -6,7 +6,7 @@ import { Breadcrumb } from "@/components/Breadcrumb";
 import { CategoryBadge } from "@/components/CategoryBadge";
 import { ArticleCard } from "@/components/ArticleCard";
 import { formatDate } from "@/lib/formatDate";
-import { getPostBySlug, getLatestPosts } from "@/lib/queries";
+import { getPostBySlug, getRelatedPosts, getLatestPosts } from "@/lib/queries";
 import { resolveRelation } from "@/lib/utils";
 
 type Props = {
@@ -65,7 +65,12 @@ export default async function PostPage({ params }: Props) {
   const imageUrl =
     post.coverUrl || heroImage?.sizes?.hero?.url || heroImage?.url || null;
 
-  const related = await getLatestPosts(4);
+  const categoryId = typeof post.category === "object" && post.category !== null
+    ? (post.category as { id: string | number }).id
+    : post.category;
+  const related = categoryId
+    ? await getRelatedPosts(categoryId, post.id)
+    : await getLatestPosts(4);
   const relatedPosts = related.docs.filter((p) => p.id !== post.id).slice(0, 3);
 
   const jsonLd = {
