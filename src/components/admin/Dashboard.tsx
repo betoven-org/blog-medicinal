@@ -56,13 +56,7 @@ export default function Dashboard() {
     : [];
 
   return (
-    <div
-      style={{
-        maxWidth: 1080,
-        margin: "0 auto",
-        padding: "32px 20px 16px",
-      }}
-    >
+    <div>
       {/* Header */}
       <div
         style={{
