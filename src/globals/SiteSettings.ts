@@ -134,6 +134,29 @@ export const SiteSettings: GlobalConfig = {
             },
           ],
         },
+        {
+          label: "Infraestrutura",
+          fields: [
+            {
+              name: "envVarsPanel",
+              type: "ui",
+              admin: {
+                components: {
+                  Field: "./components/admin/EnvVarsField",
+                },
+              },
+            },
+            {
+              name: "domainsPanel",
+              type: "ui",
+              admin: {
+                components: {
+                  Field: "./components/admin/DomainsField",
+                },
+              },
+            },
+          ],
+        },
       ],
     },
   ],

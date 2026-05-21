@@ -30,28 +30,7 @@ export default buildConfig({
         Icon: "./components/admin/Icon",
       },
       beforeLogin: ["./components/admin/BeforeLogin"],
-      afterNavLinks: ["./components/admin/NavLink"],
       beforeDashboard: ["./components/admin/Dashboard"],
-      views: {
-        envVars: {
-          Component: "./components/admin/EnvVarsView",
-          path: "/env-vars",
-          exact: true,
-          meta: { title: "Variaveis de Ambiente" },
-        },
-        domains: {
-          Component: "./components/admin/DomainsView",
-          path: "/domains",
-          exact: true,
-          meta: { title: "Dominios" },
-        },
-        analytics: {
-          Component: "./components/admin/AnalyticsView",
-          path: "/analytics",
-          exact: true,
-          meta: { title: "Analytics" },
-        },
-      },
     },
     importMap: {
       baseDir: path.resolve(dirname),
