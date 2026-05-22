@@ -60,7 +60,7 @@ export async function PATCH(req: NextRequest) {
 
   try {
     const { id, key, value, target } = await req.json();
-    if (SENSITIVE_KEYS.has(key)) {
+    if (isSensitive(key)) {
       return NextResponse.json({ error: `${key} e protegida e nao pode ser editada` }, { status: 403 });
     }
 
@@ -105,7 +105,7 @@ export async function DELETE(req: NextRequest) {
 
   try {
     const { id, key } = await req.json();
-    if (SENSITIVE_KEYS.has(key)) return NextResponse.json({ error: `${key} e protegida` }, { status: 403 });
+    if (isSensitive(key)) return NextResponse.json({ error: `${key} e protegida` }, { status: 403 });
 
     const res = await fetch(`${VERCEL_API}/v9/projects/${getProjectId()}/env/${id}`, {
       method: "DELETE",
