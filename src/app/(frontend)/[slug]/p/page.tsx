@@ -126,7 +126,6 @@ export default async function ProductPage({ params }: PageProps) {
 
   const benefits = (product.benefits as Benefit[] | null) ?? [];
   const differentials = (product.differentials as string[] | null) ?? [];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const productContent = product.content as Record<string, any> | null;
   const contentHtml = productContent?._html as string | undefined;
 

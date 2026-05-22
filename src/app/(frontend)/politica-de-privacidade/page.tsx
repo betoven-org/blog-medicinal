@@ -9,7 +9,6 @@ export const metadata: Metadata = {
 
 export default async function PrivacyPolicyPage() {
   const settings = await getSiteSettings();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const content = (settings as any)?.privacyPolicy || "";
 
   const breadcrumbItems = [

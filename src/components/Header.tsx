@@ -69,7 +69,6 @@ export async function Header() {
       .orderBy(asc(productCategories.sortOrder), asc(productCategories.name)),
   ]);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const s = settings as any;
   const logoUrl = s?.logo?.url ?? "/logo.svg";
   const siteName = s?.siteName ?? "Medicinal na Web";
