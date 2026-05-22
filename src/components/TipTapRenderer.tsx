@@ -80,7 +80,7 @@ function renderNode(node: TipTapNode, index: number): React.ReactNode {
   }
 }
 
-function markdownToHtml(md: string): string {
+export function markdownToHtml(md: string): string {
   const lines = md.replace(/\r\n/g, "\n").split("\n");
   const out: string[] = [];
   let inList = false;

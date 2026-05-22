@@ -16,7 +16,7 @@ import {
 import { db } from "@/db";
 import { products, productCategories, media } from "@/db/schema";
 import { Breadcrumb } from "@/components/Breadcrumb";
-import { TipTapRenderer } from "@/components/TipTapRenderer";
+import { TipTapRenderer, markdownToHtml } from "@/components/TipTapRenderer";
 import { ProductGallery } from "@/components/ProductGallery";
 
 // ── Types ───────────────────────────────────────────────────────────────────────
@@ -220,9 +220,10 @@ export default async function ProductPage({ params }: PageProps) {
             </h1>
 
             {product.description && (
-              <p className="mt-3 text-base leading-relaxed text-muted-foreground">
-                {product.description}
-              </p>
+              <div
+                className="prose prose-sm mt-3 max-w-none text-muted-foreground"
+                dangerouslySetInnerHTML={{ __html: markdownToHtml(product.description) }}
+              />
             )}
 
             <div className="my-6 border-t border-border" />
