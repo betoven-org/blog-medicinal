@@ -136,7 +136,7 @@ export async function POST() {
           let heroImageId: number | null = null;
           if (sa.cover_image_url) heroImageId = await getOrCreateMedia(sa.cover_image_url, sa.cover_image_alt || sa.title);
           const content = sa.content ? { type: "doc", _html: sa.content } : null;
-          const status = sa.status === "published" ? "published" : "draft";
+          const status: "draft" | "published" = sa.status === "published" ? "published" : "draft";
 
           const [existing] = await db.select({ id: posts.id }).from(posts).where(eq(posts.supabaseId, sa.id)).limit(1);
           const postData = {
@@ -194,7 +194,7 @@ export async function POST() {
           let imageId: number | null = null;
           if (sp.cover_image_url) imageId = await getOrCreateMedia(sp.cover_image_url, sp.cover_image_alt || sp.title);
           const content = sp.content ? { type: "doc", _html: sp.content } : null;
-          const status = sp.status === "published" ? "published" : "draft";
+          const status: "draft" | "published" = sp.status === "published" ? "published" : "draft";
 
           const [existing] = await db.select({ id: products.id }).from(products).where(eq(products.slug, sp.slug)).limit(1);
           if (existing) {
