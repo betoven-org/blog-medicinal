@@ -90,6 +90,7 @@ export default async function sitemap({ id }: { id: number }): Promise<MetadataR
 
   // ── Sitemap 3+: Products (paginated) ──────────────────────────────────
   const productPage = id - 3;
+  if (productPage < 0) return [];
   const offset = productPage * PER_SITEMAP;
 
   const allProducts = await db
