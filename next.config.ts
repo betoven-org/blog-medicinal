@@ -23,6 +23,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "medicinalnaweb.vtexassets.com",
       },
+      {
+        protocol: "https",
+        hostname: "hsixbybpwvhvkwxeaxup.supabase.co",
+      },
     ],
   },
   async headers() {
