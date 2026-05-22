@@ -183,6 +183,7 @@ export const tags = pgTable("tags", {
 
 export const subscribers = pgTable("subscribers", {
   id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }),
   email: varchar("email", { length: 255 }).notNull().unique(),
   active: boolean("active").default(true).notNull(),
   createdAt: timestamp("created_at", { mode: "string" }).defaultNow().notNull(),

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { subscribers } from "@/db/schema";
-import { desc, count, ilike, eq } from "drizzle-orm";
+import { desc, count, ilike, eq, or } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
   const session = await auth();
@@ -17,7 +17,10 @@ export async function GET(request: NextRequest) {
     const offset = (page - 1) * limit;
 
     const where = search
-      ? ilike(subscribers.email, `%${search}%`)
+      ? or(
+          ilike(subscribers.email, `%${search}%`),
+          ilike(subscribers.name, `%${search}%`),
+        )
       : undefined;
 
     const [docs, [total]] = await Promise.all([

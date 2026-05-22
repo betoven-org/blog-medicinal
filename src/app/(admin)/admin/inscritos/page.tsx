@@ -6,6 +6,7 @@ import DataTable from "@/components/admin/DataTable";
 
 type Subscriber = {
   id: number;
+  name: string | null;
   email: string;
   active: boolean;
   createdAt: string;
@@ -94,6 +95,9 @@ export default function InscritosPage() {
   };
 
   const columns = [
+    { key: "name", label: "Nome", render: (item: Subscriber) => (
+      <span className="text-gray-900">{item.name || "-"}</span>
+    )},
     { key: "email", label: "Email" },
     {
       key: "active",
@@ -178,7 +182,7 @@ export default function InscritosPage() {
             type="text"
             value={search}
             onChange={(e) => handleSearchChange(e.target.value)}
-            placeholder="Buscar por email..."
+            placeholder="Buscar por nome ou email..."
             className="w-full rounded-md border border-gray-300 bg-white py-2 pl-10 pr-4 text-sm text-gray-900 placeholder-gray-400 shadow-sm transition-colors focus:border-[#0d61ac] focus:outline-none focus:ring-2 focus:ring-[#0d61ac]/20 sm:w-72"
           />
         </div>

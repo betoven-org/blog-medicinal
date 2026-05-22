@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { db } from "@/db";
 import {
-  categories, authors, posts, tags, media, products, productCategories,
+  categories, authors, posts, tags, media, products, productCategories, subscribers,
 } from "@/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
@@ -55,6 +55,9 @@ type SbProduct = {
   focus_keyword: string | null; word_count: number | null; reading_time_minutes: number | null;
   status: string; created_at: string; updated_at: string;
 };
+type SbSubscriber = {
+  id: string; name: string | null; email: string; active: boolean; created_at: string;
+};
 
 async function getOrCreateMedia(url: string, alt: string): Promise<number> {
   const [existing] = await db.select({ id: media.id }).from(media).where(eq(media.supabaseUrl, url)).limit(1);
@@ -91,13 +94,14 @@ export async function POST() {
         // Step 1: Fetch from Supabase
         send({ step: "fetch", label: "Buscando dados do Supabase...", progress: 5 });
 
-        const [sbCategories, sbTags, sbArticles, sbArticleTags, sbProducts] =
+        const [sbCategories, sbTags, sbArticles, sbArticleTags, sbProducts, sbSubscribers] =
           await Promise.all([
             sbFetchAll<SbCategory>("categories"),
             sbFetchAll<SbTag>("tags"),
             sbFetchAll<SbArticle>("articles"),
             sbFetchAll<SbArticleTag>("article_tags", "article_id"),
             sbFetchAll<SbProduct>("products"),
+            sbFetchAll<SbSubscriber>("newsletter_subscribers"),
           ]);
 
         const totalItems = sbCategories.length + sbArticles.length + sbProducts.length;
@@ -216,10 +220,25 @@ export async function POST() {
           }
 
           if ((i + 1) % 10 === 0 || i === sbProducts.length - 1) {
-            const pct = 78 + Math.round(((i + 1) / sbProducts.length) * 20);
+            const pct = 78 + Math.round(((i + 1) / sbProducts.length) * 17);
             send({ step: "products_progress", label: `Produtos: ${i + 1}/${sbProducts.length}`, progress: pct });
           }
         }
+
+        // Step 6: Newsletter Subscribers
+        send({ step: "subscribers", label: `Sincronizando ${sbSubscribers.length} inscritos...`, progress: 96 });
+        let subCreated = 0, subUpdated = 0;
+        for (const ss of sbSubscribers) {
+          const [existing] = await db.select({ id: subscribers.id }).from(subscribers).where(eq(subscribers.email, ss.email)).limit(1);
+          if (existing) {
+            await db.update(subscribers).set({ name: ss.name, active: ss.active }).where(eq(subscribers.id, existing.id));
+            subUpdated++;
+          } else {
+            await db.insert(subscribers).values({ name: ss.name, email: ss.email, active: ss.active, createdAt: ss.created_at });
+            subCreated++;
+          }
+        }
+        send({ step: "subscribers_done", label: `Inscritos: ${subCreated} novos, ${subUpdated} atualizados`, progress: 99 });
 
         send({
           step: "done", label: "Sincronizacao concluida", progress: 100,
@@ -228,6 +247,7 @@ export async function POST() {
             posts: { created: postCreated, updated: postUpdated },
             tags: tagsCreated,
             products: { created: prodCreated, updated: prodUpdated },
+            subscribers: { created: subCreated, updated: subUpdated },
           },
         });
       } catch (error) {
