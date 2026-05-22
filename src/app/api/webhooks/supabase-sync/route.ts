@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import {
-  categories, authors, posts, tags, media, products, siteSettings,
+  categories, authors, posts, tags, media, products, subscribers,
 } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
@@ -79,6 +79,10 @@ export async function POST(request: NextRequest) {
       case "article_tags":
         await handleArticleTag(type, record, old_record);
         revalidateTag("posts");
+        break;
+
+      case "newsletter_subscribers":
+        await handleSubscriber(type, record, old_record);
         break;
 
       default:
@@ -301,5 +305,37 @@ async function handleArticleTag(
     if (!existingTags.some((t) => t.tag === tagName)) {
       await db.insert(tags).values({ postId: post.id, tag: tagName });
     }
+  }
+}
+
+// ── Subscriber handler ──────────────────────────────────────────────────────────
+
+async function handleSubscriber(
+  type: string,
+  record: Record<string, unknown> | null,
+  old_record: Record<string, unknown> | null,
+) {
+  if (type === "DELETE") {
+    const email = old_record?.email as string;
+    if (!email) return;
+    await db.delete(subscribers).where(eq(subscribers.email, email));
+    return;
+  }
+
+  if (!record) return;
+  const email = record.email as string;
+  const name = (record.name as string) || null;
+  const active = record.active !== false;
+
+  const [existing] = await db.select({ id: subscribers.id }).from(subscribers).where(eq(subscribers.email, email)).limit(1);
+  if (existing) {
+    await db.update(subscribers).set({ name, active }).where(eq(subscribers.id, existing.id));
+  } else {
+    await db.insert(subscribers).values({
+      name,
+      email,
+      active,
+      createdAt: (record.created_at as string) || new Date().toISOString(),
+    });
   }
 }
