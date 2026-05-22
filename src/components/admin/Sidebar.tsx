@@ -9,13 +9,22 @@ import {
   Users,
   Image,
   Mail,
-  Settings,
   PanelLeftOpen,
   PanelLeftClose,
   X,
   Package,
   Tags,
   Shield,
+  PanelBottom,
+  FileCode,
+  Search,
+  Bot,
+  UserPlus,
+  Building2,
+  Phone,
+  Share2,
+  Database,
+  CreditCard,
 } from "lucide-react";
 
 type NavItem = {
@@ -71,22 +80,82 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
+    label: "Storefront",
+    items: [
+      {
+        href: "/admin/footer",
+        label: "Footer",
+        icon: <PanelBottom className="size-[18px]" />,
+      },
+      {
+        href: "/admin/newsletter",
+        label: "Newsletter",
+        icon: <Mail className="size-[18px]" />,
+      },
+      {
+        href: "/admin/paginas",
+        label: "Paginas",
+        icon: <FileCode className="size-[18px]" />,
+      },
+    ],
+  },
+  {
+    label: "SEO",
+    items: [
+      {
+        href: "/admin/metatags",
+        label: "Meta Tags",
+        icon: <Search className="size-[18px]" />,
+      },
+      {
+        href: "/admin/robots",
+        label: "Robots",
+        icon: <Bot className="size-[18px]" />,
+      },
+    ],
+  },
+  {
     label: "Configuracoes",
     items: [
       {
         href: "/admin/inscritos",
         label: "Inscritos",
-        icon: <Mail className="size-[18px]" />,
+        icon: <UserPlus className="size-[18px]" />,
       },
       {
-        href: "/admin/configuracoes",
-        label: "Configuracoes do Site",
-        icon: <Settings className="size-[18px]" />,
+        href: "/admin/identidade",
+        label: "Identidade do Site",
+        icon: <Building2 className="size-[18px]" />,
+      },
+      {
+        href: "/admin/contato",
+        label: "Contato",
+        icon: <Phone className="size-[18px]" />,
+      },
+      {
+        href: "/admin/redes-sociais",
+        label: "Redes Sociais",
+        icon: <Share2 className="size-[18px]" />,
       },
       {
         href: "/admin/usuarios",
         label: "Usuarios e Permissoes",
         icon: <Shield className="size-[18px]" />,
+      },
+    ],
+  },
+  {
+    label: "Integracoes",
+    items: [
+      {
+        href: "/admin/supabase",
+        label: "Supabase",
+        icon: <Database className="size-[18px]" />,
+      },
+      {
+        href: "/admin/assinatura",
+        label: "Assinatura",
+        icon: <CreditCard className="size-[18px]" />,
       },
     ],
   },
@@ -164,7 +233,6 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
       >
         {/* Header: Logo + Collapse toggle */}
         <div className={`flex h-14 items-center border-b border-gray-200 ${collapsed ? "lg:justify-center lg:px-2" : "justify-between px-4"} justify-between px-4`}>
-          {/* Desktop collapsed: botao de expandir no lugar do logo */}
           {collapsed ? (
             <>
               <button
@@ -175,7 +243,6 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
               >
                 <PanelLeftOpen className="size-5" />
               </button>
-              {/* Mobile: logo normal */}
               <Link href="/admin" className="lg:hidden">
                 <img src="/logo.svg" alt="Logo" className="h-7" />
               </Link>
@@ -185,7 +252,6 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
               <Link href="/admin">
                 <img src="/logo.svg" alt="Logo" className="h-7" />
               </Link>
-              {/* Collapse button — desktop only */}
               <button
                 type="button"
                 onClick={onToggleCollapse}
@@ -197,7 +263,6 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
             </>
           )}
 
-          {/* Mobile close button */}
           <button
             type="button"
             onClick={onClose}
