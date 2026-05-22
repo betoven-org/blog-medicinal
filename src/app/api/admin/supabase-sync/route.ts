@@ -7,22 +7,22 @@ import { eq, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { generateSlug } from "@/lib/slug";
 
-const SB_URL = "https://hsixbybpwvhvkwxeaxup.supabase.co/rest/v1";
-const SB_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhzaXhieWJwd3Zodmt3eGVheHVwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODgzODM4MywiZXhwIjoyMDk0NDE0MzgzfQ.l7oo_w-6ZSn-1kxwr88FTHBnepaHcr9G3e38VOXozv0";
-
-function sbHeaders() {
-  return { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` };
+function getSbConfig() {
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) throw new Error("SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY sao obrigatorios");
+  return { url: `${url}/rest/v1`, key };
 }
 
 async function sbFetchAll<T>(table: string, orderCol = "created_at"): Promise<T[]> {
+  const { url, key } = getSbConfig();
   const all: T[] = [];
   let offset = 0;
   const limit = 1000;
   while (true) {
     const res = await fetch(
-      `${SB_URL}/${table}?offset=${offset}&limit=${limit}&order=${orderCol}.asc`,
-      { headers: sbHeaders() }
+      `${url}/${table}?offset=${offset}&limit=${limit}&order=${orderCol}.asc`,
+      { headers: { apikey: key, Authorization: `Bearer ${key}` } }
     );
     if (!res.ok) throw new Error(`Failed to fetch ${table}: ${res.status}`);
     const rows = (await res.json()) as T[];

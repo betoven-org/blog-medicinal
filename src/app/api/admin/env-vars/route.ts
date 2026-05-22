@@ -3,14 +3,18 @@ import { getToken } from "next-auth/jwt";
 
 const VERCEL_API = "https://api.vercel.com";
 
-const SENSITIVE_KEYS = new Set([
-  "DATABASE_URI",
-  "DATABASE_URL",
-  "AUTH_SECRET",
-  "VERCEL_TOKEN",
-  "VERCEL_PROJECT_ID",
-  "BLOB_READ_WRITE_TOKEN",
+// Allowlist: only these keys can have their values shown
+const VISIBLE_KEYS = new Set([
+  "NEXT_PUBLIC_SITE_URL",
+  "NEXT_PUBLIC_SUPABASE_URL",
+  "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
+  "SUPABASE_URL",
 ]);
+
+// All other keys are masked
+function isSensitive(key: string) {
+  return !VISIBLE_KEYS.has(key);
+}
 
 async function requireAuth(req: NextRequest) {
   const token = await getToken({ req, secret: process.env.AUTH_SECRET });
@@ -40,10 +44,10 @@ export async function GET(req: NextRequest) {
     const envs = data.envs.map((env: any) => ({
       id: env.id,
       key: env.key,
-      value: SENSITIVE_KEYS.has(env.key) ? "••••••••" : env.value,
+      value: isSensitive(env.key) ? "••••••••" : env.value,
       target: env.target,
       type: env.type,
-      sensitive: SENSITIVE_KEYS.has(env.key),
+      sensitive: isSensitive(env.key),
     }));
     return NextResponse.json({ envs });
   } catch (err: any) {

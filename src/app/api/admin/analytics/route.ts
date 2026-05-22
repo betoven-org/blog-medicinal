@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/auth";
 
 const VERCEL_API = "https://vercel.com/api/web-analytics";
 
@@ -25,6 +26,10 @@ const VALID_GROUP_BY = [
  * Env vars: ANALYTICS_TOKEN ou VERCEL_API_TOKEN, ANALYTICS_PROJECT_ID, ANALYTICS_TEAM_ID (opcional)
  */
 export async function GET(req: NextRequest) {
+  const session = await auth();
+  if (!session?.user)
+    return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+
   const token = process.env.ANALYTICS_TOKEN || process.env.VERCEL_API_TOKEN;
   const projectId = process.env.ANALYTICS_PROJECT_ID;
   const teamId = process.env.ANALYTICS_TEAM_ID;
