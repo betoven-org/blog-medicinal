@@ -53,6 +53,11 @@ function IconYoutube({ size = 20 }: { size?: number }) {
   );
 }
 
+function ensureAbsoluteUrl(url: string): string {
+  if (/^https?:\/\//i.test(url)) return url;
+  return `https://${url}`;
+}
+
 export async function Header() {
   const [settings, categoriesWithProducts] = await Promise.all([
     getSiteSettings(),
@@ -73,9 +78,9 @@ export async function Header() {
   const logoUrl = s?.logo?.url ?? "/logo.svg";
   const siteName = s?.siteName ?? "Medicinal na Web";
   const socials = {
-    facebook: s?.facebook ?? null,
-    instagram: s?.instagram ?? null,
-    youtube: s?.youtube ?? null,
+    facebook: s?.facebook ? ensureAbsoluteUrl(s.facebook) : null,
+    instagram: s?.instagram ? ensureAbsoluteUrl(s.instagram) : null,
+    youtube: s?.youtube ? ensureAbsoluteUrl(s.youtube) : null,
   };
 
   return (
