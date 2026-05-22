@@ -27,7 +27,7 @@ export function TrendCard({ title, slug, excerpt, coverUrl, heroImage }: Props) 
             src={imageUrl}
             alt={heroImage?.alt || title}
             fill
-            sizes="(max-width: 640px) 40vw, 240px"
+            sizes="(max-width: 640px) 35vw, 180px"
             className="object-cover transition-transform duration-300 group-hover:scale-105"
           />
         </div>

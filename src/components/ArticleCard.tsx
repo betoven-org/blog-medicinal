@@ -45,7 +45,7 @@ export function ArticleCard({
             fill
             priority={priority}
             fetchPriority={priority ? "high" : undefined}
-            sizes="(max-width: 768px) 100vw, 33vw"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
             className="object-cover transition-transform duration-300 group-hover:scale-105"
           />
         </div>
