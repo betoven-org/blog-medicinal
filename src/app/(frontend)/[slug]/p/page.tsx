@@ -329,7 +329,7 @@ export default async function ProductPage({ params }: PageProps) {
                 </h2>
                 <div className="prose prose-gray max-w-none">
                   {contentHtml ? (
-                    <div dangerouslySetInnerHTML={{ __html: contentHtml }} />
+                    <div dangerouslySetInnerHTML={{ __html: markdownToHtml(contentHtml) }} />
                   ) : (
                     <TipTapRenderer content={productContent} />
                   )}
