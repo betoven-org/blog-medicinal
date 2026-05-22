@@ -18,6 +18,7 @@ import { products, productCategories, media } from "@/db/schema";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { TipTapRenderer, markdownToHtml } from "@/components/TipTapRenderer";
 import { ProductGallery } from "@/components/ProductGallery";
+import { getSiteSettings } from "@/lib/queries";
 
 // ── Types ───────────────────────────────────────────────────────────────────────
 
@@ -77,6 +78,8 @@ export async function generateMetadata({
 // ── Page ────────────────────────────────────────────────────────────────────────
 
 export default async function ProductPage({ params }: PageProps) {
+  const settings = await getSiteSettings();
+  const whatsappNumber = (settings as any)?.whatsapp || "5531999999999";
   const { slug } = await params;
 
   const [product] = await db
@@ -295,7 +298,7 @@ export default async function ProductPage({ params }: PageProps) {
                 </div>
               </div>
               <a
-                href={`https://wa.me/5531999999999?text=${encodeURIComponent(`Ola! Gostaria de saber mais sobre: ${product.name} (Ref: ${product.id})`)}`}
+                href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(`Ola! Gostaria de saber mais sobre: ${product.name} (Ref: ${product.id})`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#0d61ac] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#0a4f8c]"

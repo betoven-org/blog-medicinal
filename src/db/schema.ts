@@ -201,6 +201,7 @@ export const siteSettings = pgTable("site_settings", {
   faviconId: integer("favicon_id").references(() => media.id, {
     onDelete: "set null",
   }),
+  whatsapp: varchar("whatsapp", { length: 20 }),
   facebook: text("facebook"),
   instagram: text("instagram"),
   youtube: text("youtube"),

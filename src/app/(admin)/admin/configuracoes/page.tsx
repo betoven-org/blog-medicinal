@@ -20,6 +20,7 @@ type Settings = {
   faviconId: number | null;
   logo?: MediaRelation;
   favicon?: MediaRelation;
+  whatsapp: string;
   facebook: string;
   instagram: string;
   youtube: string;
@@ -46,6 +47,7 @@ const EMPTY_SETTINGS: Settings = {
   siteDescription: "",
   logoId: null,
   faviconId: null,
+  whatsapp: "",
   facebook: "",
   instagram: "",
   youtube: "",
@@ -111,6 +113,7 @@ export default function ConfiguracoesPage() {
           ...json,
           siteName: json.siteName || "",
           siteDescription: json.siteDescription || "",
+          whatsapp: json.whatsapp || "",
           facebook: json.facebook || "",
           instagram: json.instagram || "",
           youtube: json.youtube || "",
@@ -351,6 +354,14 @@ export default function ConfiguracoesPage() {
                 }}
               />
             </div>
+            <FormField
+              label="WhatsApp"
+              name="whatsapp"
+              value={settings.whatsapp}
+              onChange={handleChange}
+              placeholder="5531999999999"
+              description="Numero com DDI + DDD, sem espacos ou caracteres especiais. Ex: 5531999999999"
+            />
           </div>
         )}
 

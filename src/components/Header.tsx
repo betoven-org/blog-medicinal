@@ -77,6 +77,7 @@ export async function Header() {
   const s = settings as any;
   const logoUrl = s?.logo?.url ?? "/logo.svg";
   const siteName = s?.siteName ?? "Medicinal na Web";
+  const whatsappNumber = s?.whatsapp || "5531999999999";
   const socials = {
     facebook: s?.facebook ? ensureAbsoluteUrl(s.facebook) : null,
     instagram: s?.instagram ? ensureAbsoluteUrl(s.instagram) : null,
@@ -108,7 +109,7 @@ export async function Header() {
               Area Restrita
             </Link>
             <a
-              href="https://wa.me/5531999999999"
+              href={`https://wa.me/${whatsappNumber}`}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1.5 rounded-md bg-[#0d61ac] px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[#0a4f90]"

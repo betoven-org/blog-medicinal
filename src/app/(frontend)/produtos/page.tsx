@@ -6,9 +6,9 @@ import { products, media } from "@/db/schema";
 import { eq, desc, count } from "drizzle-orm";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { Package, ChevronLeft, ChevronRight } from "lucide-react";
+import { getSiteSettings } from "@/lib/queries";
 
 const PAGE_SIZE = 20;
-const WHATSAPP_NUMBER = "5531999999999";
 
 export const metadata: Metadata = {
   title: "Todos os Produtos",
@@ -20,6 +20,8 @@ type PageProps = {
 };
 
 export default async function AllProductsPage({ searchParams }: PageProps) {
+  const settings = await getSiteSettings();
+  const whatsappNumber = (settings as any)?.whatsapp || "5531999999999";
   const { page: pageParam } = await searchParams;
   const page = Math.max(1, parseInt(pageParam ?? "1", 10));
   const offset = (page - 1) * PAGE_SIZE;
@@ -75,7 +77,7 @@ export default async function AllProductsPage({ searchParams }: PageProps) {
               const waMessage = encodeURIComponent(
                 `Ola! Gostaria de saber mais sobre: ${product.name} (Ref: ${product.id})`
               );
-              const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${waMessage}`;
+              const waUrl = `https://wa.me/${whatsappNumber}?text=${waMessage}`;
               const productHref = `/${product.slug}/p`;
               const metaDesc = product.description ?? product.seoDescription;
 
