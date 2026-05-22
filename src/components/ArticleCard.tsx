@@ -18,6 +18,7 @@ type Props = {
   category: { name: string; slug: string };
   author: { name: string };
   publishedAt?: string | null;
+  priority?: boolean;
 };
 
 export function ArticleCard({
@@ -29,6 +30,7 @@ export function ArticleCard({
   category,
   author,
   publishedAt,
+  priority = false,
 }: Props) {
   const imageUrl =
     coverUrl || heroImage?.sizes?.card?.url || heroImage?.url || "/placeholder.svg";
@@ -41,6 +43,8 @@ export function ArticleCard({
             src={imageUrl}
             alt={heroImage?.alt || title}
             fill
+            priority={priority}
+            fetchPriority={priority ? "high" : undefined}
             sizes="(max-width: 768px) 100vw, 33vw"
             className="object-cover transition-transform duration-300 group-hover:scale-105"
           />

@@ -167,7 +167,7 @@ export default async function HomePage() {
         <SectionHeader title="Escolha do Editor" href="/blog" />
         {editorPicks.length > 0 ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {editorPicks.map((post) => {
+            {editorPicks.map((post, idx) => {
               const category = resolveRelation(post.category);
               const author = resolveRelation(post.author);
               const heroImage = resolveRelation(post.heroImage);
@@ -182,6 +182,7 @@ export default async function HomePage() {
                   category={category ?? { name: "Geral", slug: "geral" }}
                   author={author ?? { name: "Redacao" }}
                   publishedAt={post.publishedAt ?? null}
+                  priority={idx === 0}
                 />
               );
             })}
