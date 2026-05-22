@@ -1,104 +1,46 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
-import { categories, authors, posts, tags, siteSettings } from "@/db/schema";
+import {
+  categories, authors, posts, tags, media, products, siteSettings,
+} from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
+import { generateSlug } from "@/lib/slug";
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
+// ── Helpers ─────────────────────────────────────────────────────────────────────
 
-function toTipTapJson(raw: unknown): object {
-  if (typeof raw === "string") {
-    return {
-      type: "doc",
-      content: [
-        { type: "paragraph", content: [{ type: "text", text: raw }] },
-      ],
-    };
-  }
-  if (raw && typeof raw === "object") return raw as object;
-  return { type: "doc", content: [] };
+async function getOrCreateMedia(url: string, alt: string): Promise<number> {
+  const [existing] = await db.select({ id: media.id }).from(media).where(eq(media.supabaseUrl, url)).limit(1);
+  if (existing) return existing.id;
+  const filename = url.split("/").pop() || "image";
+  const [created] = await db.insert(media).values({ supabaseUrl: url, filename, alt, url, createdAt: new Date().toISOString() }).returning({ id: media.id });
+  return created.id;
 }
 
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
+async function getOrCreateAuthor(name: string): Promise<number> {
+  const slug = generateSlug(name);
+  const [existing] = await db.select({ id: authors.id }).from(authors).where(eq(authors.slug, slug)).limit(1);
+  if (existing) return existing.id;
+  const now = new Date().toISOString();
+  const [created] = await db.insert(authors).values({ name, slug, createdAt: now, updatedAt: now }).returning({ id: authors.id });
+  return created.id;
 }
 
-async function resolveCategoryId(ref: unknown): Promise<number | null> {
-  if (!ref) return null;
-  if (typeof ref === "number") {
-    const found = await db.query.categories.findFirst({
-      where: eq(categories.id, ref),
-    });
-    return found?.id ?? null;
-  }
-  const str = String(ref);
-  const bySlug = await db.query.categories.findFirst({
-    where: eq(categories.slug, slugify(str)),
-  });
-  if (bySlug) return bySlug.id;
-  const byName = await db.query.categories.findFirst({
-    where: eq(categories.name, str),
-  });
-  return byName?.id ?? null;
+async function getCategoryLocalId(supabaseId: string): Promise<number | null> {
+  const [row] = await db.select({ id: categories.id }).from(categories).where(eq(categories.supabaseId, supabaseId)).limit(1);
+  return row?.id ?? null;
 }
 
-async function resolveAuthorId(ref: unknown): Promise<number | null> {
-  if (!ref) return null;
-  if (typeof ref === "number") {
-    const found = await db.query.authors.findFirst({
-      where: eq(authors.id, ref),
-    });
-    return found?.id ?? null;
-  }
-  const str = String(ref);
-  const bySlug = await db.query.authors.findFirst({
-    where: eq(authors.slug, slugify(str)),
-  });
-  if (bySlug) return bySlug.id;
-  const byName = await db.query.authors.findFirst({
-    where: eq(authors.name, str),
-  });
-  return byName?.id ?? null;
+// ── Auth ────────────────────────────────────────────────────────────────────────
+
+function verifySecret(request: NextRequest): boolean {
+  const header = request.headers.get("x-supabase-webhook-secret");
+  if (!header) return false;
+  const secret = process.env.SUPABASE_WEBHOOK_SECRET;
+  return !!secret && header === secret;
 }
 
-// ---------------------------------------------------------------------------
-// Verify webhook secret
-// ---------------------------------------------------------------------------
-
-async function verifyWebhookSecret(request: NextRequest): Promise<boolean> {
-  const headerSecret = request.headers.get("x-supabase-webhook-secret");
-  if (!headerSecret) return false;
-
-  // Check env var first
-  if (process.env.SUPABASE_WEBHOOK_SECRET) {
-    return headerSecret === process.env.SUPABASE_WEBHOOK_SECRET;
-  }
-
-  // Fallback: check site_settings for a stored secret (future-proof)
-  return false;
-}
-
-// ---------------------------------------------------------------------------
-// Check if sync is enabled
-// ---------------------------------------------------------------------------
-
-async function isSyncEnabled(): Promise<boolean> {
-  const row = await db.query.siteSettings.findFirst({
-    where: eq(siteSettings.id, 1),
-  });
-  return row?.supabaseSyncEnabled === true;
-}
-
-// ---------------------------------------------------------------------------
-// POST — Receive Supabase Database Webhook
-// ---------------------------------------------------------------------------
+// ── Webhook payload ─────────────────────────────────────────────────────────────
 
 type WebhookPayload = {
   type: "INSERT" | "UPDATE" | "DELETE";
@@ -107,23 +49,11 @@ type WebhookPayload = {
   old_record: Record<string, unknown> | null;
 };
 
-export async function POST(request: NextRequest) {
-  // Verify webhook secret
-  const valid = await verifyWebhookSecret(request);
-  if (!valid) {
-    return NextResponse.json(
-      { error: "Webhook secret invalido" },
-      { status: 401 },
-    );
-  }
+// ── POST handler ────────────────────────────────────────────────────────────────
 
-  // Check if sync is enabled
-  const enabled = await isSyncEnabled();
-  if (!enabled) {
-    return NextResponse.json(
-      { error: "Sincronizacao desativada" },
-      { status: 403 },
-    );
+export async function POST(request: NextRequest) {
+  if (!verifySecret(request)) {
+    return NextResponse.json({ error: "Webhook secret invalido" }, { status: 401 });
   }
 
   try {
@@ -136,34 +66,36 @@ export async function POST(request: NextRequest) {
         revalidateTag("categories");
         break;
 
-      case "authors":
-        await handleAuthor(type, record, old_record);
-        revalidateTag("authors");
+      case "articles":
+        await handleArticle(type, record, old_record);
+        revalidateTag("posts");
         break;
 
-      case "posts":
-        await handlePost(type, record, old_record);
+      case "products":
+        await handleProduct(type, record, old_record);
+        revalidateTag("products");
+        break;
+
+      case "article_tags":
+        await handleArticleTag(type, record, old_record);
         revalidateTag("posts");
         break;
 
       default:
-        return NextResponse.json(
-          { error: `Tabela desconhecida: ${table}` },
-          { status: 400 },
-        );
+        return NextResponse.json({ ignored: true, table }, { status: 200 });
     }
 
-    return NextResponse.json({ received: true });
+    return NextResponse.json({ received: true, table, type });
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Erro no webhook.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("[Webhook supabase-sync]", error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Erro no webhook" },
+      { status: 500 },
+    );
   }
 }
 
-// ---------------------------------------------------------------------------
-// Table handlers
-// ---------------------------------------------------------------------------
+// ── Category handler ────────────────────────────────────────────────────────────
 
 async function handleCategory(
   type: string,
@@ -171,158 +103,203 @@ async function handleCategory(
   old_record: Record<string, unknown> | null,
 ) {
   if (type === "DELETE") {
-    const slug =
-      (old_record?.slug as string) || slugify(old_record?.name as string);
-    if (slug) {
-      const existing = await db.query.categories.findFirst({
-        where: eq(categories.slug, slug),
-      });
-      if (existing) {
-        await db.delete(categories).where(eq(categories.id, existing.id));
-      }
-    }
+    const sbId = old_record?.id as string;
+    if (!sbId) return;
+    const [existing] = await db.select({ id: categories.id }).from(categories).where(eq(categories.supabaseId, sbId)).limit(1);
+    if (existing) await db.delete(categories).where(eq(categories.id, existing.id));
     return;
   }
 
   if (!record) return;
-  const slug = (record.slug as string) || slugify(record.name as string);
+  const sbId = record.id as string;
+  const now = new Date().toISOString();
 
-  await db
-    .insert(categories)
-    .values({
+  const [existing] = await db.select({ id: categories.id }).from(categories).where(eq(categories.supabaseId, sbId)).limit(1);
+  if (existing) {
+    await db.update(categories).set({
       name: record.name as string,
-      slug,
-    })
-    .onConflictDoUpdate({
-      target: categories.slug,
-      set: {
-        name: record.name as string,
-        updatedAt: new Date().toISOString(),
-      },
+      slug: record.slug as string,
+      description: (record.description as string) || null,
+      updatedAt: now,
+    }).where(eq(categories.id, existing.id));
+  } else {
+    await db.insert(categories).values({
+      supabaseId: sbId,
+      name: record.name as string,
+      slug: record.slug as string,
+      description: (record.description as string) || null,
+      createdAt: (record.created_at as string) || now,
+      updatedAt: now,
     });
+  }
 }
 
-async function handleAuthor(
+// ── Article handler ─────────────────────────────────────────────────────────────
+
+async function handleArticle(
   type: string,
   record: Record<string, unknown> | null,
   old_record: Record<string, unknown> | null,
 ) {
   if (type === "DELETE") {
-    const slug =
-      (old_record?.slug as string) || slugify(old_record?.name as string);
-    if (slug) {
-      const existing = await db.query.authors.findFirst({
-        where: eq(authors.slug, slug),
-      });
-      if (existing) {
-        await db.delete(authors).where(eq(authors.id, existing.id));
-      }
+    const sbId = old_record?.id as string;
+    if (!sbId) return;
+    const [existing] = await db.select({ id: posts.id }).from(posts).where(eq(posts.supabaseId, sbId)).limit(1);
+    if (existing) {
+      await db.delete(tags).where(eq(tags.postId, existing.id));
+      await db.delete(posts).where(eq(posts.id, existing.id));
     }
     return;
   }
 
   if (!record) return;
-  const slug = (record.slug as string) || slugify(record.name as string);
+  const sbId = record.id as string;
+  const categoryId = record.category_id ? await getCategoryLocalId(record.category_id as string) : null;
+  const authorId = record.author_name ? await getOrCreateAuthor(record.author_name as string) : null;
+  let heroImageId: number | null = null;
+  if (record.cover_image_url) {
+    heroImageId = await getOrCreateMedia(
+      record.cover_image_url as string,
+      (record.cover_image_alt as string) || (record.title as string),
+    );
+  }
+  const content = record.content ? { type: "doc", _html: record.content as string } : null;
+  const status: "draft" | "published" = record.status === "published" ? "published" : "draft";
 
-  await db
-    .insert(authors)
-    .values({
-      name: record.name as string,
-      slug,
-      bio: (record.bio as string) || null,
-    })
-    .onConflictDoUpdate({
-      target: authors.slug,
-      set: {
-        name: record.name as string,
-        bio: (record.bio as string) || null,
-        updatedAt: new Date().toISOString(),
-      },
+  const postData = {
+    title: record.title as string,
+    slug: record.slug as string,
+    excerpt: (record.excerpt as string) || null,
+    content,
+    categoryId,
+    authorId,
+    heroImageId,
+    coverUrl: (record.cover_image_url as string) || null,
+    metaTitle: (record.meta_title as string) || null,
+    metaDescription: (record.meta_description as string) || null,
+    focusKeyword: (record.focus_keyword as string) || null,
+    secondaryKeywords: (record.secondary_keywords as string) || null,
+    ogTitle: (record.og_title as string) || null,
+    ogDescription: (record.og_description as string) || null,
+    ogImageUrl: (record.og_image_url as string) || null,
+    schemaType: (record.schema_type as string) || null,
+    canonicalUrl: (record.canonical_url as string) || null,
+    wordCount: (record.word_count as number) || null,
+    readingTimeMinutes: (record.reading_time_minutes as number) || null,
+    seoScore: (record.seo_score as number) || null,
+    seoNotes: (record.seo_notes as string) || null,
+    lastSeoReviewAt: (record.last_seo_review_at as string) || null,
+    approvedAt: (record.approved_at as string) || null,
+    status,
+    publishedAt: (record.published_at as string) || (record.published_date as string) || null,
+    updatedAt: (record.updated_at as string) || new Date().toISOString(),
+  };
+
+  const [existing] = await db.select({ id: posts.id }).from(posts).where(eq(posts.supabaseId, sbId)).limit(1);
+  if (existing) {
+    await db.update(posts).set(postData).where(eq(posts.id, existing.id));
+  } else {
+    await db.insert(posts).values({
+      supabaseId: sbId,
+      ...postData,
+      createdAt: (record.created_at as string) || new Date().toISOString(),
     });
+  }
 }
 
-async function handlePost(
+// ── Product handler ─────────────────────────────────────────────────────────────
+
+async function handleProduct(
   type: string,
   record: Record<string, unknown> | null,
   old_record: Record<string, unknown> | null,
 ) {
   if (type === "DELETE") {
-    const slug =
-      (old_record?.slug as string) || slugify(old_record?.title as string);
-    if (slug) {
-      const existing = await db.query.posts.findFirst({
-        where: eq(posts.slug, slug),
-      });
-      if (existing) {
-        await db.delete(tags).where(eq(tags.postId, existing.id));
-        await db.delete(posts).where(eq(posts.id, existing.id));
-      }
-    }
+    const slug = old_record?.slug as string;
+    if (!slug) return;
+    const [existing] = await db.select({ id: products.id }).from(products).where(eq(products.slug, slug)).limit(1);
+    if (existing) await db.delete(products).where(eq(products.id, existing.id));
     return;
   }
 
   if (!record) return;
+  let imageId: number | null = null;
+  if (record.cover_image_url) {
+    imageId = await getOrCreateMedia(
+      record.cover_image_url as string,
+      (record.cover_image_alt as string) || (record.title as string),
+    );
+  }
+  const content = record.content ? { type: "doc", _html: record.content as string } : null;
+  const status: "draft" | "published" = record.status === "published" ? "published" : "draft";
 
-  const categoryRef = record.category_id ?? record.category ?? null;
-  const authorRef = record.author_id ?? record.author ?? null;
-  const categoryId = await resolveCategoryId(categoryRef);
-  const authorId = await resolveAuthorId(authorRef);
-
-  if (!categoryId || !authorId) return;
-
-  const slug = (record.slug as string) || slugify(record.title as string);
-  const content = toTipTapJson(record.content);
-  const status =
-    (record.status as string) === "published" ? "published" : "draft";
-
-  await db
-    .insert(posts)
-    .values({
-      title: record.title as string,
-      slug,
-      excerpt: (record.excerpt as string) || "",
+  const [existing] = await db.select({ id: products.id }).from(products).where(eq(products.slug, record.slug as string)).limit(1);
+  if (existing) {
+    const updateData: Record<string, unknown> = {
+      name: record.title as string,
+      description: (record.excerpt as string) || null,
       content,
-      categoryId,
-      authorId,
-      coverUrl: (record.cover_image_url as string) || null,
+      seoTitle: (record.meta_title as string) || null,
+      seoDescription: (record.meta_description as string) || null,
       status,
-      publishedAt: (record.published_at as string) || null,
-    })
-    .onConflictDoUpdate({
-      target: posts.slug,
-      set: {
-        title: record.title as string,
-        excerpt: (record.excerpt as string) || "",
-        content,
-        categoryId,
-        authorId,
-        coverUrl: (record.cover_image_url as string) || null,
-        status,
-        publishedAt: (record.published_at as string) || null,
-        updatedAt: new Date().toISOString(),
-      },
+      updatedAt: (record.updated_at as string) || new Date().toISOString(),
+    };
+    if (imageId) updateData.imageId = imageId;
+    await db.update(products).set(updateData).where(eq(products.id, existing.id));
+  } else {
+    await db.insert(products).values({
+      name: record.title as string,
+      slug: record.slug as string,
+      description: (record.excerpt as string) || null,
+      content,
+      imageId,
+      seoTitle: (record.meta_title as string) || null,
+      seoDescription: (record.meta_description as string) || null,
+      status,
+      createdAt: (record.created_at as string) || new Date().toISOString(),
+      updatedAt: (record.updated_at as string) || new Date().toISOString(),
     });
+  }
+}
 
-  // Handle tags
-  const existingPost = await db.query.posts.findFirst({
-    where: eq(posts.slug, slug),
+// ── ArticleTag handler ──────────────────────────────────────────────────────────
+
+async function handleArticleTag(
+  type: string,
+  record: Record<string, unknown> | null,
+  old_record: Record<string, unknown> | null,
+) {
+  const data = type === "DELETE" ? old_record : record;
+  if (!data) return;
+
+  const articleSbId = data.article_id as string;
+  const [post] = await db.select({ id: posts.id }).from(posts).where(eq(posts.supabaseId, articleSbId)).limit(1);
+  if (!post) return;
+
+  // Fetch tag name from Supabase
+  const sbUrl = process.env.SUPABASE_URL;
+  const sbKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!sbUrl || !sbKey) return;
+
+  const tagId = data.tag_id as string;
+  const res = await fetch(`${sbUrl}/rest/v1/tags?id=eq.${tagId}&select=name&limit=1`, {
+    headers: { apikey: sbKey, Authorization: `Bearer ${sbKey}` },
   });
+  if (!res.ok) return;
+  const tagRows = await res.json();
+  const tagName = tagRows[0]?.name;
+  if (!tagName) return;
 
-  if (existingPost && record.tags) {
-    await db.delete(tags).where(eq(tags.postId, existingPost.id));
-
-    const tagList: string[] = Array.isArray(record.tags)
-      ? (record.tags as string[])
-      : String(record.tags)
-          .split(",")
-          .map((t: string) => t.trim())
-          .filter(Boolean);
-
-    for (const tag of tagList) {
-      await db.insert(tags).values({
-        postId: existingPost.id,
-        tag,
-      });
+  if (type === "DELETE") {
+    // Remove specific tag
+    const existingTags = await db.select({ id: tags.id, tag: tags.tag }).from(tags).where(eq(tags.postId, post.id));
+    const toDelete = existingTags.find((t) => t.tag === tagName);
+    if (toDelete) await db.delete(tags).where(eq(tags.id, toDelete.id));
+  } else {
+    // Add tag (avoid duplicate)
+    const existingTags = await db.select({ tag: tags.tag }).from(tags).where(eq(tags.postId, post.id));
+    if (!existingTags.some((t) => t.tag === tagName)) {
+      await db.insert(tags).values({ postId: post.id, tag: tagName });
     }
   }
 }
