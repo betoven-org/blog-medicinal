@@ -8,12 +8,13 @@ import {
   integer,
   jsonb,
   pgEnum,
+  uuid,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
 // ── Enums ──────────────────────────────────────────────────────────────────────
 
-export const userRoleEnum = pgEnum("user_role", ["admin", "editor"]);
+export const userRoleEnum = pgEnum("user_role", ["admin", "editor", "author", "viewer"]);
 export const postStatusEnum = pgEnum("post_status", ["draft", "published"]);
 export const subscriptionStatusEnum = pgEnum("subscription_status", [
   "active",
@@ -37,8 +38,10 @@ export const users = pgTable("users", {
 
 export const categories = pgTable("categories", {
   id: serial("id").primaryKey(),
+  supabaseId: uuid("supabase_id").unique(),
   name: varchar("name", { length: 255 }).notNull(),
   slug: varchar("slug", { length: 255 }).notNull().unique(),
+  description: text("description"),
   createdAt: timestamp("created_at", { mode: "string" }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { mode: "string" }).defaultNow().notNull(),
 });
@@ -47,6 +50,7 @@ export const categories = pgTable("categories", {
 
 export const media = pgTable("media", {
   id: serial("id").primaryKey(),
+  supabaseUrl: text("supabase_url").unique(),
   filename: varchar("filename", { length: 255 }).notNull(),
   alt: varchar("alt", { length: 255 }).notNull(),
   url: text("url").notNull(),
@@ -62,6 +66,7 @@ export const media = pgTable("media", {
 
 export const authors = pgTable("authors", {
   id: serial("id").primaryKey(),
+  supabaseId: uuid("supabase_id").unique(),
   name: varchar("name", { length: 255 }).notNull(),
   slug: varchar("slug", { length: 255 }).notNull().unique(),
   bio: text("bio"),
@@ -76,21 +81,88 @@ export const authors = pgTable("authors", {
 
 export const posts = pgTable("posts", {
   id: serial("id").primaryKey(),
+  supabaseId: uuid("supabase_id").unique(),
   title: varchar("title", { length: 500 }).notNull(),
   slug: varchar("slug", { length: 500 }).notNull().unique(),
-  excerpt: text("excerpt").notNull(),
-  content: jsonb("content").notNull(),
-  categoryId: integer("category_id")
-    .notNull()
-    .references(() => categories.id),
-  authorId: integer("author_id")
-    .notNull()
-    .references(() => authors.id),
+  excerpt: text("excerpt"),
+  content: jsonb("content"),
+  categoryId: integer("category_id").references(() => categories.id),
+  authorId: integer("author_id").references(() => authors.id),
   heroImageId: integer("hero_image_id").references(() => media.id, {
     onDelete: "set null",
   }),
   coverUrl: text("cover_url"),
+  metaTitle: varchar("meta_title", { length: 500 }),
+  metaDescription: text("meta_description"),
+  focusKeyword: varchar("focus_keyword", { length: 255 }),
+  secondaryKeywords: text("secondary_keywords"),
+  ogTitle: varchar("og_title", { length: 500 }),
+  ogDescription: text("og_description"),
+  ogImageUrl: text("og_image_url"),
+  schemaType: varchar("schema_type", { length: 100 }),
+  canonicalUrl: text("canonical_url"),
+  wordCount: integer("word_count"),
+  readingTimeMinutes: integer("reading_time_minutes"),
+  seoScore: integer("seo_score"),
+  seoNotes: text("seo_notes"),
+  lastSeoReviewAt: timestamp("last_seo_review_at", { mode: "string" }),
+  approvedAt: timestamp("approved_at", { mode: "string" }),
+  noindex: boolean("noindex").default(false).notNull(),
+  nofollow: boolean("nofollow").default(false).notNull(),
   status: postStatusEnum("status").default("draft").notNull(),
+  featured: boolean("featured").default(false).notNull(),
+  publishedAt: timestamp("published_at", { mode: "string" }),
+  createdAt: timestamp("created_at", { mode: "string" }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { mode: "string" }).defaultNow().notNull(),
+});
+
+// ── Product Categories ──────────────────────────────────────────────────────────
+
+export const productCategories = pgTable("product_categories", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  slug: varchar("slug", { length: 255 }).notNull().unique(),
+  description: text("description"),
+  parentId: integer("parent_id").references((): any => productCategories.id, {
+    onDelete: "set null",
+  }),
+  imageId: integer("image_id").references(() => media.id, {
+    onDelete: "set null",
+  }),
+  sortOrder: integer("sort_order").default(0).notNull(),
+  createdAt: timestamp("created_at", { mode: "string" }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { mode: "string" }).defaultNow().notNull(),
+});
+
+// ── Products ────────────────────────────────────────────────────────────────────
+
+export const productStatusEnum = pgEnum("product_status", ["draft", "published"]);
+
+export const products = pgTable("products", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 500 }).notNull(),
+  slug: varchar("slug", { length: 500 }).notNull().unique(),
+  description: text("description"),
+  content: jsonb("content"),
+  composition: text("composition"),
+  usageInstructions: text("usage_instructions"),
+  whoCanUse: text("who_can_use"),
+  benefits: jsonb("benefits"), // [{title: string, subtitle: string}]
+  differentials: jsonb("differentials"), // string[]
+  productCategoryId: integer("product_category_id").references(
+    () => productCategories.id
+  ),
+  imageId: integer("image_id").references(() => media.id, {
+    onDelete: "set null",
+  }),
+  galleryImages: jsonb("gallery_images"), // number[] (media ids)
+  seoTitle: varchar("seo_title", { length: 500 }),
+  seoDescription: text("seo_description"),
+  brand: varchar("brand", { length: 255 }),
+  isKit: boolean("is_kit").default(false).notNull(),
+  showOnSite: boolean("show_on_site").default(true).notNull(),
+  noindex: boolean("noindex").default(false).notNull(),
+  status: productStatusEnum("product_status").default("draft").notNull(),
   featured: boolean("featured").default(false).notNull(),
   publishedAt: timestamp("published_at", { mode: "string" }),
   createdAt: timestamp("created_at", { mode: "string" }).defaultNow().notNull(),
@@ -132,13 +204,17 @@ export const siteSettings = pgTable("site_settings", {
   instagram: text("instagram"),
   youtube: text("youtube"),
   footerText: text("footer_text"),
-  copyrightText: varchar("copyright_text", { length: 255 }),
+  copyrightText: text("copyright_text"),
   newsletterTitle: varchar("newsletter_title", { length: 255 }),
   newsletterDescription: text("newsletter_description"),
   newsletterConsent: text("newsletter_consent"),
   seoTitle: varchar("seo_title", { length: 255 }),
   seoDescription: text("seo_description"),
   seoKeywords: text("seo_keywords"),
+  privacyPolicy: text("privacy_policy"),
+  robotsIndex: boolean("robots_index").default(true),
+  robotsFollow: boolean("robots_follow").default(true),
+  robotsDisallow: text("robots_disallow").default("/admin,/api"),
   supabaseUrl: text("supabase_url"),
   supabaseAnonKey: text("supabase_anon_key"),
   supabaseServiceRoleKey: text("supabase_service_role_key"),
@@ -202,6 +278,34 @@ export const tagsRelations = relations(tags, ({ one }) => ({
 }));
 
 export const subscribersRelations = relations(subscribers, () => ({}));
+
+export const productCategoriesRelations = relations(
+  productCategories,
+  ({ one, many }) => ({
+    parent: one(productCategories, {
+      fields: [productCategories.parentId],
+      references: [productCategories.id],
+      relationName: "parentChild",
+    }),
+    children: many(productCategories, { relationName: "parentChild" }),
+    image: one(media, {
+      fields: [productCategories.imageId],
+      references: [media.id],
+    }),
+    products: many(products),
+  })
+);
+
+export const productsRelations = relations(products, ({ one }) => ({
+  category: one(productCategories, {
+    fields: [products.productCategoryId],
+    references: [productCategories.id],
+  }),
+  image: one(media, {
+    fields: [products.imageId],
+    references: [media.id],
+  }),
+}));
 
 export const siteSettingsRelations = relations(siteSettings, ({ one }) => ({
   logo: one(media, {

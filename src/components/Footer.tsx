@@ -55,6 +55,12 @@ export async function Footer() {
             {s.copyrightText ||
               "Medicinal na Web. Todos os direitos reservados."}
           </p>
+          <Link
+            href="/politica-de-privacidade"
+            className="text-xs text-gray-500 transition-colors hover:text-gray-700"
+          >
+            Politica de Privacidade
+          </Link>
         </div>
       </div>
     </footer>

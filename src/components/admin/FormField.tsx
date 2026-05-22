@@ -6,7 +6,7 @@ type SelectOption = {
 type Props = {
   label: string;
   name: string;
-  type?: "text" | "email" | "textarea" | "select" | "file" | "checkbox";
+  type?: "text" | "email" | "password" | "textarea" | "select" | "file" | "checkbox";
   value?: string | boolean;
   onChange?: (
     e: React.ChangeEvent<
@@ -33,7 +33,7 @@ export default function FormField({
   description,
 }: Props) {
   const baseInputClasses =
-    "w-full rounded-md border bg-white px-3 py-2 text-sm text-gray-900 shadow-sm transition-colors placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#0d61ac] focus:border-[#0d61ac]";
+    "w-full rounded-md border bg-white px-3 py-2 text-sm text-gray-900 shadow-sm transition-colors placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-ring focus:border-primary";
   const borderClass = error ? "border-red-300" : "border-gray-300";
 
   const inputId = `field-${name}`;
@@ -94,7 +94,7 @@ export default function FormField({
             type="checkbox"
             checked={value as boolean}
             onChange={onChange}
-            className="h-4 w-4 rounded border-gray-300 text-[#0d61ac] focus:ring-[#0d61ac]"
+            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-ring"
             {...ariaProps}
           />
           <label htmlFor={inputId} className="text-sm text-gray-700">
@@ -113,7 +113,7 @@ export default function FormField({
           type="file"
           onChange={onChange}
           required={required}
-          className={`${baseInputClasses} ${borderClass} file:mr-3 file:rounded file:border-0 file:bg-[#0d61ac] file:px-3 file:py-1 file:text-sm file:font-medium file:text-white hover:file:bg-[#0a4f8c]`}
+          className={`${baseInputClasses} ${borderClass} file:mr-3 file:rounded file:border-0 file:bg-primary file:px-3 file:py-1 file:text-sm file:font-medium file:text-white hover:file:bg-primary/90`}
           {...ariaProps}
         />
       );

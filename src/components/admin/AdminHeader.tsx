@@ -1,7 +1,11 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
+import { useState, useRef, useEffect } from "react";
+import { Menu, ChevronRight, ChevronDown, LogOut } from "lucide-react";
+import GlobalSearch from "@/components/admin/GlobalSearch";
 
 type AdminHeaderProps = {
   title: string;
@@ -35,7 +39,6 @@ function getBreadcrumbs(pathname: string) {
       const isLast = i === segments.length - 1;
       crumbs.push({ label, href: isLast ? undefined : path });
     } else if (i >= 2) {
-      // Dynamic [id] segment — show "Editar"
       const isLast = i === segments.length - 1;
       crumbs.push({ label: "Editar", href: isLast ? undefined : undefined });
     }
@@ -46,58 +49,99 @@ function getBreadcrumbs(pathname: string) {
 
 export default function AdminHeader({ title, onToggleSidebar }: AdminHeaderProps) {
   const pathname = usePathname();
+  const { data: session, status } = useSession();
   const crumbs = getBreadcrumbs(pathname);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => { setMounted(true); }, []);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    if (menuOpen) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [menuOpen]);
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center border-b border-gray-200 bg-white px-4 lg:px-6">
-      {/* Mobile hamburger */}
-      <button
-        type="button"
-        onClick={onToggleSidebar}
-        className="mr-3 rounded p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 lg:hidden"
-        aria-label="Abrir menu"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="20"
-          height="20"
-          viewBox="0 0 256 256"
-          fill="currentColor"
-          aria-hidden="true"
+    <header className="sticky top-0 z-30 grid h-14 grid-cols-[1fr_auto_1fr] items-center border-b border-gray-200 bg-white px-4 lg:px-6">
+      <div className="flex items-center">
+        {/* Mobile hamburger */}
+        <button
+          type="button"
+          onClick={onToggleSidebar}
+          className="mr-3 rounded-md p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 lg:hidden"
+          aria-label="Abrir menu"
         >
-          <path d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z" />
-        </svg>
-      </button>
+          <Menu className="size-5" />
+        </button>
 
-      {/* Breadcrumb */}
-      <nav className="flex items-center gap-1.5 text-sm" aria-label="Breadcrumb">
-        {crumbs.map((crumb, i) => (
-          <span key={i} className="flex items-center gap-1.5">
-            {i > 0 && (
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 256 256"
-                fill="currentColor"
-                className="text-gray-400"
-                aria-hidden="true"
+        {/* Breadcrumb */}
+        <nav className="flex items-center gap-1.5 text-sm" aria-label="Breadcrumb">
+          {crumbs.map((crumb, i) => (
+            <span key={i} className="flex items-center gap-1.5">
+              {i > 0 && (
+                <ChevronRight className="size-4 text-gray-400" />
+              )}
+              {crumb.href ? (
+                <Link href={crumb.href} className="text-gray-500 transition-colors hover:text-primary">
+                  {crumb.label}
+                </Link>
+              ) : (
+                <span className="font-semibold text-gray-900">{crumb.label}</span>
+              )}
+            </span>
+          ))}
+        </nav>
+      </div>
+
+      <div className="flex justify-center">
+        <GlobalSearch />
+      </div>
+
+      <div className="flex items-center justify-end gap-3">
+
+        {/* User menu */}
+        {mounted && status === "authenticated" && session?.user && (
+        <div className="relative" ref={menuRef}>
+          <button
+            type="button"
+            onClick={() => setMenuOpen((p) => !p)}
+            className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 transition-colors hover:bg-gray-100"
+          >
+            <div className="text-right hidden sm:block">
+              <p className="text-sm font-medium text-gray-900 leading-tight">{session.user.name || "Usuario"}</p>
+              <p className="text-xs text-gray-500 leading-tight">{session.user.email}</p>
+            </div>
+            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-white">
+              {session.user.name?.charAt(0).toUpperCase() || "U"}
+            </div>
+            <ChevronDown className="size-4 text-gray-400" />
+          </button>
+
+          {menuOpen && (
+            <div className="absolute right-0 top-full mt-1 w-56 rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+              <div className="border-b border-gray-100 px-4 py-2.5 sm:hidden">
+                <p className="text-sm font-medium text-gray-900">{session.user.name || "Usuario"}</p>
+                <p className="text-xs text-gray-500">{session.user.email}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => signOut({ callbackUrl: "/admin/login" })}
+                className="flex w-full items-center gap-2.5 rounded-md px-4 py-2.5 text-sm text-gray-700 transition-colors hover:bg-gray-50"
               >
-                <path d="M181.66,133.66l-80,80a8,8,0,0,1-11.32-11.32L164.69,128,90.34,53.66a8,8,0,0,1,11.32-11.32l80,80A8,8,0,0,1,181.66,133.66Z" />
-              </svg>
-            )}
-            {crumb.href ? (
-              <Link
-                href={crumb.href}
-                className="text-gray-500 transition-colors hover:text-[#0d61ac]"
-              >
-                {crumb.label}
-              </Link>
-            ) : (
-              <span className="font-semibold text-gray-900">{crumb.label}</span>
-            )}
-          </span>
-        ))}
-      </nav>
+                <LogOut className="size-4" />
+                Sair do sistema
+              </button>
+            </div>
+          )}
+        </div>
+        )}
+      </div>
     </header>
   );
 }

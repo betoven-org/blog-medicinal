@@ -11,6 +11,14 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "*.public.blob.vercel-storage.com",
       },
+      {
+        protocol: "https",
+        hostname: "medicinalnaweb.vteximg.com.br",
+      },
+      {
+        protocol: "https",
+        hostname: "medicinalnaweb.vtexassets.com",
+      },
     ],
   },
   async headers() {

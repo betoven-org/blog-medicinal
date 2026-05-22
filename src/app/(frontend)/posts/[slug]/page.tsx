@@ -19,23 +19,30 @@ export async function generateMetadata({ params }: Props) {
   if (!post) return { title: "Post nao encontrado" };
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
   const heroImage = typeof post.heroImage === "object" ? post.heroImage : null;
-  const ogImageUrl = post.coverUrl || heroImage?.url || null;
+  const ogImageUrl = post.ogImageUrl || post.coverUrl || heroImage?.url || null;
+  const title = post.metaTitle || post.title;
+  const description = post.metaDescription || post.excerpt;
   return {
-    title: post.title,
-    description: post.excerpt,
-    alternates: { canonical: `${baseUrl}/posts/${post.slug}` },
+    title,
+    description,
+    keywords: post.secondaryKeywords || post.focusKeyword || undefined,
+    alternates: { canonical: post.canonicalUrl || `${baseUrl}/posts/${post.slug}` },
     openGraph: {
-      title: post.title,
-      description: post.excerpt,
+      title: post.ogTitle || title,
+      description: post.ogDescription || description,
       type: "article",
       publishedTime: post.publishedAt ?? undefined,
-      authors: [typeof post.author === "object" ? post.author?.name : "Redação"],
+      authors: [typeof post.author === "object" ? post.author?.name : "Redacao"],
       images: ogImageUrl ? [{ url: ogImageUrl, alt: heroImage?.alt || post.title }] : [],
     },
     twitter: {
       card: "summary_large_image",
-      title: post.title,
-      description: post.excerpt,
+      title: post.ogTitle || title,
+      description: post.ogDescription || description,
+    },
+    robots: {
+      index: !post.noindex,
+      follow: !post.nofollow,
     },
   };
 }
@@ -72,22 +79,32 @@ export default async function PostPage({ params }: Props) {
     : await getLatestPosts(4);
   const relatedPosts = related.docs.filter((p) => p.id !== post.id).slice(0, 3);
 
+  const schemaType = post.schemaType || "Article";
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "Article",
+    "@type": schemaType,
     headline: post.title,
-    description: post.excerpt,
+    description: post.metaDescription || post.excerpt,
     datePublished: post.publishedAt,
     dateModified: post.updatedAt,
     author: {
       "@type": "Person",
-      name: author?.name || "Redação",
+      name: author?.name || "Redacao",
     },
     publisher: {
       "@type": "Organization",
       name: "Medicinal na Web",
+      url: baseUrl,
     },
-    ...(imageUrl ? { image: imageUrl } : {}),
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": postUrl,
+    },
+    ...(imageUrl ? { image: { "@type": "ImageObject", url: imageUrl } } : {}),
+    ...(post.wordCount ? { wordCount: post.wordCount } : {}),
+    ...(post.focusKeyword ? { keywords: post.focusKeyword } : {}),
+    ...(categoryName ? { articleSection: categoryName } : {}),
+    inLanguage: "pt-BR",
   };
 
   return (

@@ -30,7 +30,7 @@ function ToolbarButton({
       title={title}
       className={`inline-flex items-center justify-center rounded p-1.5 transition-colors ${
         active
-          ? "bg-[#0d61ac] text-white"
+          ? "bg-primary text-primary-foreground"
           : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
       }`}
     >

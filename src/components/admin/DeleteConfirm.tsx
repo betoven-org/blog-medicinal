@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useCallback } from "react";
+import { Button } from "@/components/ui/button";
 
 type DeleteConfirmProps = {
   open: boolean;
@@ -75,23 +76,25 @@ export default function DeleteConfirm({
         <p className="mb-6 text-center text-sm text-gray-500">{description}</p>
 
         <div className="flex gap-3">
-          <button
+          <Button
             type="button"
+            variant="outline"
+            className="flex-1"
             onClick={onClose}
-            className="flex-1 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
           >
             Cancelar
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="destructive"
+            className="flex-1"
             onClick={() => {
               onConfirm();
               onClose();
             }}
-            className="flex-1 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
           >
             Excluir
-          </button>
+          </Button>
         </div>
       </div>
     </div>

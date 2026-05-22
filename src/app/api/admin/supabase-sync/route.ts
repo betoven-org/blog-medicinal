@@ -1,307 +1,264 @@
-import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import {
-  siteSettings,
-  categories,
-  authors,
-  posts,
-  tags,
+  categories, authors, posts, tags, media, products, productCategories,
 } from "@/db/schema";
-import { eq } from "drizzle-orm";
-import { revalidateTag } from "next/cache";
-import { createClient } from "@supabase/supabase-js";
+import { eq, sql } from "drizzle-orm";
+import { NextResponse } from "next/server";
+import { generateSlug } from "@/lib/slug";
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
+const SB_URL = "https://hsixbybpwvhvkwxeaxup.supabase.co/rest/v1";
+const SB_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhzaXhieWJwd3Zodmt3eGVheHVwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODgzODM4MywiZXhwIjoyMDk0NDE0MzgzfQ.l7oo_w-6ZSn-1kxwr88FTHBnepaHcr9G3e38VOXozv0";
 
-function toTipTapJson(raw: unknown): object {
-  if (typeof raw === "string") {
-    return {
-      type: "doc",
-      content: [
-        { type: "paragraph", content: [{ type: "text", text: raw }] },
-      ],
-    };
+function sbHeaders() {
+  return { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` };
+}
+
+async function sbFetchAll<T>(table: string, orderCol = "created_at"): Promise<T[]> {
+  const all: T[] = [];
+  let offset = 0;
+  const limit = 1000;
+  while (true) {
+    const res = await fetch(
+      `${SB_URL}/${table}?offset=${offset}&limit=${limit}&order=${orderCol}.asc`,
+      { headers: sbHeaders() }
+    );
+    if (!res.ok) throw new Error(`Failed to fetch ${table}: ${res.status}`);
+    const rows = (await res.json()) as T[];
+    all.push(...rows);
+    if (rows.length < limit) break;
+    offset += limit;
   }
-  if (raw && typeof raw === "object") return raw as object;
-  return { type: "doc", content: [] };
+  return all;
 }
 
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
+type SbCategory = { id: string; name: string; slug: string; description: string | null; created_at: string };
+type SbTag = { id: string; name: string; slug: string };
+type SbArticle = {
+  id: string; title: string; slug: string; excerpt: string | null; content: string | null;
+  cover_image_url: string | null; cover_image_alt: string | null; published_date: string | null;
+  author_name: string | null; category_id: string | null; meta_title: string | null;
+  meta_description: string | null; focus_keyword: string | null; secondary_keywords: string | null;
+  og_title: string | null; og_description: string | null; og_image_url: string | null;
+  schema_type: string | null; canonical_url: string | null;
+  word_count: number | null; reading_time_minutes: number | null;
+  seo_score: number | null; seo_notes: string | null; last_seo_review_at: string | null;
+  status: string; created_at: string; updated_at: string;
+  published_at: string | null; approved_at: string | null;
+};
+type SbArticleTag = { article_id: string; tag_id: string };
+type SbProduct = {
+  id: string; title: string; slug: string; excerpt: string | null; content: string | null;
+  cover_image_url: string | null; cover_image_alt: string | null; author_name: string | null;
+  category_id: string | null; meta_title: string | null; meta_description: string | null;
+  focus_keyword: string | null; word_count: number | null; reading_time_minutes: number | null;
+  status: string; created_at: string; updated_at: string;
+};
+
+async function getOrCreateMedia(url: string, alt: string): Promise<number> {
+  const [existing] = await db.select({ id: media.id }).from(media).where(eq(media.supabaseUrl, url)).limit(1);
+  if (existing) return existing.id;
+  const filename = url.split("/").pop() || "image";
+  const [created] = await db.insert(media).values({ supabaseUrl: url, filename, alt, url, createdAt: new Date().toISOString() }).returning({ id: media.id });
+  return created.id;
 }
 
-async function getSupabaseSettings() {
-  const row = await db.query.siteSettings.findFirst({
-    where: eq(siteSettings.id, 1),
-  });
-  if (!row?.supabaseUrl || !row?.supabaseServiceRoleKey) {
-    return null;
-  }
-  return {
-    url: row.supabaseUrl,
-    serviceRoleKey: row.supabaseServiceRoleKey,
-  };
+async function getOrCreateAuthor(name: string): Promise<number> {
+  const slug = generateSlug(name);
+  const [existing] = await db.select({ id: authors.id }).from(authors).where(eq(authors.slug, slug)).limit(1);
+  if (existing) return existing.id;
+  const now = new Date().toISOString();
+  const [created] = await db.insert(authors).values({ name, slug, createdAt: now, updatedAt: now }).returning({ id: authors.id });
+  return created.id;
 }
 
-// ---------------------------------------------------------------------------
-// Resolve category / author by flexible reference (id, name, slug)
-// ---------------------------------------------------------------------------
-
-async function resolveCategoryId(
-  ref: unknown,
-): Promise<number | null> {
-  if (!ref) return null;
-
-  if (typeof ref === "number") {
-    const found = await db.query.categories.findFirst({
-      where: eq(categories.id, ref),
-    });
-    return found?.id ?? null;
-  }
-
-  const str = String(ref);
-  // Try by slug first, then by name
-  const bySlug = await db.query.categories.findFirst({
-    where: eq(categories.slug, slugify(str)),
-  });
-  if (bySlug) return bySlug.id;
-
-  const byName = await db.query.categories.findFirst({
-    where: eq(categories.name, str),
-  });
-  return byName?.id ?? null;
-}
-
-async function resolveAuthorId(
-  ref: unknown,
-): Promise<number | null> {
-  if (!ref) return null;
-
-  if (typeof ref === "number") {
-    const found = await db.query.authors.findFirst({
-      where: eq(authors.id, ref),
-    });
-    return found?.id ?? null;
-  }
-
-  const str = String(ref);
-  const bySlug = await db.query.authors.findFirst({
-    where: eq(authors.slug, slugify(str)),
-  });
-  if (bySlug) return bySlug.id;
-
-  const byName = await db.query.authors.findFirst({
-    where: eq(authors.name, str),
-  });
-  return byName?.id ?? null;
-}
-
-// ---------------------------------------------------------------------------
-// POST — Full sync from client Supabase → Neon
-// ---------------------------------------------------------------------------
+// ── SSE Sync ─────────────────────────────────────────────────────────────────
 
 export async function POST() {
   const session = await auth();
   if (!session?.user)
     return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
 
-  const config = await getSupabaseSettings();
-  if (!config)
-    return NextResponse.json(
-      { error: "Credenciais do Supabase nao configuradas." },
-      { status: 400 },
-    );
-
-  try {
-    const supabase = createClient(config.url, config.serviceRoleKey);
-
-    // 1. Sync categories
-    const { data: sbCategories, error: catErr } = await supabase
-      .from("categories")
-      .select("*");
-
-    if (catErr) throw new Error(`Erro ao buscar categories: ${catErr.message}`);
-
-    let categoriesSynced = 0;
-    for (const cat of sbCategories ?? []) {
-      const slug = cat.slug || slugify(cat.name);
-      await db
-        .insert(categories)
-        .values({
-          name: cat.name,
-          slug,
-        })
-        .onConflictDoUpdate({
-          target: categories.slug,
-          set: {
-            name: cat.name,
-            updatedAt: new Date().toISOString(),
-          },
-        });
-      categoriesSynced++;
-    }
-
-    // 2. Sync authors
-    const { data: sbAuthors, error: authErr } = await supabase
-      .from("authors")
-      .select("*");
-
-    if (authErr) throw new Error(`Erro ao buscar authors: ${authErr.message}`);
-
-    let authorsSynced = 0;
-    for (const author of sbAuthors ?? []) {
-      const slug = author.slug || slugify(author.name);
-      await db
-        .insert(authors)
-        .values({
-          name: author.name,
-          slug,
-          bio: author.bio || null,
-        })
-        .onConflictDoUpdate({
-          target: authors.slug,
-          set: {
-            name: author.name,
-            bio: author.bio || null,
-            updatedAt: new Date().toISOString(),
-          },
-        });
-      authorsSynced++;
-    }
-
-    // 3. Sync posts
-    const { data: sbPosts, error: postErr } = await supabase
-      .from("posts")
-      .select("*");
-
-    if (postErr) throw new Error(`Erro ao buscar posts: ${postErr.message}`);
-
-    let postsSynced = 0;
-    for (const post of sbPosts ?? []) {
-      const categoryRef = post.category_id ?? post.category ?? null;
-      const authorRef = post.author_id ?? post.author ?? null;
-
-      const categoryId = await resolveCategoryId(categoryRef);
-      const authorId = await resolveAuthorId(authorRef);
-
-      if (!categoryId || !authorId) {
-        // Skip posts with unresolvable references
-        continue;
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream({
+    async start(controller) {
+      function send(data: Record<string, unknown>) {
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
       }
 
-      const slug = post.slug || slugify(post.title);
-      const content = toTipTapJson(post.content);
-      const status = post.status === "published" ? "published" : "draft";
+      try {
+        // Step 1: Fetch from Supabase
+        send({ step: "fetch", label: "Buscando dados do Supabase...", progress: 5 });
 
-      await db
-        .insert(posts)
-        .values({
-          title: post.title,
-          slug,
-          excerpt: post.excerpt || "",
-          content,
-          categoryId,
-          authorId,
-          coverUrl: post.cover_image_url || null,
-          status,
-          publishedAt: post.published_at || null,
-        })
-        .onConflictDoUpdate({
-          target: posts.slug,
-          set: {
-            title: post.title,
-            excerpt: post.excerpt || "",
-            content,
-            categoryId,
-            authorId,
-            coverUrl: post.cover_image_url || null,
-            status,
-            publishedAt: post.published_at || null,
-            updatedAt: new Date().toISOString(),
-          },
-        });
+        const [sbCategories, sbTags, sbArticles, sbArticleTags, sbProducts] =
+          await Promise.all([
+            sbFetchAll<SbCategory>("categories"),
+            sbFetchAll<SbTag>("tags"),
+            sbFetchAll<SbArticle>("articles"),
+            sbFetchAll<SbArticleTag>("article_tags", "article_id"),
+            sbFetchAll<SbProduct>("products"),
+          ]);
 
-      // Sync tags for this post
-      if (post.tags) {
-        // Get the post ID
-        const existingPost = await db.query.posts.findFirst({
-          where: eq(posts.slug, slug),
-        });
+        const totalItems = sbCategories.length + sbArticles.length + sbProducts.length;
+        send({ step: "fetch_done", label: `${totalItems} itens encontrados`, progress: 15 });
 
-        if (existingPost) {
-          // Clear existing tags
-          await db.delete(tags).where(eq(tags.postId, existingPost.id));
+        const now = new Date().toISOString();
+        let catCreated = 0, catUpdated = 0;
+        let postCreated = 0, postUpdated = 0;
+        let tagsCreated = 0;
+        let prodCreated = 0, prodUpdated = 0;
 
-          // Parse tags (array or comma-separated string)
-          const tagList: string[] = Array.isArray(post.tags)
-            ? post.tags
-            : String(post.tags)
-                .split(",")
-                .map((t: string) => t.trim())
-                .filter(Boolean);
-
-          for (const tag of tagList) {
-            await db.insert(tags).values({
-              postId: existingPost.id,
-              tag,
-            });
+        // Step 2: Categories
+        send({ step: "categories", label: `Sincronizando ${sbCategories.length} categorias...`, progress: 20 });
+        const catMap = new Map<string, number>();
+        for (const sc of sbCategories) {
+          const [existing] = await db.select({ id: categories.id }).from(categories).where(eq(categories.supabaseId, sc.id)).limit(1);
+          if (existing) {
+            await db.update(categories).set({ name: sc.name, slug: sc.slug, description: sc.description, updatedAt: now }).where(eq(categories.id, existing.id));
+            catMap.set(sc.id, existing.id);
+            catUpdated++;
+          } else {
+            const [row] = await db.insert(categories).values({ supabaseId: sc.id, name: sc.name, slug: sc.slug, description: sc.description, createdAt: sc.created_at, updatedAt: now }).returning({ id: categories.id });
+            catMap.set(sc.id, row.id);
+            catCreated++;
           }
         }
+        send({ step: "categories_done", label: `Categorias: ${catCreated} novas, ${catUpdated} atualizadas`, progress: 30 });
+
+        // Step 3: Posts
+        send({ step: "posts", label: `Sincronizando ${sbArticles.length} posts...`, progress: 35 });
+        const postMap = new Map<string, number>();
+        for (let i = 0; i < sbArticles.length; i++) {
+          const sa = sbArticles[i];
+          const categoryId = sa.category_id ? catMap.get(sa.category_id) ?? null : null;
+          const authorId = sa.author_name ? await getOrCreateAuthor(sa.author_name) : null;
+          let heroImageId: number | null = null;
+          if (sa.cover_image_url) heroImageId = await getOrCreateMedia(sa.cover_image_url, sa.cover_image_alt || sa.title);
+          const content = sa.content ? { type: "doc", _html: sa.content } : null;
+          const status = sa.status === "published" ? "published" : "draft";
+
+          const [existing] = await db.select({ id: posts.id }).from(posts).where(eq(posts.supabaseId, sa.id)).limit(1);
+          const postData = {
+            title: sa.title, slug: sa.slug, excerpt: sa.excerpt, content, categoryId, authorId,
+            heroImageId, coverUrl: sa.cover_image_url, metaTitle: sa.meta_title,
+            metaDescription: sa.meta_description, focusKeyword: sa.focus_keyword,
+            secondaryKeywords: sa.secondary_keywords, ogTitle: sa.og_title,
+            ogDescription: sa.og_description, ogImageUrl: sa.og_image_url,
+            schemaType: sa.schema_type, canonicalUrl: sa.canonical_url,
+            wordCount: sa.word_count, readingTimeMinutes: sa.reading_time_minutes,
+            seoScore: sa.seo_score, seoNotes: sa.seo_notes,
+            lastSeoReviewAt: sa.last_seo_review_at, approvedAt: sa.approved_at,
+            status, publishedAt: sa.published_at || sa.published_date || null,
+            updatedAt: sa.updated_at,
+          };
+
+          if (existing) {
+            await db.update(posts).set(postData).where(eq(posts.id, existing.id));
+            postMap.set(sa.id, existing.id);
+            postUpdated++;
+          } else {
+            const [row] = await db.insert(posts).values({
+              supabaseId: sa.id, ...postData, createdAt: sa.created_at,
+            }).returning({ id: posts.id });
+            postMap.set(sa.id, row.id);
+            postCreated++;
+          }
+
+          // Progress every 10 posts
+          if ((i + 1) % 10 === 0 || i === sbArticles.length - 1) {
+            const pct = 35 + Math.round(((i + 1) / sbArticles.length) * 30);
+            send({ step: "posts_progress", label: `Posts: ${i + 1}/${sbArticles.length}`, progress: pct });
+          }
+        }
+        send({ step: "posts_done", label: `Posts: ${postCreated} novos, ${postUpdated} atualizados`, progress: 65 });
+
+        // Step 4: Tags
+        send({ step: "tags", label: "Sincronizando tags...", progress: 70 });
+        const tagNameMap = new Map<string, string>();
+        for (const st of sbTags) tagNameMap.set(st.id, st.name);
+        for (const [sbId, localId] of postMap) {
+          await db.delete(tags).where(eq(tags.postId, localId));
+          const postTags = sbArticleTags.filter((at) => at.article_id === sbId);
+          for (const at of postTags) {
+            const tagName = tagNameMap.get(at.tag_id);
+            if (tagName) { await db.insert(tags).values({ postId: localId, tag: tagName }); tagsCreated++; }
+          }
+        }
+        send({ step: "tags_done", label: `${tagsCreated} tags vinculadas`, progress: 75 });
+
+        // Step 5: Products
+        send({ step: "products", label: `Sincronizando ${sbProducts.length} produtos...`, progress: 78 });
+        for (let i = 0; i < sbProducts.length; i++) {
+          const sp = sbProducts[i];
+          let imageId: number | null = null;
+          if (sp.cover_image_url) imageId = await getOrCreateMedia(sp.cover_image_url, sp.cover_image_alt || sp.title);
+          const content = sp.content ? { type: "doc", _html: sp.content } : null;
+          const status = sp.status === "published" ? "published" : "draft";
+
+          const [existing] = await db.select({ id: products.id }).from(products).where(eq(products.slug, sp.slug)).limit(1);
+          if (existing) {
+            const updateData: Record<string, unknown> = {
+              name: sp.title, description: sp.excerpt, content,
+              seoTitle: sp.meta_title, seoDescription: sp.meta_description,
+              status, updatedAt: sp.updated_at,
+            };
+            if (imageId) updateData.imageId = imageId;
+            await db.update(products).set(updateData).where(eq(products.id, existing.id));
+            prodUpdated++;
+          } else {
+            await db.insert(products).values({
+              name: sp.title, slug: sp.slug, description: sp.excerpt, content, imageId,
+              seoTitle: sp.meta_title, seoDescription: sp.meta_description,
+              status, createdAt: sp.created_at, updatedAt: sp.updated_at,
+            });
+            prodCreated++;
+          }
+
+          if ((i + 1) % 10 === 0 || i === sbProducts.length - 1) {
+            const pct = 78 + Math.round(((i + 1) / sbProducts.length) * 20);
+            send({ step: "products_progress", label: `Produtos: ${i + 1}/${sbProducts.length}`, progress: pct });
+          }
+        }
+
+        send({
+          step: "done", label: "Sincronizacao concluida", progress: 100,
+          result: {
+            categories: { created: catCreated, updated: catUpdated },
+            posts: { created: postCreated, updated: postUpdated },
+            tags: tagsCreated,
+            products: { created: prodCreated, updated: prodUpdated },
+          },
+        });
+      } catch (error) {
+        send({ step: "error", label: error instanceof Error ? error.message : "Erro na sincronizacao", progress: -1 });
+      } finally {
+        controller.close();
       }
+    },
+  });
 
-      postsSynced++;
-    }
-
-    revalidateTag("posts");
-    revalidateTag("categories");
-    revalidateTag("authors");
-
-    return NextResponse.json({
-      synced: {
-        posts: postsSynced,
-        categories: categoriesSynced,
-        authors: authorsSynced,
-      },
-    });
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Erro desconhecido na sincronizacao.";
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+    },
+  });
 }
 
-// ---------------------------------------------------------------------------
-// DELETE — Clear all content data from Neon
-// ---------------------------------------------------------------------------
-
 export async function DELETE() {
-  const session = await auth();
-  if (!session?.user)
-    return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
-
   try {
-    // Delete in FK-safe order: tags → posts → authors → categories
-    await db.delete(tags);
-    await db.delete(posts);
-    await db.delete(authors);
-    await db.delete(categories);
+    const session = await auth();
+    if (!session?.user)
+      return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
 
-    revalidateTag("posts");
-    revalidateTag("categories");
-    revalidateTag("authors");
+    await db.execute(sql`UPDATE site_settings SET logo_id = NULL, favicon_id = NULL`);
+    await db.execute(sql`TRUNCATE TABLE tags, posts, categories, products, product_categories, authors, media RESTART IDENTITY CASCADE`);
 
-    return NextResponse.json({ cleared: true });
+    return NextResponse.json({ message: "Todos os dados de conteudo limpos" });
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Erro ao limpar dados.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("[DELETE /api/admin/supabase-sync]", error);
+    return NextResponse.json({ error: "Erro ao limpar dados" }, { status: 500 });
   }
 }

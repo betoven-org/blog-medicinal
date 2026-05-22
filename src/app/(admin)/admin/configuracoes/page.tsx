@@ -31,6 +31,10 @@ type Settings = {
   seoTitle: string;
   seoDescription: string;
   seoKeywords: string;
+  privacyPolicy: string;
+  robotsIndex: boolean;
+  robotsFollow: boolean;
+  robotsDisallow: string;
   supabaseUrl: string;
   supabaseAnonKey: string;
   supabaseServiceRoleKey: string;
@@ -53,6 +57,10 @@ const EMPTY_SETTINGS: Settings = {
   seoTitle: "",
   seoDescription: "",
   seoKeywords: "",
+  privacyPolicy: "",
+  robotsIndex: true,
+  robotsFollow: true,
+  robotsDisallow: "/admin,/api",
   supabaseUrl: "",
   supabaseAnonKey: "",
   supabaseServiceRoleKey: "",
@@ -65,6 +73,7 @@ const TABS = [
   { key: "footer", label: "Footer" },
   { key: "newsletter", label: "Newsletter" },
   { key: "seo", label: "SEO" },
+  { key: "paginas", label: "Paginas" },
   { key: "supabase", label: "Supabase" },
   { key: "assinatura", label: "Assinatura" },
 ] as const;
@@ -81,11 +90,9 @@ export default function ConfiguracoesPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [syncing, setSyncing] = useState(false);
-  const [syncResult, setSyncResult] = useState<{
-    posts: number;
-    categories: number;
-    authors: number;
-  } | null>(null);
+  const [syncProgress, setSyncProgress] = useState(0);
+  const [syncLabel, setSyncLabel] = useState("");
+  const [syncResult, setSyncResult] = useState<Record<string, unknown> | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
   const [lastSyncAt, setLastSyncAt] = useState<string | null>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
@@ -115,6 +122,10 @@ export default function ConfiguracoesPage() {
           seoTitle: json.seoTitle || "",
           seoDescription: json.seoDescription || "",
           seoKeywords: json.seoKeywords || "",
+          privacyPolicy: json.privacyPolicy || "",
+          robotsIndex: json.robotsIndex ?? true,
+          robotsFollow: json.robotsFollow ?? true,
+          robotsDisallow: json.robotsDisallow || "/admin,/api",
           supabaseUrl: json.supabaseUrl || "",
           supabaseAnonKey: json.supabaseAnonKey || "",
           supabaseServiceRoleKey: json.supabaseServiceRoleKey || "",
@@ -148,12 +159,46 @@ export default function ConfiguracoesPage() {
     setSyncing(true);
     setSyncResult(null);
     setSyncError(null);
+    setSyncProgress(0);
+    setSyncLabel("Iniciando...");
     try {
       const res = await fetch("/api/admin/supabase-sync", { method: "POST" });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Erro na sincronizacao.");
-      setSyncResult(data.synced);
-      setLastSyncAt(new Date().toLocaleString("pt-BR"));
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Erro na sincronizacao.");
+      }
+
+      const reader = res.body?.getReader();
+      if (!reader) throw new Error("Stream nao disponivel");
+
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          const match = line.match(/^data: (.+)$/m);
+          if (!match) continue;
+          try {
+            const event = JSON.parse(match[1]);
+            if (event.progress >= 0) setSyncProgress(event.progress);
+            if (event.label) setSyncLabel(event.label);
+            if (event.step === "done") {
+              setSyncResult(event.result);
+              setLastSyncAt(new Date().toLocaleString("pt-BR"));
+            }
+            if (event.step === "error") {
+              setSyncError(event.label);
+            }
+          } catch { /* ignore parse errors */ }
+        }
+      }
     } catch (err) {
       setSyncError(err instanceof Error ? err.message : "Erro desconhecido.");
     } finally {
@@ -161,16 +206,21 @@ export default function ConfiguracoesPage() {
     }
   };
 
+  const [clearSuccess, setClearSuccess] = useState(false);
+
   const handleClearContent = async () => {
     setClearing(true);
     setSyncError(null);
     setSyncResult(null);
+    setClearSuccess(false);
     try {
       const res = await fetch("/api/admin/supabase-sync", { method: "DELETE" });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Erro ao limpar dados.");
       setSyncResult(null);
       setLastSyncAt(null);
+      setClearSuccess(true);
+      setTimeout(() => setClearSuccess(false), 5000);
     } catch (err) {
       setSyncError(err instanceof Error ? err.message : "Erro desconhecido.");
     } finally {
@@ -407,6 +457,69 @@ export default function ConfiguracoesPage() {
               placeholder="saude, plantas medicinais, suplementos, nutricao"
               description="Separe as palavras-chave por virgula."
             />
+
+            <div className="border-t border-gray-200 pt-6">
+              <h3 className="mb-4 text-sm font-semibold text-gray-900">Robots (Indexacao)</h3>
+              <div className="space-y-4">
+                <FormField
+                  label="Permitir indexacao (index)"
+                  name="robotsIndex"
+                  type="checkbox"
+                  value={settings.robotsIndex}
+                  onChange={handleChange}
+                  description="Quando desativado, o site inteiro sera bloqueado dos motores de busca."
+                />
+                <FormField
+                  label="Permitir seguir links (follow)"
+                  name="robotsFollow"
+                  type="checkbox"
+                  value={settings.robotsFollow}
+                  onChange={handleChange}
+                  description="Quando desativado, bots nao seguirao links nas paginas."
+                />
+                <FormField
+                  label="Caminhos bloqueados (disallow)"
+                  name="robotsDisallow"
+                  value={settings.robotsDisallow}
+                  onChange={handleChange}
+                  placeholder="/admin,/api"
+                  description="Caminhos separados por virgula que devem ser bloqueados no robots.txt"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tab: Paginas */}
+        {activeTab === "paginas" && (
+          <div className="space-y-6">
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                Politica de Privacidade
+              </label>
+              <p className="mb-3 text-xs text-gray-500">
+                Cole o conteudo HTML da sua politica de privacidade. Ele sera exibido na pagina /politica-de-privacidade.
+              </p>
+              <textarea
+                name="privacyPolicy"
+                value={settings.privacyPolicy}
+                onChange={handleChange}
+                rows={20}
+                placeholder="<h2>Politica de Privacidade</h2><p>Seu conteudo aqui...</p>"
+                className="w-full rounded-md border bg-card px-3 py-2 font-mono text-xs shadow-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30"
+              />
+              {settings.privacyPolicy && (
+                <details className="mt-3">
+                  <summary className="cursor-pointer text-xs font-medium text-[#0d61ac] hover:underline">
+                    Preview do conteudo
+                  </summary>
+                  <div
+                    className="prose prose-sm mt-2 max-w-none rounded-md border bg-white p-4"
+                    dangerouslySetInnerHTML={{ __html: settings.privacyPolicy }}
+                  />
+                </details>
+              )}
+            </div>
           </div>
         )}
 
@@ -431,6 +544,7 @@ export default function ConfiguracoesPage() {
             <FormField
               label="Anon Key"
               name="supabaseAnonKey"
+              type="password"
               value={settings.supabaseAnonKey}
               onChange={handleChange}
               placeholder="eyJhbGciOi..."
@@ -438,6 +552,7 @@ export default function ConfiguracoesPage() {
             <FormField
               label="Service Role Key"
               name="supabaseServiceRoleKey"
+              type="password"
               value={settings.supabaseServiceRoleKey}
               onChange={handleChange}
               placeholder="eyJhbGciOi..."
@@ -543,35 +658,42 @@ export default function ConfiguracoesPage() {
                 </button>
               </div>
 
+              {/* Sync progress */}
+              {syncing && (
+                <div className="mt-4 rounded-md border border-[#0d61ac]/20 bg-[#0d61ac]/5 p-4">
+                  <div className="mb-2 flex items-center justify-between text-sm">
+                    <span className="font-medium text-gray-700">{syncLabel}</span>
+                    <span className="text-xs font-semibold text-[#0d61ac]">{syncProgress}%</span>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full bg-gray-200">
+                    <div
+                      className="h-full rounded-full bg-[#0d61ac] transition-all duration-300"
+                      style={{ width: `${syncProgress}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+
               {/* Sync result */}
-              {syncResult && (
+              {syncResult && !syncing && (
                 <div className="mt-4 rounded-md border border-green-200 bg-green-50 p-4">
                   <div className="flex items-center gap-2 text-sm font-medium text-green-800">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="16"
-                      height="16"
-                      viewBox="0 0 256 256"
-                      fill="currentColor"
-                      aria-hidden="true"
-                    >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true">
                       <path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z" />
                     </svg>
                     Sincronizacao concluida
                   </div>
-                  <div className="mt-2 grid grid-cols-3 gap-4 text-sm text-green-700">
-                    <div>
-                      <span className="font-semibold">{syncResult.categories}</span>{" "}
-                      categorias
-                    </div>
-                    <div>
-                      <span className="font-semibold">{syncResult.authors}</span>{" "}
-                      autores
-                    </div>
-                    <div>
-                      <span className="font-semibold">{syncResult.posts}</span>{" "}
-                      posts
-                    </div>
+                  <div className="mt-3 grid grid-cols-2 gap-3 text-sm text-green-700 sm:grid-cols-4">
+                    {Object.entries(syncResult).map(([key, val]) => (
+                      <div key={key} className="rounded-md bg-white/60 px-3 py-2">
+                        <p className="text-xs text-green-600 capitalize">{key}</p>
+                        <p className="font-semibold">
+                          {typeof val === "object" && val !== null
+                            ? `${(val as any).created || 0} novos, ${(val as any).updated || 0} atualizados`
+                            : String(val)}
+                        </p>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
@@ -596,6 +718,17 @@ export default function ConfiguracoesPage() {
               )}
 
               {/* Last sync */}
+              {clearSuccess && (
+                <div className="mt-4 rounded-md border border-green-200 bg-green-50 p-4">
+                  <div className="flex items-center gap-2 text-sm font-medium text-green-800">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true">
+                      <path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z" />
+                    </svg>
+                    Todos os dados de conteudo foram limpos com sucesso.
+                  </div>
+                </div>
+              )}
+
               {lastSyncAt && (
                 <p className="mt-3 text-xs text-gray-500">
                   Ultima sincronizacao: {lastSyncAt}

@@ -90,7 +90,25 @@
       "Bash(mkdir -p /Users/wesleymoraesserafim/blog-medicinal/src/app/\\\\\\(admin\\\\\\)/admin/autores/[id])",
       "Bash(mkdir -p /Users/wesleymoraesserafim/blog-medicinal/src/app/api/auth/[...nextauth])",
       "Bash(mkdir -p /Users/wesleymoraesserafim/blog-medicinal/src/app/api/admin/posts/[id])",
-      "Bash(npx drizzle-kit:*)"
+      "Bash(npx drizzle-kit:*)",
+      "Bash(rm -rf node_modules pnpm-lock.yaml)",
+      "Bash(pnpm install:*)",
+      "Bash(pnpm add:*)",
+      "Bash(npx tsc:*)",
+      "Bash(wc:*)",
+      "Bash(grep \"DATABASE_URL\\\\|DATABASE_URI\" /Users/wesleymoraesserafim/blog-medicinal/.env*)",
+      "Bash(npx:*)",
+      "Bash(grep -n \"content\\\\|_html\\\\|tiptap\\\\|dangerously\\\\|prose\" /Users/wesleymoraesserafim/blog-medicinal/src/app/\\\\\\(frontend\\\\\\)/[slug]/p/page.tsx)",
+      "Bash(ls /Users/wesleymoraesserafim/blog-medicinal/src/app/\\\\\\(frontend\\\\\\)/produtos/)",
+      "Bash(cat /Users/wesleymoraesserafim/blog-medicinal/.prettierrc*)",
+      "Bash(psql:*)",
+      "Bash(grep:*)",
+      "Bash(SB_URL=\"https://hsixbybpwvhvkwxeaxup.supabase.co/rest/v1\" SB_KEY=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhzaXhieWJwd3Zodmt3eGVheHVwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODgzODM4MywiZXhwIjoyMDk0NDE0MzgzfQ.l7oo_w-6ZSn-1kxwr88FTHBnepaHcr9G3e38VOXozv0\" __NEW_LINE_7c1c9ce9ecbda13b__ echo \"=== PRODUCTS ===\" curl -s \"$SB_URL/products?limit=1\" -H \"apikey: $SB_KEY\" -H \"Authorization: Bearer $SB_KEY\")",
+      "Bash(python3 -c \"import json,sys; [print\\(json.dumps\\(r, indent=2, ensure_ascii=False\\)\\) for r in json.load\\(sys.stdin\\)]\" __NEW_LINE_7c1c9ce9ecbda13b__ echo echo '=== PRODUCTS COUNT ===' curl -s $SB_URL/products?select=id -H 'apikey: $SB_KEY' -H 'Authorization: Bearer $SB_KEY' -H 'Prefer: count=exact' -H 'Range: 0-0' -I)",
+      "Bash(SB_URL=\"https://hsixbybpwvhvkwxeaxup.supabase.co/rest/v1\" SB_KEY=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhzaXhieWJwd3Zodmt3eGVheHVwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODgzODM4MywiZXhwIjoyMDk0NDE0MzgzfQ.l7oo_w-6ZSn-1kxwr88FTHBnepaHcr9G3e38VOXozv0\" __NEW_LINE_9c870638b39f64b4__ echo \"=== TAGS ===\" curl -s \"$SB_URL/tags?limit=5\" -H \"apikey: $SB_KEY\" -H \"Authorization: Bearer $SB_KEY\")",
+      "Bash(python3 -c \"import json,sys; [print\\(json.dumps\\(r, indent=2, ensure_ascii=False\\)\\) for r in json.load\\(sys.stdin\\)]\" __NEW_LINE_9c870638b39f64b4__ echo \"\" echo \"=== ARTICLE_TAGS ===\" curl -s \"$SB_URL/article_tags?limit=3\" -H \"apikey: $SB_KEY\" -H \"Authorization: Bearer $SB_KEY\")",
+      "Bash(python3 -c \"import json,sys; [print\\(json.dumps\\(r, indent=2, ensure_ascii=False\\)\\) for r in json.load\\(sys.stdin\\)]\" __NEW_LINE_9c870638b39f64b4__ echo echo '=== TAGS COUNT ===' curl -s $SB_URL/tags?select=id -H 'apikey: $SB_KEY' -H 'Authorization: Bearer $SB_KEY' -H 'Prefer: count=exact' -H 'Range: 0-0' -I)",
+      "Bash(SB_URL=\"https://hsixbybpwvhvkwxeaxup.supabase.co/rest/v1\" SB_KEY=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhzaXhieWJwd3Zodmt3eGVheHVwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODgzODM4MywiZXhwIjoyMDk0NDE0MzgzfQ.l7oo_w-6ZSn-1kxwr88FTHBnepaHcr9G3e38VOXozv0\" __NEW_LINE_f01ef202971962d6__ curl -s \"$SB_URL/articles?select=id,title,slug,content,excerpt,status&limit=2&status=eq.published\" -H \"apikey: $SB_KEY\" -H \"Authorization: Bearer $SB_KEY\")"
     ]
   }
 }

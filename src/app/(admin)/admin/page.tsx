@@ -74,14 +74,16 @@ function SkeletonCard() {
   );
 }
 
+const SKELETON_HEIGHTS = [45, 62, 38, 71, 53, 29, 67, 41, 58, 34, 73, 50, 36, 64];
+
 function SkeletonBar() {
   return (
     <div className="flex items-end gap-1">
-      {Array.from({ length: 14 }).map((_, i) => (
+      {SKELETON_HEIGHTS.map((h, i) => (
         <div
           key={i}
           className="flex-1 animate-pulse rounded-t bg-gray-100"
-          style={{ height: `${20 + Math.random() * 60}%` }}
+          style={{ height: `${h}%` }}
         />
       ))}
     </div>

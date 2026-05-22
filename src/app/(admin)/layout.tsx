@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { SessionProvider } from "next-auth/react";
 import { Roboto } from "next/font/google";
 import "../globals.css";
 
@@ -24,7 +25,9 @@ export default function AdminRootLayout({
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
       </head>
       <body className="bg-gray-50 font-sans text-gray-900">
-        <Suspense fallback={null}>{children}</Suspense>
+        <SessionProvider>
+          <Suspense fallback={null}>{children}</Suspense>
+        </SessionProvider>
       </body>
     </html>
   );

@@ -7,13 +7,13 @@ import { eq } from "drizzle-orm";
 
 declare module "next-auth" {
   interface User {
-    role: "admin" | "editor";
+    role: "admin" | "editor" | "author" | "viewer";
   }
 
   interface Session {
     user: {
       id: string;
-      role: "admin" | "editor";
+      role: "admin" | "editor" | "author" | "viewer";
     } & DefaultSession["user"];
   }
 }
@@ -21,7 +21,7 @@ declare module "next-auth" {
 declare module "@auth/core/jwt" {
   interface JWT {
     id: string;
-    role: "admin" | "editor";
+    role: "admin" | "editor" | "author" | "viewer";
   }
 }
 

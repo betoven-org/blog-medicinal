@@ -1,10 +1,23 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Plus, Pencil, Trash2, FolderOpen } from "lucide-react";
 import AdminShell from "@/components/admin/AdminShell";
-import DataTable from "@/components/admin/DataTable";
+import DeleteConfirm from "@/components/admin/DeleteConfirm";
+import BulkBar from "@/components/admin/BulkBar";
+import CategoryDrawer from "@/components/admin/CategoryDrawer";
+import Spinner from "@/components/admin/Spinner";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell,
+} from "@/components/ui/table";
 
 type Category = {
   id: number;
@@ -12,19 +25,18 @@ type Category = {
   slug: string;
 };
 
-type ApiResponse = {
-  docs: Category[];
-  totalPages: number;
-  page: number;
-};
-
 export default function CategoriasPage() {
-  const router = useRouter();
   const [data, setData] = useState<Category[]>([]);
   const [totalPages, setTotalPages] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [bulkLoading, setBulkLoading] = useState(false);
+  const [showBulkDelete, setShowBulkDelete] = useState(false);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [drawerId, setDrawerId] = useState<number | null>(null);
 
   const fetchCategories = useCallback(async (page = 1) => {
     setLoading(true);
@@ -32,7 +44,7 @@ export default function CategoriasPage() {
     try {
       const res = await fetch(`/api/admin/categories?page=${page}`);
       if (!res.ok) throw new Error("Erro ao carregar categorias.");
-      const json: ApiResponse = await res.json();
+      const json = await res.json();
       setData(json.docs);
       setTotalPages(json.totalPages);
       setCurrentPage(json.page);
@@ -40,6 +52,7 @@ export default function CategoriasPage() {
       setError(err instanceof Error ? err.message : "Erro desconhecido.");
     } finally {
       setLoading(false);
+      setSelected(new Set());
     }
   }, []);
 
@@ -49,82 +62,220 @@ export default function CategoriasPage() {
 
   const handleDelete = async (id: number) => {
     try {
-      const res = await fetch(`/api/admin/categories/${id}`, {
-        method: "DELETE",
-      });
-
+      const res = await fetch(`/api/admin/categories/${id}`, { method: "DELETE" });
       if (res.status === 409) {
         const json = await res.json().catch(() => ({}));
-        alert(json.error || "Esta categoria possui posts vinculados e nao pode ser excluida.");
+        setError(json.error || "Categoria possui posts vinculados.");
         return;
       }
-
-      if (!res.ok) throw new Error("Erro ao excluir categoria.");
-
+      if (!res.ok) throw new Error();
       fetchCategories(currentPage);
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Erro ao excluir categoria.");
+    } catch {
+      setError("Erro ao excluir categoria.");
     }
   };
 
-  const columns = [
-    { key: "name", label: "Nome" },
-    { key: "slug", label: "Slug" },
-  ];
+  const doBulkDelete = async () => {
+    setBulkLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin/categories/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: Array.from(selected), action: "delete" }),
+      });
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        setError(json.error || "Erro na exclusao em massa.");
+        return;
+      }
+      fetchCategories(currentPage);
+    } catch {
+      setError("Erro na exclusao em massa.");
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  const allSelected = data.length > 0 && selected.size === data.length;
+  const someSelected = selected.size > 0 && selected.size < data.length;
+
+  const toggleAll = () => {
+    setSelected(allSelected ? new Set() : new Set(data.map((c) => c.id)));
+  };
+
+  const toggleOne = (id: number) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   return (
     <AdminShell title="Categorias">
       <div className="mb-6 flex items-center justify-between">
-        <p className="text-sm text-gray-500">
-          Gerencie as categorias do blog.
-        </p>
-        <Link
-          href="/admin/categorias/novo"
-          className="inline-flex items-center gap-2 rounded-md bg-[#0d61ac] px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-[#0a4f8c]"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            viewBox="0 0 256 256"
-            fill="currentColor"
-            aria-hidden="true"
-          >
-            <path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z" />
-          </svg>
+        <p className="text-sm text-muted-foreground">Gerencie as categorias do blog.</p>
+        <Button nativeButton={false} render={<Link href="/admin/categorias/novo" />}>
+          <Plus />
           Nova Categoria
-        </Link>
+        </Button>
       </div>
+
+      {error && (
+        <div className="mb-4 rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+          {error}
+          <button
+            type="button"
+            onClick={() => setError(null)}
+            className="ml-2 font-medium underline"
+          >
+            Fechar
+          </button>
+        </div>
+      )}
+
+      <BulkBar
+        count={selected.size}
+        actions={[{ label: "Excluir", onClick: () => setShowBulkDelete(true), variant: "danger" }]}
+        onClear={() => setSelected(new Set())}
+        loading={bulkLoading}
+      />
 
       {loading ? (
         <div className="flex items-center justify-center py-12">
-          <svg
-            className="h-8 w-8 animate-spin text-[#0d61ac]"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-          </svg>
-          <span className="ml-3 text-sm text-gray-500">Carregando...</span>
+          <Spinner />
         </div>
-      ) : error ? (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-          {error}
+      ) : data.length === 0 ? (
+        <div className="rounded-lg border bg-card p-12 text-center">
+          <FolderOpen className="mx-auto mb-4 size-12 text-muted-foreground/40" aria-hidden="true" />
+          <p className="text-sm text-muted-foreground">Nenhuma categoria encontrada.</p>
         </div>
       ) : (
-        <DataTable
-          columns={columns}
-          data={data}
-          totalPages={totalPages}
-          currentPage={currentPage}
-          baseUrl="/admin/categorias"
-          onDelete={handleDelete}
-          editUrl={(item) => `/admin/categorias/${item.id}`}
-        />
+        <div className="overflow-hidden rounded-lg border bg-card">
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="w-10 px-4">
+                  <Checkbox
+                    checked={allSelected}
+                    indeterminate={someSelected}
+                    onCheckedChange={toggleAll}
+                    aria-label="Selecionar todos"
+                  />
+                </TableHead>
+                <TableHead className="px-4 text-xs font-semibold uppercase tracking-wider">
+                  Nome
+                </TableHead>
+                <TableHead className="px-4 text-xs font-semibold uppercase tracking-wider">
+                  Slug
+                </TableHead>
+                <TableHead className="px-4 text-right text-xs font-semibold uppercase tracking-wider">
+                  Acoes
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {data.map((cat) => (
+                <TableRow
+                  key={cat.id}
+                  data-state={selected.has(cat.id) ? "selected" : undefined}
+                >
+                  <TableCell className="w-10 px-4">
+                    <Checkbox
+                      checked={selected.has(cat.id)}
+                      onCheckedChange={() => toggleOne(cat.id)}
+                      aria-label={`Selecionar ${cat.name}`}
+                    />
+                  </TableCell>
+                  <TableCell className="px-4">
+                    <button
+                      type="button"
+                      onClick={() => setDrawerId(cat.id)}
+                      className="text-left font-medium text-foreground transition-colors hover:text-primary"
+                    >
+                      {cat.name}
+                    </button>
+                  </TableCell>
+                  <TableCell className="px-4 text-muted-foreground">{cat.slug}</TableCell>
+                  <TableCell className="px-4 text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={() => setDrawerId(cat.id)}
+                        aria-label={`Editar ${cat.name}`}
+                      >
+                        <Pencil />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={() => setDeleteId(cat.id)}
+                        aria-label={`Excluir ${cat.name}`}
+                        className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                      >
+                        <Trash2 />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between border-t bg-muted/30 px-4 py-3">
+              <p className="text-sm text-muted-foreground">
+                Pagina {currentPage} de {totalPages}
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={currentPage <= 1}
+                  onClick={() => fetchCategories(currentPage - 1)}
+                >
+                  Anterior
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={currentPage >= totalPages}
+                  onClick={() => fetchCategories(currentPage + 1)}
+                >
+                  Proximo
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
       )}
+
+      <CategoryDrawer
+        categoryId={drawerId}
+        onClose={() => setDrawerId(null)}
+        onSaved={() => fetchCategories(currentPage)}
+      />
+
+      <DeleteConfirm
+        open={deleteId !== null}
+        onClose={() => setDeleteId(null)}
+        onConfirm={() => {
+          if (deleteId !== null) handleDelete(deleteId);
+        }}
+        title="Excluir categoria?"
+        description="Esta acao nao pode ser desfeita. A categoria sera permanentemente removida."
+      />
+
+      <DeleteConfirm
+        open={showBulkDelete}
+        onClose={() => setShowBulkDelete(false)}
+        onConfirm={doBulkDelete}
+        title={`Excluir ${selected.size} ${selected.size === 1 ? "categoria" : "categorias"}?`}
+        description="Esta acao nao pode ser desfeita. Categorias com posts vinculados nao serao excluidas."
+      />
     </AdminShell>
   );
 }

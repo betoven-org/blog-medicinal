@@ -40,7 +40,7 @@ function ShellInner({ title, children }: AdminShellProps) {
 
       <div
         className={`transition-all duration-200 ${
-          collapsed ? "lg:pl-16" : "lg:pl-64"
+          collapsed ? "lg:pl-[68px]" : "lg:pl-60"
         }`}
       >
         <AdminHeader

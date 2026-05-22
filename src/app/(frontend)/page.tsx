@@ -17,7 +17,7 @@ import Link from "next/link";
 import { resolveRelation } from "@/lib/utils";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const settings = (await getSiteSettings()) as any;
+  const settings = ((await getSiteSettings()) || {}) as any;
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
   return {
     title:

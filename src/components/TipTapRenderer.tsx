@@ -80,7 +80,47 @@ function renderNode(node: TipTapNode, index: number): React.ReactNode {
   }
 }
 
+function markdownToHtml(md: string): string {
+  return md
+    // Headers
+    .replace(/^######\s+(.+)$/gm, "<h6>$1</h6>")
+    .replace(/^#####\s+(.+)$/gm, "<h5>$1</h5>")
+    .replace(/^####\s+(.+)$/gm, "<h4>$1</h4>")
+    .replace(/^###\s+(.+)$/gm, "<h3>$1</h3>")
+    .replace(/^##\s+(.+)$/gm, "<h2>$1</h2>")
+    .replace(/^#\s+(.+)$/gm, "<h1>$1</h1>")
+    // Bold + italic
+    .replace(/\*\*\*(.+?)\*\*\*/g, "<strong><em>$1</em></strong>")
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*(.+?)\*/g, "<em>$1</em>")
+    .replace(/_(.+?)_/g, "<em>$1</em>")
+    // Unordered lists
+    .replace(/^[-*]\s+(.+)$/gm, "<li>$1</li>")
+    .replace(/((?:<li>.*<\/li>\n?)+)/g, "<ul>$1</ul>")
+    // Links
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
+    // Images
+    .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" />')
+    // Horizontal rule
+    .replace(/^---$/gm, "<hr />")
+    // Paragraphs (lines that aren't already wrapped in tags)
+    .replace(/^(?!<[a-z])((?!^\s*$).+)$/gm, "<p>$1</p>")
+    // Clean up empty paragraphs
+    .replace(/<p>\s*<\/p>/g, "")
+    // Line breaks
+    .replace(/\r\n/g, "\n");
+}
+
 export function TipTapRenderer({ content }: { content: any }) {
-  if (!content || !content.content) return null;
+  if (!content) return null;
+
+  // Handle markdown content from Supabase (_html field)
+  if (content._html && typeof content._html === "string") {
+    const html = markdownToHtml(content._html);
+    return <div dangerouslySetInnerHTML={{ __html: html }} />;
+  }
+
+  // Handle TipTap JSON format
+  if (!content.content) return null;
   return <>{content.content.map(renderNode)}</>;
 }

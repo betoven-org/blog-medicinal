@@ -1,10 +1,24 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import AdminShell from "@/components/admin/AdminShell";
-import DataTable from "@/components/admin/DataTable";
 import Link from "next/link";
+import { Search, Plus, FileText, Pencil, Trash2, X } from "lucide-react";
+import AdminShell from "@/components/admin/AdminShell";
+import StatusBadge from "@/components/admin/StatusBadge";
+import DeleteConfirm from "@/components/admin/DeleteConfirm";
+import PostDrawer from "@/components/admin/PostDrawer";
+import BulkBar from "@/components/admin/BulkBar";
+import Spinner from "@/components/admin/Spinner";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell,
+} from "@/components/ui/table";
 
 type PostRow = {
   id: number;
@@ -29,6 +43,19 @@ export default function PostsListPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState(currentSearch);
 
+  // Selection
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+
+  // Bulk
+  const [bulkLoading, setBulkLoading] = useState(false);
+  const [showBulkDelete, setShowBulkDelete] = useState(false);
+
+  // Drawer
+  const [drawerPostId, setDrawerPostId] = useState<number | null>(null);
+
+  // Single delete
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+
   const fetchPosts = useCallback(async () => {
     setLoading(true);
     try {
@@ -49,6 +76,7 @@ export default function PostsListPage() {
       setTotalPages(1);
     } finally {
       setLoading(false);
+      setSelected(new Set());
     }
   }, [currentPage, currentSearch, currentStatus]);
 
@@ -59,28 +87,76 @@ export default function PostsListPage() {
   const updateParams = (updates: Record<string, string>) => {
     const params = new URLSearchParams(searchParams.toString());
     for (const [key, val] of Object.entries(updates)) {
-      if (val) {
-        params.set(key, val);
-      } else {
-        params.delete(key);
-      }
+      if (val) params.set(key, val);
+      else params.delete(key);
     }
     params.delete("page");
     router.push(`/admin/posts?${params.toString()}`);
   };
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    updateParams({ search });
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      updateParams({ search: value });
+    }, 400);
   };
 
+  const clearSearch = () => {
+    setSearch("");
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    updateParams({ search: "" });
+  };
+
+  // Selection handlers
+  const allSelected = data.length > 0 && selected.size === data.length;
+  const someSelected = selected.size > 0 && selected.size < data.length;
+
+  const toggleAll = () => {
+    if (allSelected) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(data.map((p) => p.id)));
+    }
+  };
+
+  const toggleOne = (id: number) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  // Bulk actions
+  const doBulk = async (action: "delete" | "publish" | "unpublish") => {
+    setBulkLoading(true);
+    try {
+      const res = await fetch("/api/admin/posts/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: Array.from(selected), action }),
+      });
+      if (!res.ok) throw new Error();
+      fetchPosts();
+    } catch {
+      // handled silently
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  // Single delete
   const handleDelete = async (id: number) => {
     try {
       const res = await fetch(`/api/admin/posts/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Erro ao excluir post");
+      if (!res.ok) throw new Error();
       fetchPosts();
     } catch {
-      // silently handled — DataTable shows confirmation
+      // handled silently
     }
   };
 
@@ -92,35 +168,8 @@ export default function PostsListPage() {
     });
   };
 
-  const columns = [
-    {
-      key: "title",
-      label: "Titulo",
-      render: (item: PostRow) => (
-        <span className="font-medium text-gray-900">{item.title}</span>
-      ),
-    },
-    {
-      key: "categoryName",
-      label: "Categoria",
-      render: (item: PostRow) => item.categoryName || "---",
-    },
-    {
-      key: "authorName",
-      label: "Autor",
-      render: (item: PostRow) => item.authorName || "---",
-    },
-    {
-      key: "status",
-      label: "Status",
-    },
-    {
-      key: "createdAt",
-      label: "Data",
-      render: (item: PostRow) => formatDate(item.createdAt),
-    },
-  ];
-
+  const hasPrev = currentPage > 1;
+  const hasNext = currentPage < totalPages;
   const baseUrl = (() => {
     const params = new URLSearchParams();
     if (currentSearch) params.set("search", currentSearch);
@@ -128,45 +177,42 @@ export default function PostsListPage() {
     const qs = params.toString();
     return qs ? `/admin/posts?${qs}` : "/admin/posts";
   })();
+  const separator = baseUrl.includes("?") ? "&" : "?";
 
   return (
     <AdminShell title="Posts">
+      {/* Toolbar */}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-1 gap-3">
-          <form onSubmit={handleSearch} className="flex flex-1 max-w-md gap-2">
-            <div className="relative flex-1">
-              <svg
-                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth="2"
-                aria-hidden="true"
+          <div className="relative flex-1 max-w-md">
+            <Search
+              className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+              aria-hidden="true"
+            />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Escape") clearSearch(); }}
+              placeholder="Buscar posts..."
+              className="w-full rounded-md border bg-card py-2 pl-10 pr-9 text-sm shadow-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+            />
+            {search && (
+              <button
+                type="button"
+                onClick={clearSearch}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                aria-label="Limpar busca"
               >
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Buscar posts..."
-                className="w-full rounded-md border border-gray-300 bg-white py-2 pl-10 pr-3 text-sm shadow-sm placeholder:text-gray-400 focus:border-[#0d61ac] focus:outline-none focus:ring-2 focus:ring-[#0d61ac]"
-              />
-            </div>
-            <button
-              type="submit"
-              className="rounded-md bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200"
-            >
-              Buscar
-            </button>
-          </form>
+                <X className="size-4" aria-hidden="true" />
+              </button>
+            )}
+          </div>
 
           <select
             value={currentStatus}
             onChange={(e) => updateParams({ status: e.target.value })}
-            className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-[#0d61ac] focus:outline-none focus:ring-2 focus:ring-[#0d61ac]"
+            className="rounded-md border bg-card px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
           >
             <option value="">Todos</option>
             <option value="draft">Rascunho</option>
@@ -174,64 +220,194 @@ export default function PostsListPage() {
           </select>
         </div>
 
-        <Link
-          href="/admin/posts/novo"
-          className="inline-flex items-center gap-2 rounded-md bg-[#0d61ac] px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-[#0a4f8c]"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <line x1="12" y1="5" x2="12" y2="19" />
-            <line x1="5" y1="12" x2="19" y2="12" />
-          </svg>
+        <Button nativeButton={false} render={<Link href="/admin/posts/novo" />}>
+          <Plus className="size-4" aria-hidden="true" />
           Novo Post
-        </Link>
+        </Button>
       </div>
+
+      {/* Bulk actions bar */}
+      <BulkBar
+        count={selected.size}
+        loading={bulkLoading}
+        onClear={() => setSelected(new Set())}
+        actions={[
+          { label: "Publicar", onClick: () => doBulk("publish") },
+          { label: "Despublicar", onClick: () => doBulk("unpublish") },
+          { label: "Excluir", onClick: () => setShowBulkDelete(true), variant: "danger" },
+        ]}
+      />
 
       {loading ? (
         <div className="flex items-center justify-center py-12">
-          <svg
-            className="h-8 w-8 animate-spin text-[#0d61ac]"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
+          <Spinner className="size-8" />
+        </div>
+      ) : data.length === 0 ? (
+        <div className="rounded-lg border bg-card p-12 text-center">
+          <FileText
+            className="mx-auto mb-4 size-12 text-muted-foreground/40"
             aria-hidden="true"
-          >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            />
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            />
-          </svg>
+          />
+          <p className="text-sm text-muted-foreground">Nenhum post encontrado.</p>
         </div>
       ) : (
-        <DataTable
-          columns={columns}
-          data={data}
-          totalPages={totalPages}
-          currentPage={currentPage}
-          baseUrl={baseUrl}
-          onDelete={handleDelete}
-          editUrl={(item) => `/admin/posts/${item.id}`}
-        />
+        <>
+          <div className="overflow-hidden rounded-lg border bg-card">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-10 px-4">
+                    <input
+                      type="checkbox"
+                      checked={allSelected}
+                      ref={(el) => {
+                        if (el) el.indeterminate = someSelected;
+                      }}
+                      onChange={toggleAll}
+                      className="size-4 rounded border-input accent-primary"
+                      aria-label="Selecionar todos"
+                    />
+                  </TableHead>
+                  <TableHead className="px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Titulo
+                  </TableHead>
+                  <TableHead className="px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Categoria
+                  </TableHead>
+                  <TableHead className="px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Autor
+                  </TableHead>
+                  <TableHead className="px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Status
+                  </TableHead>
+                  <TableHead className="px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Data
+                  </TableHead>
+                  <TableHead className="px-4 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Acoes
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data.map((post) => (
+                  <TableRow
+                    key={post.id}
+                    className={selected.has(post.id) ? "bg-primary/[0.03]" : ""}
+                  >
+                    <TableCell className="w-10 px-4">
+                      <input
+                        type="checkbox"
+                        checked={selected.has(post.id)}
+                        onChange={() => toggleOne(post.id)}
+                        className="size-4 rounded border-input accent-primary"
+                        aria-label={`Selecionar ${post.title}`}
+                      />
+                    </TableCell>
+                    <TableCell className="px-4">
+                      <button
+                        type="button"
+                        onClick={() => setDrawerPostId(post.id)}
+                        className="text-left font-medium text-foreground transition-colors hover:text-primary"
+                      >
+                        {post.title}
+                      </button>
+                    </TableCell>
+                    <TableCell className="px-4 text-muted-foreground">
+                      {post.categoryName || "---"}
+                    </TableCell>
+                    <TableCell className="px-4 text-muted-foreground">
+                      {post.authorName || "---"}
+                    </TableCell>
+                    <TableCell className="px-4">
+                      <StatusBadge status={post.status} />
+                    </TableCell>
+                    <TableCell className="px-4 text-muted-foreground">
+                      {formatDate(post.createdAt)}
+                    </TableCell>
+                    <TableCell className="px-4 text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={() => setDrawerPostId(post.id)}
+                          title="Editar"
+                          aria-label="Editar post"
+                        >
+                          <Pencil className="size-4" aria-hidden="true" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={() => setDeleteId(post.id)}
+                          title="Excluir"
+                          aria-label="Excluir post"
+                          className="hover:bg-destructive/10 hover:text-destructive"
+                        >
+                          <Trash2 className="size-4" aria-hidden="true" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between border-t bg-muted/30 px-4 py-3">
+                <p className="text-sm text-muted-foreground">
+                  Pagina {currentPage} de {totalPages}
+                </p>
+                <div className="flex gap-2">
+                  {hasPrev ? (
+                    <Button variant="outline" size="sm" nativeButton={false} render={<Link href={`${baseUrl}${separator}page=${currentPage - 1}`} />}>
+                      Anterior
+                    </Button>
+                  ) : (
+                    <Button variant="outline" size="sm" disabled>
+                      Anterior
+                    </Button>
+                  )}
+                  {hasNext ? (
+                    <Button variant="outline" size="sm" nativeButton={false} render={<Link href={`${baseUrl}${separator}page=${currentPage + 1}`} />}>
+                      Proximo
+                    </Button>
+                  ) : (
+                    <Button variant="outline" size="sm" disabled>
+                      Proximo
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </>
       )}
+
+      {/* Edit drawer */}
+      <PostDrawer
+        postId={drawerPostId}
+        onClose={() => setDrawerPostId(null)}
+        onSaved={fetchPosts}
+      />
+
+      {/* Single delete */}
+      <DeleteConfirm
+        open={deleteId !== null}
+        onClose={() => setDeleteId(null)}
+        onConfirm={() => {
+          if (deleteId !== null) handleDelete(deleteId);
+        }}
+      />
+
+      {/* Bulk delete */}
+      <DeleteConfirm
+        open={showBulkDelete}
+        onClose={() => setShowBulkDelete(false)}
+        onConfirm={() => doBulk("delete")}
+        title={`Excluir ${selected.size} ${selected.size === 1 ? "post" : "posts"}?`}
+        description="Esta acao nao pode ser desfeita. Os posts e suas tags serao permanentemente removidos."
+      />
     </AdminShell>
   );
 }
