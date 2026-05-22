@@ -219,6 +219,7 @@ export const siteSettings = pgTable("site_settings", {
   supabaseAnonKey: text("supabase_anon_key"),
   supabaseServiceRoleKey: text("supabase_service_role_key"),
   supabaseSyncEnabled: boolean("supabase_sync_enabled").default(false),
+  lastSyncAt: timestamp("last_sync_at", { mode: "string" }),
   updatedAt: timestamp("updated_at", { mode: "string" }).defaultNow().notNull(),
 });
 
