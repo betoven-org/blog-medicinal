@@ -81,34 +81,66 @@ function renderNode(node: TipTapNode, index: number): React.ReactNode {
 }
 
 function markdownToHtml(md: string): string {
-  return md
+  const lines = md.replace(/\r\n/g, "\n").split("\n");
+  const out: string[] = [];
+  let inList = false;
+
+  for (let i = 0; i < lines.length; i++) {
+    let line = lines[i];
+
+    // Empty line
+    if (line.trim() === "") {
+      if (inList) { out.push("</ul>"); inList = false; }
+      continue;
+    }
+
     // Headers
-    .replace(/^######\s+(.+)$/gm, "<h6>$1</h6>")
-    .replace(/^#####\s+(.+)$/gm, "<h5>$1</h5>")
-    .replace(/^####\s+(.+)$/gm, "<h4>$1</h4>")
-    .replace(/^###\s+(.+)$/gm, "<h3>$1</h3>")
-    .replace(/^##\s+(.+)$/gm, "<h2>$1</h2>")
-    .replace(/^#\s+(.+)$/gm, "<h1>$1</h1>")
+    const headingMatch = line.match(/^(#{1,6})\s+(.+)$/);
+    if (headingMatch) {
+      if (inList) { out.push("</ul>"); inList = false; }
+      const level = headingMatch[1].length;
+      out.push(`<h${level}>${inlineMarkdown(headingMatch[2])}</h${level}>`);
+      continue;
+    }
+
+    // Horizontal rule
+    if (/^---+$/.test(line.trim())) {
+      if (inList) { out.push("</ul>"); inList = false; }
+      out.push("<hr />");
+      continue;
+    }
+
+    // Unordered list item
+    const listMatch = line.match(/^[-*]\s+(.+)$/);
+    if (listMatch) {
+      if (!inList) { out.push("<ul>"); inList = true; }
+      out.push(`<li>${inlineMarkdown(listMatch[1])}</li>`);
+      continue;
+    }
+
+    // If we were in a list but this line is not a list item
+    if (inList) { out.push("</ul>"); inList = false; }
+
+    // Regular paragraph
+    out.push(`<p>${inlineMarkdown(line)}</p>`);
+  }
+
+  if (inList) out.push("</ul>");
+
+  return out.join("\n");
+}
+
+function inlineMarkdown(text: string): string {
+  return text
+    // Images (before links)
+    .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" />')
+    // Links
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
     // Bold + italic
     .replace(/\*\*\*(.+?)\*\*\*/g, "<strong><em>$1</em></strong>")
     .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
     .replace(/\*(.+?)\*/g, "<em>$1</em>")
-    .replace(/_(.+?)_/g, "<em>$1</em>")
-    // Unordered lists
-    .replace(/^[-*]\s+(.+)$/gm, "<li>$1</li>")
-    .replace(/((?:<li>.*<\/li>\n?)+)/g, "<ul>$1</ul>")
-    // Links
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
-    // Images
-    .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" />')
-    // Horizontal rule
-    .replace(/^---$/gm, "<hr />")
-    // Paragraphs (lines that aren't already wrapped in tags)
-    .replace(/^(?!<[a-z])((?!^\s*$).+)$/gm, "<p>$1</p>")
-    // Clean up empty paragraphs
-    .replace(/<p>\s*<\/p>/g, "")
-    // Line breaks
-    .replace(/\r\n/g, "\n");
+    .replace(/_(.+?)_/g, "<em>$1</em>");
 }
 
 export function TipTapRenderer({ content }: { content: any }) {

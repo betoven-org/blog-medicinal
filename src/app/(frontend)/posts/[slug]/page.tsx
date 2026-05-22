@@ -103,7 +103,7 @@ export default async function PostPage({ params }: Props) {
     ...(imageUrl ? { image: { "@type": "ImageObject", url: imageUrl } } : {}),
     ...(post.wordCount ? { wordCount: post.wordCount } : {}),
     ...(post.focusKeyword ? { keywords: post.focusKeyword } : {}),
-    ...(categoryName ? { articleSection: categoryName } : {}),
+    ...(category?.name ? { articleSection: category.name } : {}),
     inLanguage: "pt-BR",
   };
 
@@ -167,15 +167,15 @@ export default async function PostPage({ params }: Props) {
       )}
 
       {/* Rich Text Content */}
-      <div className="mx-auto max-w-7xl px-4 ">
-        <div className="prose prose-lg prose-gray mt-6 max-w-none">
+      <div className="mx-auto max-w-7xl px-4">
+        <div className="prose prose-lg prose-gray mt-8 max-w-none prose-headings:font-bold prose-headings:text-gray-900 prose-h2:mt-10 prose-h2:mb-4 prose-h2:text-2xl prose-h3:mt-8 prose-h3:mb-3 prose-h3:text-xl prose-p:mb-5 prose-p:leading-relaxed prose-p:text-gray-700 prose-li:text-gray-700 prose-li:leading-relaxed prose-ul:my-5 prose-ol:my-5 prose-strong:text-gray-900 prose-a:text-[#0d61ac] prose-a:no-underline hover:prose-a:underline prose-hr:my-8 prose-blockquote:border-[#0d61ac]/30 prose-blockquote:text-gray-600 prose-img:rounded-xl">
           {post.content && <TipTapRenderer content={post.content} />}
         </div>
       </div>
 
       {/* Tags */}
       {post.tags && post.tags.length > 0 && (
-        <div className="mx-auto max-w-7xl px-4 pb-6">
+        <div className="mx-auto max-w-7xl px-4 pt-6 pb-6">
           <div className="flex flex-wrap gap-2">
             {post.tags.map((t: { tag?: string | null }, i: number) => (
               <span

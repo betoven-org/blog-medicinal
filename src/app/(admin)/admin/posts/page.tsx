@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Search, Plus, FileText, Pencil, Trash2, X } from "lucide-react";
+import { Search, Plus, FileText, Pencil, Trash2, X, MoreVertical, ExternalLink } from "lucide-react";
 import AdminShell from "@/components/admin/AdminShell";
 import StatusBadge from "@/components/admin/StatusBadge";
 import DeleteConfirm from "@/components/admin/DeleteConfirm";
@@ -11,6 +11,11 @@ import PostDrawer from "@/components/admin/PostDrawer";
 import BulkBar from "@/components/admin/BulkBar";
 import Spinner from "@/components/admin/Spinner";
 import { Button } from "@/components/ui/button";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
 import {
   Table,
   TableHeader,
@@ -325,27 +330,41 @@ export default function PostsListPage() {
                       {formatDate(post.createdAt)}
                     </TableCell>
                     <TableCell className="px-4 text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon-sm"
-                          onClick={() => setDrawerPostId(post.id)}
-                          title="Editar"
-                          aria-label="Editar post"
+                      <Popover>
+                        <PopoverTrigger
+                          className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                          aria-label="Acoes"
                         >
-                          <Pencil className="size-4" aria-hidden="true" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon-sm"
-                          onClick={() => setDeleteId(post.id)}
-                          title="Excluir"
-                          aria-label="Excluir post"
-                          className="hover:bg-destructive/10 hover:text-destructive"
-                        >
-                          <Trash2 className="size-4" aria-hidden="true" />
-                        </Button>
-                      </div>
+                          <MoreVertical className="size-4" aria-hidden="true" />
+                        </PopoverTrigger>
+                        <PopoverContent align="end" className="w-40 p-1">
+                          <button
+                            type="button"
+                            onClick={() => setDrawerPostId(post.id)}
+                            className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm text-foreground transition-colors hover:bg-muted"
+                          >
+                            <Pencil className="size-3.5" aria-hidden="true" />
+                            Editar
+                          </button>
+                          <a
+                            href={`/posts/${post.slug}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm text-foreground transition-colors hover:bg-muted"
+                          >
+                            <ExternalLink className="size-3.5" aria-hidden="true" />
+                            Ver no site
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => setDeleteId(post.id)}
+                            className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm text-destructive transition-colors hover:bg-destructive/10"
+                          >
+                            <Trash2 className="size-3.5" aria-hidden="true" />
+                            Remover
+                          </button>
+                        </PopoverContent>
+                      </Popover>
                     </TableCell>
                   </TableRow>
                 ))}
