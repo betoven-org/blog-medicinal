@@ -112,14 +112,14 @@ function ProductCardItem({ product, showDescription }: ProductCardItemProps) {
   return (
     <article className="group rounded-xl border border-gray-200 bg-white p-4 transition-all hover:border-[#0d61ac]/30 hover:shadow-md">
       <a href={`/${product.slug}/p`} className="block">
-        <div className="flex items-center justify-center rounded-lg bg-gray-50 p-4">
+        <div className="flex items-center justify-center rounded-lg bg-[#f8f9fa] p-4">
           {product.imageUrl ? (
             <img
               src={product.imageUrl}
               alt={product.imageAlt ?? product.name}
               width={200}
               height={200}
-              className="h-40 w-40 object-contain transition-transform duration-300 group-hover:scale-105"
+              className="h-40 w-40 object-contain mix-blend-multiply transition-transform duration-300 group-hover:scale-105"
               loading="lazy"
               decoding="async"
             />
