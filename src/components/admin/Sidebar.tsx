@@ -15,6 +15,7 @@ import {
   Settings,
   Plug,
   BarChart3,
+  HelpCircle,
 } from "lucide-react";
 
 type NavItem = {
@@ -87,6 +88,13 @@ const navGroups: NavGroup[] = [
     items: [
       { href: "/admin/supabase", label: "Supabase" },
       { href: "/admin/assinatura", label: "Assinatura" },
+    ],
+  },
+  {
+    label: "Ajuda",
+    icon: <HelpCircle className="size-[18px]" />,
+    items: [
+      { href: "/admin/ajuda", label: "Guias" },
     ],
   },
 ];

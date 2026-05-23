@@ -354,6 +354,18 @@ export const siteSettingsRelations = relations(siteSettings, ({ one }) => ({
 
 export const subscriptionsRelations = relations(subscriptions, () => ({}));
 
+// ── CMS Guides ───────────────────────────────────────────────────────────────
+
+export const cmsGuides = pgTable("cms_guides", {
+  id: serial("id").primaryKey(),
+  slug: varchar("slug", { length: 100 }).notNull().unique(),
+  title: varchar("title", { length: 255 }).notNull(),
+  content: text("content").notNull(),
+  sortOrder: integer("sort_order").default(0).notNull(),
+  createdAt: timestamp("created_at", { mode: "string" }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { mode: "string" }).defaultNow().notNull(),
+});
+
 // ── Request Metrics ──────────────────────────────────────────────────────────
 
 export const requestMetrics = pgTable("request_metrics", {
