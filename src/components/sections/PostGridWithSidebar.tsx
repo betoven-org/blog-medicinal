@@ -48,10 +48,6 @@ export interface Props {
   /** @default 5 */
   sidebarLimit?: number;
 
-  /** @title Mostrar views na lista */
-  /** @default true */
-  sidebarShowViews?: boolean;
-
   /** @title Link "Ver todos" do grid */
   gridViewAllHref?: string;
 }
@@ -67,7 +63,6 @@ export default async function PostGridWithSidebar({
   sidebarMode = "trending",
   sidebarManualSlugs,
   sidebarLimit = 5,
-  sidebarShowViews = true,
   gridViewAllHref,
 }: Props) {
   const gridSlugs = gridManualSlugs?.split(",").map((s) => s.trim()).filter(Boolean);
@@ -138,14 +133,11 @@ export default async function PostGridWithSidebar({
                       <h3 className="mt-0.5 text-sm font-semibold leading-snug text-gray-900 line-clamp-2 transition-colors group-hover:text-[#0d61ac]">
                         {post.title}
                       </h3>
-                      <p className="mt-1 text-xs text-gray-400">
-                        {[
-                          post.readingTimeMinutes ? `${post.readingTimeMinutes} min` : null,
-                          sidebarShowViews && post.views ? `${post.views.toLocaleString("pt-BR")} views` : null,
-                        ]
-                          .filter(Boolean)
-                          .join(" · ")}
-                      </p>
+                      {post.readingTimeMinutes != null && (
+                        <p className="mt-1 text-xs text-gray-400">
+                          {post.readingTimeMinutes} min
+                        </p>
+                      )}
                     </a>
                   </li>
                 ))}

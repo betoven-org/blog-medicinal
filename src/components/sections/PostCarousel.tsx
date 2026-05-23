@@ -30,10 +30,6 @@ export interface Props {
   /** @default true */
   showCategory?: boolean;
 
-  /** @title Mostrar views */
-  /** @default true */
-  showViews?: boolean;
-
   /** @title Link "Ver todos" */
   viewAllHref?: string;
 }
@@ -47,7 +43,6 @@ export default async function PostList({
   manualSlugs,
   limit = 5,
   showCategory = true,
-  showViews = true,
   viewAllHref,
 }: Props) {
   const parsedSlugs =
@@ -135,20 +130,9 @@ export default async function PostList({
                   <h3 className="text-base font-semibold text-gray-900 mt-1 line-clamp-2 group-hover:text-[#0d61ac] transition-colors">
                     {post.title}
                   </h3>
-                  {(post.readingTimeMinutes != null ||
-                    (showViews && post.views != null)) && (
+                  {post.readingTimeMinutes != null && (
                     <p className="text-xs text-gray-400 mt-1.5">
-                      {post.readingTimeMinutes != null && (
-                        <span>{post.readingTimeMinutes} min</span>
-                      )}
-                      {post.readingTimeMinutes != null &&
-                        showViews &&
-                        post.views != null && <span> · </span>}
-                      {showViews && post.views != null && (
-                        <span>
-                          {post.views.toLocaleString("pt-BR")} views
-                        </span>
-                      )}
+                      {post.readingTimeMinutes} min
                     </p>
                   )}
                 </div>

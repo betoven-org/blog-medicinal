@@ -44,10 +44,6 @@ export interface Props {
   /** @default true */
   showReadingTime?: boolean;
 
-  /** @title Mostrar views (trending/popular) */
-  /** @default false */
-  showViews?: boolean;
-
   /** @title Link "Ver todos" */
   viewAllHref?: string;
 }
@@ -63,7 +59,6 @@ interface PostCardProps {
   showCategory: boolean;
   showAuthor: boolean;
   showReadingTime: boolean;
-  showViews: boolean;
 }
 
 function PostCardItem({
@@ -71,7 +66,6 @@ function PostCardItem({
   showCategory,
   showAuthor,
   showReadingTime,
-  showViews,
 }: PostCardProps) {
   const imageUrl = post.heroImageUrl ?? post.coverUrl;
 
@@ -147,27 +141,6 @@ function PostCardItem({
             </span>
           )}
 
-          {showViews && post.views != null && (
-            <span className="flex items-center gap-1">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                <circle cx="12" cy="12" r="3" />
-              </svg>
-              {post.views.toLocaleString("pt-BR")}
-            </span>
-          )}
-
           {post.publishedAt && (
             <time dateTime={post.publishedAt} className="ml-auto">
               {formatDate(post.publishedAt)}
@@ -189,7 +162,6 @@ export default async function PostGrid({
   showCategory = true,
   showAuthor = false,
   showReadingTime = true,
-  showViews = false,
   viewAllHref,
 }: Props) {
   const parsedSlugs = manualSlugs
@@ -232,7 +204,6 @@ export default async function PostGrid({
               showCategory={showCategory}
               showAuthor={showAuthor}
               showReadingTime={showReadingTime}
-              showViews={showViews}
             />
           ))}
         </div>
