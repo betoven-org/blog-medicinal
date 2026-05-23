@@ -2,8 +2,7 @@
 
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { toast } from "sonner";
-import { AdminShell, FormField, ImageUpload } from "@brasa/admin";
-import PageBuilder from "@/components/admin/PageBuilder";
+import { AdminShell, FormField, ImageUpload, PageBuilder } from "@brasa/admin";
 import manifest from "@/manifest.json";
 import type { BrasaManifest, SectionBlock } from "@brasa/core/manifest";
 

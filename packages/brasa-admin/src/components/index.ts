@@ -30,3 +30,5 @@ export { default as EnvVarsField } from "./EnvVarsField";
 export { default as EnvVarsView } from "./EnvVarsView";
 export { default as DomainsField } from "./DomainsField";
 export { default as DomainsView } from "./DomainsView";
+export { default as PageBuilder } from "./PageBuilder";
+export { default as SectionEditor } from "./SectionEditor";
