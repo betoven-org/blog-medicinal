@@ -6,9 +6,27 @@ const INGEST_SECRET = process.env.METRICS_INGEST_SECRET || "metrics-internal-key
 // Paths to skip metrics collection (static assets, internal APIs)
 const SKIP_METRICS = /^\/((_next|favicon|logo|apple-touch|manifest|robots|sitemap|feed|api\/metrics))/;
 
+// Bots maliciosos / scrapers que inflam pageviews (bloquear com 403)
+// Bots legitimos (Googlebot, Bingbot) sao permitidos mas marcados como bot nas metricas
+const BLOCK_BOTS = /semrush|ahref|mj12bot|dotbot|petalbot|bytespider|gptbot|ccbot|claudebot|anthropic|dataprovider|barkrowler|seekport|zoominfobot|censys|netcraft|masscan|nmap|zgrab|httpx|nuclei|nikto|sqlmap|dirbuster|gobuster|wpscan|acunetix|nessus|openvas/i;
+
+// Bots legitimos — permitir mas nao contar como pageview
+const LEGIT_BOTS = /googlebot|bingbot|slurp|duckduckbot|yandex|baiduspider|facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegram|applebot|pinterest|redditbot/i;
+
 export default auth(async (req) => {
   const start = Date.now();
   const { pathname } = req.nextUrl;
+  const ua = req.headers.get("user-agent") || "";
+
+  // Bloquear bots maliciosos / scrapers
+  if (BLOCK_BOTS.test(ua)) {
+    return new Response("Forbidden", { status: 403 });
+  }
+
+  // Bloquear requests sem user-agent (quase sempre bots)
+  if (!ua && !pathname.startsWith("/api/")) {
+    return new Response("Forbidden", { status: 403 });
+  }
 
   const isLoginPage = pathname === "/admin/login";
   const isPaymentPage = pathname === "/admin/pagamento-pendente";
