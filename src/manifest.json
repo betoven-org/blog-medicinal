@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-23T06:39:39.866Z",
+  "generatedAt": "2026-05-23T15:05:10.072Z",
   "sections": [
     {
       "key": "Banner",
@@ -190,6 +190,225 @@
           "title": "Fundo escuro",
           "required": false,
           "default": false
+        }
+      }
+    },
+    {
+      "key": "HeroPost",
+      "title": "Post Destaque",
+      "description": "Banner principal com o post em destaque",
+      "group": "Home",
+      "path": "sections/HeroPost",
+      "props": {
+        "mode": {
+          "type": "string",
+          "format": "select",
+          "title": "Modo de selecao",
+          "required": false,
+          "default": "featured",
+          "options": [
+            "featured",
+            "manual"
+          ]
+        },
+        "manualSlug": {
+          "type": "string",
+          "format": "text",
+          "title": "Slug do post (modo manual)",
+          "description": "Informe o slug do post para exibir manualmente",
+          "required": false
+        },
+        "height": {
+          "type": "string",
+          "format": "select",
+          "title": "Altura",
+          "required": false,
+          "default": "grande",
+          "options": [
+            "pequeno",
+            "medio",
+            "grande"
+          ]
+        },
+        "overlay": {
+          "type": "boolean",
+          "title": "Overlay escuro",
+          "required": false,
+          "default": true
+        },
+        "showCategory": {
+          "type": "boolean",
+          "title": "Mostrar categoria",
+          "required": false,
+          "default": true
+        },
+        "showAuthor": {
+          "type": "boolean",
+          "title": "Mostrar autor",
+          "required": false,
+          "default": true
+        },
+        "showReadingTime": {
+          "type": "boolean",
+          "title": "Mostrar tempo de leitura",
+          "required": false,
+          "default": true
+        }
+      }
+    },
+    {
+      "key": "PostCarousel",
+      "title": "Carrossel de Posts",
+      "description": "Carrossel horizontal de posts com scroll",
+      "group": "Home",
+      "path": "sections/PostCarousel",
+      "props": {
+        "title": {
+          "type": "string",
+          "format": "text",
+          "title": "Titulo da secao",
+          "required": true
+        },
+        "subtitle": {
+          "type": "string",
+          "format": "text",
+          "title": "Subtitulo",
+          "required": false
+        },
+        "mode": {
+          "type": "string",
+          "format": "select",
+          "title": "Modo",
+          "required": false,
+          "default": "recent",
+          "options": [
+            "recent",
+            "trending",
+            "popular",
+            "editor-picks",
+            "manual"
+          ]
+        },
+        "manualSlugs": {
+          "type": "string",
+          "format": "text",
+          "title": "Slugs manuais",
+          "description": "Slugs separados por virgula (modo manual)",
+          "required": false
+        },
+        "limit": {
+          "type": "number",
+          "title": "Limite de posts",
+          "required": false,
+          "default": 8
+        },
+        "showCategory": {
+          "type": "boolean",
+          "title": "Mostrar categoria",
+          "required": false,
+          "default": true
+        },
+        "showViews": {
+          "type": "boolean",
+          "title": "Mostrar views",
+          "required": false,
+          "default": false
+        },
+        "viewAllHref": {
+          "type": "string",
+          "format": "text",
+          "title": "Link \"Ver todos\"",
+          "required": false
+        }
+      }
+    },
+    {
+      "key": "PostGrid",
+      "title": "Grade de Posts",
+      "description": "Grade de posts com filtros configuraveis",
+      "group": "Home",
+      "path": "sections/PostGrid",
+      "props": {
+        "title": {
+          "type": "string",
+          "format": "text",
+          "title": "Titulo da secao",
+          "required": true
+        },
+        "subtitle": {
+          "type": "string",
+          "format": "text",
+          "title": "Subtitulo",
+          "required": false
+        },
+        "mode": {
+          "type": "string",
+          "format": "select",
+          "title": "Modo",
+          "required": false,
+          "default": "recent",
+          "options": [
+            "recent",
+            "trending",
+            "popular",
+            "editor-picks",
+            "manual"
+          ]
+        },
+        "manualSlugs": {
+          "type": "string",
+          "format": "text",
+          "title": "Slugs manuais",
+          "description": "Slugs separados por virgula (modo manual)",
+          "required": false
+        },
+        "limit": {
+          "type": "number",
+          "title": "Limite de posts",
+          "required": false,
+          "default": 6
+        },
+        "columns": {
+          "type": "string",
+          "format": "select",
+          "title": "Colunas",
+          "required": false,
+          "default": "3",
+          "options": [
+            "2",
+            "3",
+            "4"
+          ]
+        },
+        "showCategory": {
+          "type": "boolean",
+          "title": "Mostrar categoria",
+          "required": false,
+          "default": true
+        },
+        "showAuthor": {
+          "type": "boolean",
+          "title": "Mostrar autor",
+          "required": false,
+          "default": false
+        },
+        "showReadingTime": {
+          "type": "boolean",
+          "title": "Mostrar tempo de leitura",
+          "required": false,
+          "default": true
+        },
+        "showViews": {
+          "type": "boolean",
+          "title": "Mostrar views (trending/popular)",
+          "required": false,
+          "default": false
+        },
+        "viewAllHref": {
+          "type": "string",
+          "format": "text",
+          "title": "Link \"Ver todos\"",
+          "required": false
         }
       }
     }

@@ -2,6 +2,9 @@ import type { SectionBlock } from "@brasa/core/manifest";
 import Hero from "@/components/sections/Hero";
 import Features from "@/components/sections/Features";
 import Banner from "@/components/sections/Banner";
+import HeroPost from "@/components/sections/HeroPost";
+import PostGrid from "@/components/sections/PostGrid";
+import PostCarousel from "@/components/sections/PostCarousel";
 
 // ── Component map ─────────────────────────────────────────────────────────────
 // Add new section components here as they are created.
@@ -11,6 +14,9 @@ const SECTION_MAP: Record<string, React.ComponentType<any>> = {
   Hero,
   Features,
   Banner,
+  HeroPost,
+  PostGrid,
+  PostCarousel,
 };
 
 // ── SectionRenderer ───────────────────────────────────────────────────────────

@@ -227,3 +227,90 @@ scripts/
 | `pnpm build` | Gera manifest + build Next.js (prebuild) |
 | `pnpm dev:next` | Roda so o Next.js (sem watcher) |
 | `pnpm dev:watch` | Roda so o watcher |
+
+## Sections de conteudo (Home)
+
+Sections server-side que buscam dados do banco automaticamente.
+
+### HeroPost — Banner de post destaque
+
+Banner full-width com o post em destaque. Pode ser automatico (pega o post com `featured=true` mais recente) ou manual (slug especifico).
+
+| Prop | Tipo | Descricao |
+|---|---|---|
+| `mode` | `featured` \| `manual` | Automatico ou manual |
+| `manualSlug` | string | Slug do post (modo manual) |
+| `height` | `pequeno` \| `medio` \| `grande` | Altura do banner |
+| `overlay` | boolean | Overlay escuro sobre a imagem |
+| `showCategory` | boolean | Exibir badge de categoria |
+| `showAuthor` | boolean | Exibir nome do autor |
+| `showReadingTime` | boolean | Exibir tempo de leitura |
+
+### PostGrid — Grade de posts
+
+Grid responsivo de post cards com filtros configuraveis.
+
+| Prop | Tipo | Descricao |
+|---|---|---|
+| `title` | string | Titulo da secao (obrigatorio) |
+| `subtitle` | string | Subtitulo |
+| `mode` | `recent` \| `trending` \| `popular` \| `editor-picks` \| `manual` | Modo de filtragem |
+| `manualSlugs` | string | Slugs separados por virgula (modo manual) |
+| `limit` | number | Quantidade de posts (default: 6) |
+| `columns` | `2` \| `3` \| `4` | Colunas do grid |
+| `showCategory` | boolean | Exibir badge de categoria |
+| `showAuthor` | boolean | Exibir autor |
+| `showReadingTime` | boolean | Exibir tempo de leitura |
+| `showViews` | boolean | Exibir contagem de views (trending/popular) |
+| `viewAllHref` | string | Link "Ver todos" |
+
+### PostCarousel — Carrossel horizontal
+
+Carrossel com scroll-snap CSS (zero JS). Mesmos modos do PostGrid.
+
+| Prop | Tipo | Descricao |
+|---|---|---|
+| `title` | string | Titulo da secao (obrigatorio) |
+| `subtitle` | string | Subtitulo |
+| `mode` | `recent` \| `trending` \| `popular` \| `editor-picks` \| `manual` | Modo de filtragem |
+| `manualSlugs` | string | Slugs separados por virgula (modo manual) |
+| `limit` | number | Quantidade de posts (default: 8) |
+| `showCategory` | boolean | Exibir badge de categoria |
+| `showViews` | boolean | Exibir contagem de views |
+| `viewAllHref` | string | Link "Ver todos" |
+
+### Modos de filtragem
+
+| Modo | Fonte dos dados | Descricao |
+|---|---|---|
+| `recent` | `posts.publishedAt DESC` | Posts mais recentes |
+| `trending` | `request_metrics` (7 dias) | Mais vistos na ultima semana |
+| `popular` | `request_metrics` (all-time) | Mais vistos de todos os tempos |
+| `editor-picks` | `posts.featured = true` | Posts marcados como destaque |
+| `manual` | Slugs informados | Selecao manual pelo editor |
+
+Quando `trending` ou `popular` nao tem dados de metricas, faz fallback automatico para `recent`.
+
+### Exemplo de home
+
+```json
+[
+  { "component": "HeroPost", "props": { "mode": "featured", "height": "grande" } },
+  { "component": "PostGrid", "props": { "mode": "recent", "title": "Mais Recentes", "limit": 6, "columns": "3" } },
+  { "component": "PostCarousel", "props": { "mode": "trending", "title": "Tendencias", "limit": 8 } },
+  { "component": "PostGrid", "props": { "mode": "popular", "title": "Mais Lidos", "limit": 4, "columns": "2" } },
+  { "component": "PostGrid", "props": { "mode": "editor-picks", "title": "Escolhas do Editor", "limit": 6 } },
+  { "component": "PostGrid", "props": { "mode": "manual", "title": "Novidades", "manualSlugs": "slug-1,slug-2,slug-3", "limit": 3 } }
+]
+```
+
+### Loader (src/lib/loaders.ts)
+
+Funcao compartilhada usada por todas as sections de conteudo:
+
+```ts
+getPostsByMode(mode: PostMode, limit?: number, manualSlugs?: string[]): Promise<PostCard[]>
+getFeaturedPost(mode?: "featured" | "manual", manualSlug?: string): Promise<PostCard | null>
+```
+
+Retorna: `{ id, title, slug, excerpt, coverUrl, heroImageUrl, categoryName, categorySlug, authorName, publishedAt, readingTimeMinutes, views? }`
