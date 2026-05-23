@@ -1,0 +1,37 @@
+{
+  "name": "create-brasa",
+  "version": "0.1.0",
+  "description": "Crie um novo projeto Brasa CMS em segundos",
+  "bin": {
+    "create-brasa": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean",
+    "dev": "tsx src/index.ts"
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "brasa",
+    "cms",
+    "blog",
+    "nextjs",
+    "create"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.0",
+    "bcryptjs": "^3.0.0",
+    "prompts": "^2.4.2",
+    "kleur": "^4.1.5",
+    "degit": "^2.8.4"
+  },
+  "devDependencies": {
+    "@types/prompts": "^2.4.9",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/degit": "^2.8.6",
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0"
+  }
+}
