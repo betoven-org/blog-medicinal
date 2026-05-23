@@ -4,6 +4,7 @@ import { categories, posts } from "@/db/schema";
 import { inArray, eq, count } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
+import { parseBody, bulkDeleteSchema } from "@/lib/validations";
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,15 +13,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
 
     const body = await req.json();
-    const { ids, action } = body as { ids: number[]; action: "delete" };
-
-    if (!ids || !Array.isArray(ids) || ids.length === 0) {
-      return NextResponse.json({ error: "IDs obrigatorios" }, { status: 400 });
-    }
-
-    if (action !== "delete") {
-      return NextResponse.json({ error: "Acao invalida" }, { status: 400 });
-    }
+    const parsed = parseBody(bulkDeleteSchema, body);
+    if (!parsed.success) return NextResponse.json({ error: parsed.error }, { status: 400 });
+    const { ids, action } = parsed.data;
 
     // Check for linked posts
     for (const id of ids) {

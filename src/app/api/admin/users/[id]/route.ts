@@ -4,6 +4,7 @@ import { users } from "@/db/schema";
 import { eq, count } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
+import { parseBody, updateUserSchema } from "@/lib/validations";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -57,28 +58,26 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
       return NextResponse.json({ error: "Usuario nao encontrado" }, { status: 404 });
 
     const body = await req.json();
+    const parsed = parseBody(updateUserSchema, body);
+    if (!parsed.success) return NextResponse.json({ error: parsed.error }, { status: 400 });
     const updateData: Record<string, unknown> = {};
 
-    if (body.name !== undefined) updateData.name = body.name;
-    if (body.email !== undefined) {
+    if (parsed.data.name !== undefined) updateData.name = parsed.data.name;
+    if (parsed.data.email !== undefined) {
       const [conflict] = await db
         .select({ id: users.id })
         .from(users)
-        .where(eq(users.email, body.email))
+        .where(eq(users.email, parsed.data.email))
         .limit(1);
       if (conflict && conflict.id !== userId) {
         return NextResponse.json({ error: "Email ja em uso" }, { status: 409 });
       }
-      updateData.email = body.email;
+      updateData.email = parsed.data.email;
     }
 
-    const validRoles = ["admin", "editor", "author", "viewer"];
-    if (body.role !== undefined) {
-      if (!validRoles.includes(body.role)) {
-        return NextResponse.json({ error: "Role invalido" }, { status: 400 });
-      }
+    if (parsed.data.role !== undefined) {
       // Prevent removing last admin
-      if (existing.role === "admin" && body.role !== "admin") {
+      if (existing.role === "admin" && parsed.data.role !== "admin") {
         const [adminCount] = await db
           .select({ total: count() })
           .from(users)
@@ -87,11 +86,11 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
           return NextResponse.json({ error: "Nao e possivel remover o ultimo admin" }, { status: 400 });
         }
       }
-      updateData.role = body.role;
+      updateData.role = parsed.data.role;
     }
 
-    if (body.password) {
-      updateData.passwordHash = await bcrypt.hash(body.password, 10);
+    if (parsed.data.password) {
+      updateData.passwordHash = await bcrypt.hash(parsed.data.password, 10);
     }
 
     updateData.updatedAt = new Date().toISOString();

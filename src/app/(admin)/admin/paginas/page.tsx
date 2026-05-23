@@ -142,6 +142,8 @@ export default function PaginasPage() {
     }
   }
 
+  const pendingCount = pages.filter((p) => p.draft !== null).length;
+
   if (loading) {
     return (
       <AdminShell title="Paginas">
@@ -160,17 +162,30 @@ export default function PaginasPage() {
           <h1 className="text-lg font-semibold text-gray-900">Paginas</h1>
           <p className="mt-1 text-sm text-gray-500">Gerencie as paginas estaticas do site.</p>
         </div>
-        <button
-          type="button"
-          onClick={() => { setShowCreate(true); setNewTitle(""); setNewSlug(""); setCreateError(null); }}
-          className="inline-flex items-center gap-1.5 rounded-md bg-[#0d61ac] px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-[#0a4f8c]"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M12 5v14" />
-            <path d="M5 12h14" />
-          </svg>
-          Nova pagina
-        </button>
+        <div className="flex items-center gap-2">
+          {pendingCount > 0 && (
+            <a
+              href="/admin/publicar"
+              className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-3 py-2 text-xs font-medium text-gray-900 shadow-sm transition-colors hover:bg-gray-50"
+            >
+              staging
+              <span className="flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#0d61ac] px-1 text-[10px] font-bold text-white leading-none">
+                {pendingCount}
+              </span>
+            </a>
+          )}
+          <button
+            type="button"
+            onClick={() => { setShowCreate(true); setNewTitle(""); setNewSlug(""); setCreateError(null); }}
+            className="inline-flex items-center gap-1.5 rounded-md bg-[#0d61ac] px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-[#0a4f8c]"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M12 5v14" />
+              <path d="M5 12h14" />
+            </svg>
+            Nova pagina
+          </button>
+        </div>
       </div>
 
       {/* Modal criar pagina */}
@@ -246,6 +261,7 @@ export default function PaginasPage() {
               <tr>
                 <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500">Titulo</th>
                 <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500">Slug</th>
+                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500">Status</th>
                 <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500">Atualizado</th>
                 <th className="w-10 px-4 py-3" />
               </tr>
@@ -260,6 +276,19 @@ export default function PaginasPage() {
                   <td className="px-4 py-3 font-medium text-gray-900">{page.title}</td>
                   <td className="px-4 py-3 text-gray-500">
                     <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs">{page.slug}</code>
+                  </td>
+                  <td className="px-4 py-3">
+                    {page.draft ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700 ring-1 ring-amber-200">
+                        <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                        Rascunho
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-[11px] font-semibold text-green-700 ring-1 ring-green-200">
+                        <span className="h-1.5 w-1.5 rounded-full bg-green-400" />
+                        Publicado
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-gray-500">
                     {new Date(page.updatedAt).toLocaleDateString("pt-BR", {

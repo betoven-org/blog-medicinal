@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { generateSlug } from "@/lib/slug";
+import { parseBody, updateProductSchema } from "@/lib/validations";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -83,11 +84,13 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
       return NextResponse.json({ error: "Produto nao encontrado" }, { status: 404 });
 
     const body = await req.json();
+    const parsed = parseBody(updateProductSchema, body);
+    if (!parsed.success) return NextResponse.json({ error: parsed.error }, { status: 400 });
     const updateData: Record<string, unknown> = {};
 
-    if (body.name !== undefined && body.name !== existing.name) {
-      updateData.name = body.name;
-      updateData.slug = generateSlug(body.name);
+    if (parsed.data.name !== undefined && parsed.data.name !== existing.name) {
+      updateData.name = parsed.data.name;
+      updateData.slug = generateSlug(parsed.data.name);
 
       const [conflict] = await db
         .select({ id: products.id })
@@ -108,7 +111,7 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
     ] as const;
 
     for (const field of fields) {
-      if (body[field] !== undefined) updateData[field] = body[field];
+      if (parsed.data[field] !== undefined) updateData[field] = parsed.data[field];
     }
 
     if (updateData.status === "published" && existing.status !== "published" && !existing.publishedAt) {

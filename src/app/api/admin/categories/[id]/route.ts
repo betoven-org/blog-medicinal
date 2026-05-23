@@ -5,6 +5,7 @@ import { eq, count } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { generateSlug } from "@/lib/slug";
+import { parseBody, updateCategorySchema } from "@/lib/validations";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -71,11 +72,13 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
     }
 
     const body = await req.json();
+    const parsed = parseBody(updateCategorySchema, body);
+    if (!parsed.success) return NextResponse.json({ error: parsed.error }, { status: 400 });
     const updateData: Record<string, unknown> = {};
 
-    if (body.name) {
-      updateData.name = body.name;
-      updateData.slug = generateSlug(body.name);
+    if (parsed.data.name) {
+      updateData.name = parsed.data.name;
+      updateData.slug = generateSlug(parsed.data.name);
 
       const [slugConflict] = await db
         .select({ id: categories.id })

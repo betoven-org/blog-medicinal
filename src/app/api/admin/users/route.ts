@@ -4,6 +4,7 @@ import { users } from "@/db/schema";
 import { desc, count, eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
+import { parseBody, createUserSchema } from "@/lib/validations";
 
 export async function GET(req: NextRequest) {
   try {
@@ -49,16 +50,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
 
     const body = await req.json();
-    const { name, email, password, role } = body;
-
-    if (!name || !email || !password) {
-      return NextResponse.json({ error: "Nome, email e senha sao obrigatorios" }, { status: 400 });
-    }
-
-    const validRoles = ["admin", "editor", "author", "viewer"];
-    if (role && !validRoles.includes(role)) {
-      return NextResponse.json({ error: "Role invalido" }, { status: 400 });
-    }
+    const parsed = parseBody(createUserSchema, body);
+    if (!parsed.success) return NextResponse.json({ error: parsed.error }, { status: 400 });
+    const { name, email, password, role } = parsed.data;
 
     const [existing] = await db
       .select({ id: users.id })
@@ -79,7 +73,7 @@ export async function POST(req: NextRequest) {
         name,
         email,
         passwordHash,
-        role: role || "viewer",
+        role: role ?? "viewer",
         createdAt: now,
         updatedAt: now,
       })

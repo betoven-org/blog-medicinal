@@ -5,6 +5,7 @@ import { eq, count } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { generateSlug } from "@/lib/slug";
+import { parseBody, updateProductCategorySchema } from "@/lib/validations";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -67,11 +68,13 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
       return NextResponse.json({ error: "Categoria nao encontrada" }, { status: 404 });
 
     const body = await req.json();
+    const parsed = parseBody(updateProductCategorySchema, body);
+    if (!parsed.success) return NextResponse.json({ error: parsed.error }, { status: 400 });
     const updateData: Record<string, unknown> = {};
 
-    if (body.name !== undefined) {
-      updateData.name = body.name;
-      updateData.slug = generateSlug(body.name);
+    if (parsed.data.name !== undefined) {
+      updateData.name = parsed.data.name;
+      updateData.slug = generateSlug(parsed.data.name);
 
       const [conflict] = await db
         .select({ id: productCategories.id })
@@ -84,9 +87,9 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
       }
     }
 
-    if (body.description !== undefined) updateData.description = body.description;
-    if (body.imageId !== undefined) updateData.imageId = body.imageId || null;
-    if (body.sortOrder !== undefined) updateData.sortOrder = body.sortOrder;
+    if (parsed.data.description !== undefined) updateData.description = parsed.data.description;
+    if (parsed.data.imageId !== undefined) updateData.imageId = parsed.data.imageId || null;
+    if (parsed.data.sortOrder !== undefined) updateData.sortOrder = parsed.data.sortOrder;
 
     updateData.updatedAt = new Date().toISOString();
 

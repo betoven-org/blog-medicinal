@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { siteSettings, media } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
+import { parseBody, updateSettingsSchema } from "@/lib/validations";
 
 export async function GET() {
   const session = await auth();
@@ -40,11 +41,8 @@ export async function PATCH(request: NextRequest) {
 
   try {
     const body = await request.json();
-
-    // Remove fields that should not be set directly
-    delete body.id;
-    delete body.logo;
-    delete body.favicon;
+    const parsed = parseBody(updateSettingsSchema, body);
+    if (!parsed.success) return NextResponse.json({ error: parsed.error }, { status: 400 });
 
     // Check if settings row exists
     const [existing] = await db
@@ -58,13 +56,13 @@ export async function PATCH(request: NextRequest) {
     if (existing) {
       [result] = await db
         .update(siteSettings)
-        .set({ ...body, updatedAt: new Date().toISOString() })
+        .set({ ...parsed.data, updatedAt: new Date().toISOString() })
         .where(eq(siteSettings.id, 1))
         .returning();
     } else {
       [result] = await db
         .insert(siteSettings)
-        .values({ id: 1, ...body })
+        .values({ id: 1, ...parsed.data })
         .returning();
     }
 

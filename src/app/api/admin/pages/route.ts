@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { pages } from "@/db/schema";
 import { asc } from "drizzle-orm";
+import { parseBody, createPageSchema } from "@/lib/validations";
 
 export async function GET() {
   const session = await auth();
@@ -29,11 +30,9 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { title, slug } = body as { title?: string; slug?: string };
-
-    if (!title || !slug) {
-      return NextResponse.json({ error: "Titulo e slug sao obrigatorios" }, { status: 400 });
-    }
+    const parsed = parseBody(createPageSchema, body);
+    if (!parsed.success) return NextResponse.json({ error: parsed.error }, { status: 400 });
+    const { title, slug } = parsed.data;
 
     const normalized = slug.toLowerCase().trim().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
 

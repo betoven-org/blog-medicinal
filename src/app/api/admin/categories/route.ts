@@ -5,6 +5,7 @@ import { eq, asc } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { generateSlug } from "@/lib/slug";
+import { parseBody, createCategorySchema } from "@/lib/validations";
 
 export async function GET() {
   try {
@@ -34,14 +35,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
 
     const body = await req.json();
-    const { name } = body;
-
-    if (!name) {
-      return NextResponse.json(
-        { error: "Campo obrigatorio: name" },
-        { status: 400 }
-      );
-    }
+    const parsed = parseBody(createCategorySchema, body);
+    if (!parsed.success) return NextResponse.json({ error: parsed.error }, { status: 400 });
+    const { name } = parsed.data;
 
     const slug = generateSlug(name);
 

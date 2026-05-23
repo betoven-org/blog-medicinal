@@ -4,6 +4,7 @@ import { products } from "@/db/schema";
 import { inArray } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
+import { parseBody, bulkActionSchema } from "@/lib/validations";
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,16 +12,10 @@ export async function POST(req: NextRequest) {
     if (!session?.user)
       return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
 
-    const { ids, action } = (await req.json()) as {
-      ids: number[];
-      action: "delete" | "publish" | "unpublish";
-    };
-
-    if (!ids?.length)
-      return NextResponse.json({ error: "IDs obrigatorios" }, { status: 400 });
-
-    if (!["delete", "publish", "unpublish"].includes(action))
-      return NextResponse.json({ error: "Acao invalida" }, { status: 400 });
+    const body = await req.json();
+    const parsed = parseBody(bulkActionSchema, body);
+    if (!parsed.success) return NextResponse.json({ error: parsed.error }, { status: 400 });
+    const { ids, action } = parsed.data;
 
     const now = new Date().toISOString();
 

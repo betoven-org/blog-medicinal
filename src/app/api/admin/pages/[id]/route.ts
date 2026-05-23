@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { pages } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { parseBody, updatePageSchema } from "@/lib/validations";
 
 export async function GET(
   _request: NextRequest,
@@ -54,6 +55,8 @@ export async function PATCH(
       return NextResponse.json({ error: "ID invalido" }, { status: 400 });
 
     const body = await request.json();
+    const parsed = parseBody(updatePageSchema, body);
+    if (!parsed.success) return NextResponse.json({ error: parsed.error }, { status: 400 });
 
     const [existing] = await db
       .select({ id: pages.id })
@@ -65,13 +68,13 @@ export async function PATCH(
       return NextResponse.json({ error: "Pagina nao encontrada" }, { status: 404 });
 
     const draftData = {
-      title: body.title,
-      metaTitle: body.metaTitle,
-      metaDescription: body.metaDescription,
-      ogTitle: body.ogTitle,
-      ogDescription: body.ogDescription,
-      ogImageUrl: body.ogImageUrl,
-      content: body.content,
+      title: parsed.data.title,
+      metaTitle: parsed.data.metaTitle,
+      metaDescription: parsed.data.metaDescription,
+      ogTitle: parsed.data.ogTitle,
+      ogDescription: parsed.data.ogDescription,
+      ogImageUrl: parsed.data.ogImageUrl,
+      content: parsed.data.content,
     };
 
     const [updated] = await db

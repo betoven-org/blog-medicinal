@@ -5,6 +5,7 @@ import { eq, desc } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { generateSlug } from "@/lib/slug";
+import { parseBody, updatePostSchema } from "@/lib/validations";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -95,17 +96,20 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
     }
 
     const body = await req.json();
-    const { tags: postTags, ...updateData } = body;
+    const parsed = parseBody(updatePostSchema, body);
+    if (!parsed.success) return NextResponse.json({ error: parsed.error }, { status: 400 });
+    const { tags: postTags, ...validated } = parsed.data;
+    const updateData: Record<string, unknown> = { ...validated };
 
     const now = new Date().toISOString();
 
-    if (updateData.title && updateData.title !== existing.title) {
-      updateData.slug = generateSlug(updateData.title);
+    if (validated.title && validated.title !== existing.title) {
+      updateData.slug = generateSlug(validated.title);
 
       const [slugConflict] = await db
         .select({ id: posts.id })
         .from(posts)
-        .where(eq(posts.slug, updateData.slug))
+        .where(eq(posts.slug, updateData.slug as string))
         .limit(1);
 
       if (slugConflict && slugConflict.id !== postId) {
@@ -117,7 +121,7 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
     }
 
     if (
-      updateData.status === "published" &&
+      validated.status === "published" &&
       existing.status !== "published" &&
       !existing.publishedAt
     ) {
