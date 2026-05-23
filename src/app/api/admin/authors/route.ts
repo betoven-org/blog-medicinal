@@ -1,11 +1,12 @@
 import { auth } from "@brasa/core/auth";
 import { db } from "@brasa/core/db";
 import { authors, media } from "@brasa/core/schema";
-import { eq, asc } from "drizzle-orm";
+import { and, eq, asc } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { generateSlug } from "@brasa/core/slug";
 import { parseBody, createAuthorSchema } from "@brasa/core/validations";
+import { getTenantId } from "@/lib/tenant";
 
 export async function GET() {
   try {
@@ -13,6 +14,7 @@ export async function GET() {
     if (!session?.user)
       return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
 
+    const tenantId = await getTenantId();
     const docs = await db
       .select({
         id: authors.id,
@@ -27,6 +29,7 @@ export async function GET() {
       })
       .from(authors)
       .leftJoin(media, eq(authors.avatarId, media.id))
+      .where(eq(authors.tenantId, tenantId))
       .orderBy(asc(authors.name));
 
     return NextResponse.json({ docs });
@@ -45,6 +48,7 @@ export async function POST(req: NextRequest) {
     if (!session?.user)
       return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
 
+    const tenantId = await getTenantId();
     const body = await req.json();
     const parsed = parseBody(createAuthorSchema, body);
     if (!parsed.success) return NextResponse.json({ error: parsed.error }, { status: 400 });
@@ -55,7 +59,7 @@ export async function POST(req: NextRequest) {
     const [existingSlug] = await db
       .select({ id: authors.id })
       .from(authors)
-      .where(eq(authors.slug, slug))
+      .where(and(eq(authors.slug, slug), eq(authors.tenantId, tenantId)))
       .limit(1);
 
     if (existingSlug) {
@@ -74,6 +78,7 @@ export async function POST(req: NextRequest) {
         slug,
         bio: bio || null,
         avatarId: avatarId || null,
+        tenantId,
         createdAt: now,
         updatedAt: now,
       })

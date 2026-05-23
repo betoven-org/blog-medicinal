@@ -29,10 +29,26 @@ export const subscriptionStatusEnum = pgEnum("subscription_status", [
   "suspended",
 ]);
 
+// -- Tenants ------------------------------------------------------------------
+
+export const tenants = pgTable("tenants", {
+  id: serial("id").primaryKey(),
+  slug: varchar("slug", { length: 100 }).notNull().unique(),
+  name: varchar("name", { length: 255 }).notNull(),
+  domain: varchar("domain", { length: 255 }).unique(),
+  subdomain: varchar("subdomain", { length: 100 }).unique(),
+  logoUrl: text("logo_url"),
+  plan: varchar("plan", { length: 50 }).default("starter").notNull(),
+  active: boolean("active").default(true).notNull(),
+  createdAt: timestamp("created_at", { mode: "string" }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { mode: "string" }).defaultNow().notNull(),
+});
+
 // -- Users --------------------------------------------------------------------
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
+  tenantId: integer("tenant_id").default(1).notNull().references(() => tenants.id),
   name: varchar("name", { length: 255 }).notNull(),
   email: varchar("email", { length: 255 }).notNull().unique(),
   passwordHash: text("password_hash").notNull(),
@@ -45,6 +61,7 @@ export const users = pgTable("users", {
 
 export const categories = pgTable("categories", {
   id: serial("id").primaryKey(),
+  tenantId: integer("tenant_id").default(1).notNull().references(() => tenants.id),
   supabaseId: uuid("supabase_id").unique(),
   name: varchar("name", { length: 255 }).notNull(),
   slug: varchar("slug", { length: 255 }).notNull().unique(),
@@ -57,6 +74,7 @@ export const categories = pgTable("categories", {
 
 export const media = pgTable("media", {
   id: serial("id").primaryKey(),
+  tenantId: integer("tenant_id").default(1).notNull().references(() => tenants.id),
   supabaseUrl: text("supabase_url").unique(),
   filename: varchar("filename", { length: 255 }).notNull(),
   alt: varchar("alt", { length: 255 }).notNull(),
@@ -74,6 +92,7 @@ export const media = pgTable("media", {
 
 export const authors = pgTable("authors", {
   id: serial("id").primaryKey(),
+  tenantId: integer("tenant_id").default(1).notNull().references(() => tenants.id),
   supabaseId: uuid("supabase_id").unique(),
   name: varchar("name", { length: 255 }).notNull(),
   slug: varchar("slug", { length: 255 }).notNull().unique(),
@@ -89,6 +108,7 @@ export const authors = pgTable("authors", {
 
 export const posts = pgTable("posts", {
   id: serial("id").primaryKey(),
+  tenantId: integer("tenant_id").default(1).notNull().references(() => tenants.id),
   supabaseId: uuid("supabase_id").unique(),
   title: varchar("title", { length: 500 }).notNull(),
   slug: varchar("slug", { length: 500 }).notNull().unique(),
@@ -129,6 +149,7 @@ export const posts = pgTable("posts", {
 
 export const productCategories = pgTable("product_categories", {
   id: serial("id").primaryKey(),
+  tenantId: integer("tenant_id").default(1).notNull().references(() => tenants.id),
   name: varchar("name", { length: 255 }).notNull(),
   slug: varchar("slug", { length: 255 }).notNull().unique(),
   description: text("description"),
@@ -149,6 +170,7 @@ export const productStatusEnum = pgEnum("product_status", ["draft", "published"]
 
 export const products = pgTable("products", {
   id: serial("id").primaryKey(),
+  tenantId: integer("tenant_id").default(1).notNull().references(() => tenants.id),
   name: varchar("name", { length: 500 }).notNull(),
   slug: varchar("slug", { length: 500 }).notNull().unique(),
   description: text("description"),
@@ -183,6 +205,7 @@ export const products = pgTable("products", {
 
 export const tags = pgTable("tags", {
   id: serial("id").primaryKey(),
+  tenantId: integer("tenant_id").default(1).notNull().references(() => tenants.id),
   postId: integer("post_id")
     .notNull()
     .references(() => posts.id, { onDelete: "cascade" }),
@@ -193,6 +216,7 @@ export const tags = pgTable("tags", {
 
 export const subscribers = pgTable("subscribers", {
   id: serial("id").primaryKey(),
+  tenantId: integer("tenant_id").default(1).notNull().references(() => tenants.id),
   name: varchar("name", { length: 255 }),
   email: varchar("email", { length: 255 }).notNull().unique(),
   active: boolean("active").default(true).notNull(),
@@ -203,6 +227,7 @@ export const subscribers = pgTable("subscribers", {
 
 export const pages = pgTable("pages", {
   id: serial("id").primaryKey(),
+  tenantId: integer("tenant_id").default(1).notNull().references(() => tenants.id),
   slug: varchar("slug", { length: 255 }).notNull().unique(),
   title: varchar("title", { length: 255 }).notNull(),
   metaTitle: varchar("meta_title", { length: 255 }),
@@ -224,6 +249,7 @@ export const pagesRelations = relations(pages, () => ({}));
 
 export const siteSettings = pgTable("site_settings", {
   id: serial("id").primaryKey(),
+  tenantId: integer("tenant_id").default(1).notNull().references(() => tenants.id),
   siteName: varchar("site_name", { length: 255 }).default("Medicinal na Web"),
   siteDescription: text("site_description"),
   logoId: integer("logo_id").references(() => media.id, {
@@ -260,7 +286,7 @@ export const siteSettings = pgTable("site_settings", {
 
 export const subscriptions = pgTable("subscriptions", {
   id: serial("id").primaryKey(),
-  tenantId: integer("tenant_id").notNull().unique(),
+  tenantId: integer("tenant_id").default(1).notNull().references(() => tenants.id),
   status: subscriptionStatusEnum("status").default("active").notNull(),
   nextDueDate: timestamp("next_due_date", { mode: "string" }).notNull(),
   graceDays: integer("grace_days").default(7).notNull(),
@@ -358,6 +384,7 @@ export const subscriptionsRelations = relations(subscriptions, () => ({}));
 
 export const cmsGuides = pgTable("cms_guides", {
   id: serial("id").primaryKey(),
+  tenantId: integer("tenant_id").default(1).notNull().references(() => tenants.id),
   slug: varchar("slug", { length: 100 }).notNull().unique(),
   title: varchar("title", { length: 255 }).notNull(),
   content: text("content").notNull(),
@@ -370,6 +397,7 @@ export const cmsGuides = pgTable("cms_guides", {
 
 export const requestMetrics = pgTable("request_metrics", {
   id: serial("id").primaryKey(),
+  tenantId: integer("tenant_id").default(1).notNull().references(() => tenants.id),
   path: varchar("path", { length: 500 }).notNull(),
   method: varchar("method", { length: 10 }).notNull(),
   statusCode: integer("status_code").notNull(),
@@ -382,3 +410,5 @@ export const requestMetrics = pgTable("request_metrics", {
   contentLength: integer("content_length"),
   createdAt: timestamp("created_at", { mode: "string" }).defaultNow().notNull(),
 });
+
+export const tenantsRelations = relations(tenants, () => ({}));

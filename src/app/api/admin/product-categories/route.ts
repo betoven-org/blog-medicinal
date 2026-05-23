@@ -1,11 +1,12 @@
 import { auth } from "@brasa/core/auth";
 import { db } from "@brasa/core/db";
 import { productCategories, media } from "@brasa/core/schema";
-import { eq, count, asc, isNull } from "drizzle-orm";
+import { and, eq, count, asc, isNull } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { generateSlug } from "@brasa/core/slug";
 import { parseBody, createProductCategorySchema } from "@brasa/core/validations";
+import { getTenantId } from "@/lib/tenant";
 
 export async function GET(req: NextRequest) {
   try {
@@ -13,13 +14,16 @@ export async function GET(req: NextRequest) {
     if (!session?.user)
       return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
 
+    const tenantId = await getTenantId();
     const { searchParams } = req.nextUrl;
     const page = Math.max(1, Number(searchParams.get("page") || "1"));
     const limit = Math.min(100, Math.max(1, Number(searchParams.get("limit") || "50")));
     const offset = (page - 1) * limit;
 
     const parentOnly = searchParams.get("parentOnly") === "true";
-    const whereClause = parentOnly ? isNull(productCategories.parentId) : undefined;
+    const whereClause = parentOnly
+      ? and(isNull(productCategories.parentId), eq(productCategories.tenantId, tenantId))
+      : eq(productCategories.tenantId, tenantId);
 
     const [docs, totalResult] = await Promise.all([
       db
@@ -58,6 +62,7 @@ export async function POST(req: NextRequest) {
     if (!session?.user)
       return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
 
+    const tenantId = await getTenantId();
     const body = await req.json();
     const parsed = parseBody(createProductCategorySchema, body);
     if (!parsed.success) return NextResponse.json({ error: parsed.error }, { status: 400 });
@@ -68,7 +73,7 @@ export async function POST(req: NextRequest) {
     const [existing] = await db
       .select({ id: productCategories.id })
       .from(productCategories)
-      .where(eq(productCategories.slug, slug))
+      .where(and(eq(productCategories.slug, slug), eq(productCategories.tenantId, tenantId)))
       .limit(1);
 
     if (existing) {
@@ -86,6 +91,7 @@ export async function POST(req: NextRequest) {
         parentId: null,
         imageId: imageId || null,
         sortOrder: sortOrder ?? 0,
+        tenantId,
         createdAt: now,
         updatedAt: now,
       })

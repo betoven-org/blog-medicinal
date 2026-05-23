@@ -5,6 +5,7 @@ import { media } from "@brasa/core/schema";
 import { put } from "@vercel/blob";
 import sharp from "sharp";
 import { encode } from "blurhash";
+import { getTenantId } from "@/lib/tenant";
 
 interface ProcessedImage {
   suffix: string;
@@ -96,6 +97,7 @@ export async function POST(request: NextRequest) {
       console.error("Blurhash generation failed:", blurhashError);
     }
 
+    const tenantId = await getTenantId();
     const [record] = await db
       .insert(media)
       .values({
@@ -108,6 +110,7 @@ export async function POST(request: NextRequest) {
         mimeType: file.type,
         size: file.size,
         blurhash,
+        tenantId,
       })
       .returning();
 

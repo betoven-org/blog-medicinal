@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@brasa/core/auth";
 import { db } from "@brasa/core/db";
 import { posts, categories, authors, products } from "@brasa/core/schema";
-import { like, desc } from "drizzle-orm";
+import { and, like, desc, eq } from "drizzle-orm";
+import { getTenantId } from "@/lib/tenant";
 
 export async function GET(req: NextRequest) {
   const session = await auth();
@@ -13,6 +14,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ results: [] });
   }
 
+  const tenantId = await getTenantId();
   const pattern = `%${q}%`;
 
   const [foundPosts, foundCategories, foundAuthors, foundProducts] =
@@ -20,25 +22,25 @@ export async function GET(req: NextRequest) {
       db
         .select({ id: posts.id, title: posts.title, slug: posts.slug, status: posts.status })
         .from(posts)
-        .where(like(posts.title, pattern))
+        .where(and(like(posts.title, pattern), eq(posts.tenantId, tenantId)))
         .orderBy(desc(posts.createdAt))
         .limit(5),
       db
         .select({ id: categories.id, name: categories.name, slug: categories.slug })
         .from(categories)
-        .where(like(categories.name, pattern))
+        .where(and(like(categories.name, pattern), eq(categories.tenantId, tenantId)))
         .orderBy(desc(categories.createdAt))
         .limit(5),
       db
         .select({ id: authors.id, name: authors.name, slug: authors.slug })
         .from(authors)
-        .where(like(authors.name, pattern))
+        .where(and(like(authors.name, pattern), eq(authors.tenantId, tenantId)))
         .orderBy(desc(authors.createdAt))
         .limit(5),
       db
         .select({ id: products.id, name: products.name, slug: products.slug })
         .from(products)
-        .where(like(products.name, pattern))
+        .where(and(like(products.name, pattern), eq(products.tenantId, tenantId)))
         .orderBy(desc(products.createdAt))
         .limit(5),
     ]);

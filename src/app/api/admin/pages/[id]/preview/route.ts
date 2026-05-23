@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@brasa/core/auth";
 import { db } from "@brasa/core/db";
 import { pages } from "@brasa/core/schema";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
+import { getTenantId } from "@/lib/tenant";
 
 export async function GET(
   request: NextRequest,
@@ -14,10 +15,11 @@ export async function GET(
 
   const { id } = await params;
   const numId = parseInt(id, 10);
+  const tenantId = await getTenantId();
   if (isNaN(numId))
     return new NextResponse("ID invalido", { status: 400 });
 
-  const [page] = await db.select().from(pages).where(eq(pages.id, numId)).limit(1);
+  const [page] = await db.select().from(pages).where(and(eq(pages.id, numId), eq(pages.tenantId, tenantId))).limit(1);
   if (!page)
     return new NextResponse("Pagina nao encontrada", { status: 404 });
 

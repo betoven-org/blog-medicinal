@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@brasa/core/auth";
 import { db } from "@brasa/core/db";
 import { pages } from "@brasa/core/schema";
-import { asc } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { parseBody, createPageSchema } from "@brasa/core/validations";
+import { getTenantId } from "@/lib/tenant";
 
 export async function GET() {
   const session = await auth();
@@ -11,7 +12,8 @@ export async function GET() {
     return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
 
   try {
-    const docs = await db.select().from(pages).orderBy(asc(pages.title));
+    const tenantId = await getTenantId();
+    const docs = await db.select().from(pages).where(eq(pages.tenantId, tenantId)).orderBy(asc(pages.title));
 
     return NextResponse.json({ docs });
   } catch (error) {
@@ -29,6 +31,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
 
   try {
+    const tenantId = await getTenantId();
     const body = await request.json();
     const parsed = parseBody(createPageSchema, body);
     if (!parsed.success) return NextResponse.json({ error: parsed.error }, { status: 400 });
@@ -40,6 +43,7 @@ export async function POST(request: NextRequest) {
     const [created] = await db.insert(pages).values({
       title,
       slug: normalized,
+      tenantId,
       createdAt: now,
       updatedAt: now,
     }).returning();

@@ -1,10 +1,11 @@
 import { auth } from "@brasa/core/auth";
 import { db } from "@brasa/core/db";
 import { users } from "@brasa/core/schema";
-import { eq, count } from "drizzle-orm";
+import { and, eq, count } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { parseBody, updateUserSchema } from "@brasa/core/validations";
+import { getTenantId } from "@/lib/tenant";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -16,6 +17,7 @@ export async function GET(req: NextRequest, ctx: RouteContext) {
 
     const { id } = await ctx.params;
     const userId = Number(id);
+    const tenantId = await getTenantId();
     if (isNaN(userId))
       return NextResponse.json({ error: "ID invalido" }, { status: 400 });
 
@@ -29,7 +31,7 @@ export async function GET(req: NextRequest, ctx: RouteContext) {
         updatedAt: users.updatedAt,
       })
       .from(users)
-      .where(eq(users.id, userId))
+      .where(and(eq(users.id, userId), eq(users.tenantId, tenantId)))
       .limit(1);
 
     if (!user)
@@ -50,10 +52,11 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
 
     const { id } = await ctx.params;
     const userId = Number(id);
+    const tenantId = await getTenantId();
     if (isNaN(userId))
       return NextResponse.json({ error: "ID invalido" }, { status: 400 });
 
-    const [existing] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+    const [existing] = await db.select().from(users).where(and(eq(users.id, userId), eq(users.tenantId, tenantId))).limit(1);
     if (!existing)
       return NextResponse.json({ error: "Usuario nao encontrado" }, { status: 404 });
 
@@ -67,7 +70,7 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
       const [conflict] = await db
         .select({ id: users.id })
         .from(users)
-        .where(eq(users.email, parsed.data.email))
+        .where(and(eq(users.email, parsed.data.email), eq(users.tenantId, tenantId)))
         .limit(1);
       if (conflict && conflict.id !== userId) {
         return NextResponse.json({ error: "Email ja em uso" }, { status: 409 });
@@ -81,7 +84,7 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
         const [adminCount] = await db
           .select({ total: count() })
           .from(users)
-          .where(eq(users.role, "admin"));
+          .where(and(eq(users.role, "admin"), eq(users.tenantId, tenantId)));
         if (adminCount.total <= 1) {
           return NextResponse.json({ error: "Nao e possivel remover o ultimo admin" }, { status: 400 });
         }
@@ -98,7 +101,7 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
     const [updated] = await db
       .update(users)
       .set(updateData)
-      .where(eq(users.id, userId))
+      .where(and(eq(users.id, userId), eq(users.tenantId, tenantId)))
       .returning({ id: users.id, name: users.name, email: users.email, role: users.role });
 
     return NextResponse.json(updated);
@@ -116,6 +119,7 @@ export async function DELETE(req: NextRequest, ctx: RouteContext) {
 
     const { id } = await ctx.params;
     const userId = Number(id);
+    const tenantId = await getTenantId();
     if (isNaN(userId))
       return NextResponse.json({ error: "ID invalido" }, { status: 400 });
 
@@ -125,7 +129,7 @@ export async function DELETE(req: NextRequest, ctx: RouteContext) {
     }
 
     // Can't delete last admin
-    const [user] = await db.select({ role: users.role }).from(users).where(eq(users.id, userId)).limit(1);
+    const [user] = await db.select({ role: users.role }).from(users).where(and(eq(users.id, userId), eq(users.tenantId, tenantId))).limit(1);
     if (!user)
       return NextResponse.json({ error: "Usuario nao encontrado" }, { status: 404 });
 
@@ -133,13 +137,13 @@ export async function DELETE(req: NextRequest, ctx: RouteContext) {
       const [adminCount] = await db
         .select({ total: count() })
         .from(users)
-        .where(eq(users.role, "admin"));
+        .where(and(eq(users.role, "admin"), eq(users.tenantId, tenantId)));
       if (adminCount.total <= 1) {
         return NextResponse.json({ error: "Nao e possivel excluir o ultimo admin" }, { status: 400 });
       }
     }
 
-    await db.delete(users).where(eq(users.id, userId));
+    await db.delete(users).where(and(eq(users.id, userId), eq(users.tenantId, tenantId)));
 
     return NextResponse.json({ success: true });
   } catch (error) {

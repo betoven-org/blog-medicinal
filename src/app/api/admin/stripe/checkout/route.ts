@@ -4,6 +4,8 @@ import Stripe from "stripe";
 import { stripe } from "@/lib/stripe";
 import { db } from "@brasa/core/db";
 import { subscriptions } from "@brasa/core/schema";
+import { eq } from "drizzle-orm";
+import { getTenantId } from "@/lib/tenant";
 
 async function getOrCreatePrice(): Promise<string> {
   const prices = await stripe.prices.list({
@@ -44,10 +46,11 @@ export async function POST(req: NextRequest) {
       req.headers.get("origin") ||
       "http://localhost:3000";
 
+    const tenantId = await getTenantId();
     const email = token.email as string;
 
     // Verificar se ja existe um stripeCustomerId salvo
-    const [sub] = await db.select().from(subscriptions).limit(1);
+    const [sub] = await db.select().from(subscriptions).where(eq(subscriptions.tenantId, tenantId)).limit(1);
     let customerId: string | undefined;
 
     if (sub?.stripeCustomerId) {
@@ -71,7 +74,7 @@ export async function POST(req: NextRequest) {
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${origin}/admin?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/admin/pagamento-pendente`,
-      metadata: { tenantId: "1" },
+      metadata: { tenantId: String(tenantId) },
     };
 
     if (customerId) {

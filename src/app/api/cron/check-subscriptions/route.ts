@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@brasa/core/db";
 import { subscriptions } from "@brasa/core/schema";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
+import { getTenantId } from "@/lib/tenant";
 
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
@@ -9,10 +10,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
   }
 
+  const tenantId = await getTenantId();
   const [sub] = await db
     .select()
     .from(subscriptions)
-    .where(eq(subscriptions.status, "overdue"))
+    .where(and(eq(subscriptions.status, "overdue"), eq(subscriptions.tenantId, tenantId)))
     .limit(1);
 
   if (!sub) {

@@ -1,6 +1,7 @@
 import { db } from "@brasa/core/db";
 import { posts, categories } from "@brasa/core/schema";
-import { eq, desc } from "drizzle-orm";
+import { and, eq, desc } from "drizzle-orm";
+import { getTenantId } from "@/lib/tenant";
 
 function escapeXml(str: string): string {
   return str
@@ -13,6 +14,7 @@ function escapeXml(str: string): string {
 
 export async function GET() {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const tenantId = await getTenantId();
 
   const rows = await db
     .select({
@@ -25,7 +27,7 @@ export async function GET() {
     })
     .from(posts)
     .leftJoin(categories, eq(posts.categoryId, categories.id))
-    .where(eq(posts.status, "published"))
+    .where(and(eq(posts.status, "published"), eq(posts.tenantId, tenantId)))
     .orderBy(desc(posts.publishedAt))
     .limit(50);
 

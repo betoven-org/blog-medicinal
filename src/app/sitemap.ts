@@ -1,7 +1,8 @@
 import type { MetadataRoute } from "next";
 import { db } from "@brasa/core/db";
 import { posts, categories, authors, products, productCategories } from "@brasa/core/schema";
-import { eq, count } from "drizzle-orm";
+import { and, eq, count } from "drizzle-orm";
+import { getTenantId } from "@/lib/tenant";
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 const PER_SITEMAP = 5000;
@@ -11,7 +12,8 @@ const PER_SITEMAP = 5000;
 // IDs: 0 = static + blog posts, 1 = blog categories + authors, 2+ = products (paginated)
 
 export async function generateSitemaps() {
-  const [productCount] = await db.select({ total: count() }).from(products).where(eq(products.status, "published"));
+  const tenantId = await getTenantId();
+  const [productCount] = await db.select({ total: count() }).from(products).where(and(eq(products.status, "published"), eq(products.tenantId, tenantId)));
   const totalProducts = productCount?.total ?? 0;
   const productPages = Math.ceil(totalProducts / PER_SITEMAP);
 
@@ -30,12 +32,13 @@ export async function generateSitemaps() {
 }
 
 export default async function sitemap({ id }: { id: number }): Promise<MetadataRoute.Sitemap> {
+  const tenantId = await getTenantId();
   // ── Sitemap 0: Static pages + Blog posts ──────────────────────────────
   if (id === 0) {
     const allPosts = await db
       .select({ slug: posts.slug, updatedAt: posts.updatedAt })
       .from(posts)
-      .where(eq(posts.status, "published"));
+      .where(and(eq(posts.status, "published"), eq(posts.tenantId, tenantId)));
 
     return [
       { url: baseUrl, lastModified: new Date(), changeFrequency: "daily", priority: 1.0 },
@@ -53,8 +56,8 @@ export default async function sitemap({ id }: { id: number }): Promise<MetadataR
   // ── Sitemap 1: Blog categories + Authors ──────────────────────────────
   if (id === 1) {
     const [allCategories, allAuthors] = await Promise.all([
-      db.select({ slug: categories.slug, updatedAt: categories.updatedAt }).from(categories),
-      db.select({ slug: authors.slug, updatedAt: authors.updatedAt }).from(authors),
+      db.select({ slug: categories.slug, updatedAt: categories.updatedAt }).from(categories).where(eq(categories.tenantId, tenantId)),
+      db.select({ slug: authors.slug, updatedAt: authors.updatedAt }).from(authors).where(eq(authors.tenantId, tenantId)),
     ]);
 
     return [
@@ -78,7 +81,8 @@ export default async function sitemap({ id }: { id: number }): Promise<MetadataR
   if (id === 2) {
     const allProductCats = await db
       .select({ slug: productCategories.slug, updatedAt: productCategories.updatedAt })
-      .from(productCategories);
+      .from(productCategories)
+      .where(eq(productCategories.tenantId, tenantId));
 
     return allProductCats.map((cat) => ({
       url: `${baseUrl}/produtos/${cat.slug}`,
@@ -96,7 +100,7 @@ export default async function sitemap({ id }: { id: number }): Promise<MetadataR
   const allProducts = await db
     .select({ slug: products.slug, updatedAt: products.updatedAt })
     .from(products)
-    .where(eq(products.status, "published"))
+    .where(and(eq(products.status, "published"), eq(products.tenantId, tenantId)))
     .limit(PER_SITEMAP)
     .offset(offset);
 

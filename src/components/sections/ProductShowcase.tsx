@@ -1,6 +1,7 @@
 import { db } from "@brasa/core/db";
 import { products, media, productCategories } from "@brasa/core/schema";
 import { eq, desc, and, inArray } from "drizzle-orm";
+import { getTenantId } from "@/lib/tenant";
 
 /**
  * @title Vitrine de Produtos
@@ -58,10 +59,12 @@ const COLUMNS_CLASS: Record<string, string> = {
   "4": "sm:grid-cols-2 lg:grid-cols-4",
 };
 
-const publishedFilter = and(
-  eq(products.status, "published"),
-  eq(products.showOnSite, true),
-);
+const publishedWhere = (tenantId: number) =>
+  and(
+    eq(products.status, "published"),
+    eq(products.showOnSite, true),
+    eq(products.tenantId, tenantId),
+  );
 
 async function fetchProducts(
   mode: NonNullable<Props["mode"]>,
@@ -69,6 +72,8 @@ async function fetchProducts(
   parsedSlugs: string[] | undefined,
   categorySlug: string | undefined,
 ): Promise<ProductCard[]> {
+  const tenantId = await getTenantId();
+  const publishedFilter = publishedWhere(tenantId);
   const select = {
     id: products.id,
     name: products.name,

@@ -1,5 +1,7 @@
 import { db } from "@brasa/core/db";
 import { siteSettings } from "@brasa/core/schema";
+import { eq } from "drizzle-orm";
+import { getTenantId } from "@/lib/tenant";
 
 /**
  * @title CTA WhatsApp
@@ -69,7 +71,8 @@ export default async function WhatsAppCTA({
   defaultMessage = "Ola! Gostaria de saber mais sobre os produtos manipulados.",
   style = "brand",
 }: Props) {
-  const settings = await db.select().from(siteSettings).limit(1);
+  const tenantId = await getTenantId();
+  const settings = await db.select().from(siteSettings).where(eq(siteSettings.tenantId, tenantId)).limit(1);
   const whatsapp = settings[0]?.whatsapp ?? null;
 
   if (!whatsapp) return null;

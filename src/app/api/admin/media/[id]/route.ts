@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@brasa/core/auth";
 import { db } from "@brasa/core/db";
 import { media } from "@brasa/core/schema";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { del } from "@vercel/blob";
 import { revalidateTag } from "next/cache";
+import { getTenantId } from "@/lib/tenant";
 
 type RouteParams = { params: Promise<{ id: string }> };
 
@@ -16,6 +17,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
     const mediaId = Number(id);
+    const tenantId = await getTenantId();
 
     if (isNaN(mediaId)) {
       return NextResponse.json({ error: "ID invalido" }, { status: 400 });
@@ -24,7 +26,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const [record] = await db
       .select()
       .from(media)
-      .where(eq(media.id, mediaId))
+      .where(and(eq(media.id, mediaId), eq(media.tenantId, tenantId)))
       .limit(1);
 
     if (!record) {
@@ -49,6 +51,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
     const mediaId = Number(id);
+    const tenantId = await getTenantId();
 
     if (isNaN(mediaId)) {
       return NextResponse.json({ error: "ID invalido" }, { status: 400 });
@@ -57,7 +60,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     const [record] = await db
       .select()
       .from(media)
-      .where(eq(media.id, mediaId))
+      .where(and(eq(media.id, mediaId), eq(media.tenantId, tenantId)))
       .limit(1);
 
     if (!record) {
@@ -78,7 +81,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       console.error("Blob deletion failed (continuing with DB delete):", blobError);
     }
 
-    await db.delete(media).where(eq(media.id, mediaId));
+    await db.delete(media).where(and(eq(media.id, mediaId), eq(media.tenantId, tenantId)));
 
     revalidateTag("media");
 

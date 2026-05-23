@@ -1,11 +1,12 @@
 import { auth } from "@brasa/core/auth";
 import { db } from "@brasa/core/db";
 import { productCategories, products, media } from "@brasa/core/schema";
-import { eq, count } from "drizzle-orm";
+import { and, eq, count } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { generateSlug } from "@brasa/core/slug";
 import { parseBody, updateProductCategorySchema } from "@brasa/core/validations";
+import { getTenantId } from "@/lib/tenant";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -17,6 +18,7 @@ export async function GET(req: NextRequest, ctx: RouteContext) {
 
     const { id } = await ctx.params;
     const catId = Number(id);
+    const tenantId = await getTenantId();
     if (isNaN(catId))
       return NextResponse.json({ error: "ID invalido" }, { status: 400 });
 
@@ -34,7 +36,7 @@ export async function GET(req: NextRequest, ctx: RouteContext) {
       })
       .from(productCategories)
       .leftJoin(media, eq(productCategories.imageId, media.id))
-      .where(eq(productCategories.id, catId))
+      .where(and(eq(productCategories.id, catId), eq(productCategories.tenantId, tenantId)))
       .limit(1);
 
     if (!cat)
@@ -55,13 +57,14 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
 
     const { id } = await ctx.params;
     const catId = Number(id);
+    const tenantId = await getTenantId();
     if (isNaN(catId))
       return NextResponse.json({ error: "ID invalido" }, { status: 400 });
 
     const [existing] = await db
       .select()
       .from(productCategories)
-      .where(eq(productCategories.id, catId))
+      .where(and(eq(productCategories.id, catId), eq(productCategories.tenantId, tenantId)))
       .limit(1);
 
     if (!existing)
@@ -79,7 +82,7 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
       const [conflict] = await db
         .select({ id: productCategories.id })
         .from(productCategories)
-        .where(eq(productCategories.slug, updateData.slug as string))
+        .where(and(eq(productCategories.slug, updateData.slug as string), eq(productCategories.tenantId, tenantId)))
         .limit(1);
 
       if (conflict && conflict.id !== catId) {
@@ -96,7 +99,7 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
     const [updated] = await db
       .update(productCategories)
       .set(updateData)
-      .where(eq(productCategories.id, catId))
+      .where(and(eq(productCategories.id, catId), eq(productCategories.tenantId, tenantId)))
       .returning();
 
     revalidateTag("product-categories");
@@ -116,13 +119,14 @@ export async function DELETE(req: NextRequest, ctx: RouteContext) {
 
     const { id } = await ctx.params;
     const catId = Number(id);
+    const tenantId = await getTenantId();
     if (isNaN(catId))
       return NextResponse.json({ error: "ID invalido" }, { status: 400 });
 
     const [productCount] = await db
       .select({ total: count() })
       .from(products)
-      .where(eq(products.productCategoryId, catId));
+      .where(and(eq(products.productCategoryId, catId), eq(products.tenantId, tenantId)));
 
     if (productCount.total > 0) {
       return NextResponse.json(
@@ -131,7 +135,7 @@ export async function DELETE(req: NextRequest, ctx: RouteContext) {
       );
     }
 
-    await db.delete(productCategories).where(eq(productCategories.id, catId));
+    await db.delete(productCategories).where(and(eq(productCategories.id, catId), eq(productCategories.tenantId, tenantId)));
 
     revalidateTag("product-categories");
 

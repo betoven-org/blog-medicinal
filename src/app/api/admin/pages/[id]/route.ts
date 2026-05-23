@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@brasa/core/auth";
 import { db } from "@brasa/core/db";
 import { pages } from "@brasa/core/schema";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { parseBody, updatePageSchema } from "@brasa/core/validations";
+import { getTenantId } from "@/lib/tenant";
 
 export async function GET(
   _request: NextRequest,
@@ -16,6 +17,7 @@ export async function GET(
   try {
     const { id } = await params;
     const pageId = Number(id);
+    const tenantId = await getTenantId();
 
     if (isNaN(pageId))
       return NextResponse.json({ error: "ID invalido" }, { status: 400 });
@@ -23,7 +25,7 @@ export async function GET(
     const [page] = await db
       .select()
       .from(pages)
-      .where(eq(pages.id, pageId))
+      .where(and(eq(pages.id, pageId), eq(pages.tenantId, tenantId)))
       .limit(1);
 
     if (!page)
@@ -50,6 +52,7 @@ export async function PATCH(
   try {
     const { id } = await params;
     const pageId = Number(id);
+    const tenantId = await getTenantId();
 
     if (isNaN(pageId))
       return NextResponse.json({ error: "ID invalido" }, { status: 400 });
@@ -59,7 +62,7 @@ export async function PATCH(
     const [existing] = await db
       .select({ id: pages.id })
       .from(pages)
-      .where(eq(pages.id, pageId))
+      .where(and(eq(pages.id, pageId), eq(pages.tenantId, tenantId)))
       .limit(1);
 
     if (!existing)
@@ -70,7 +73,7 @@ export async function PATCH(
       const [updated] = await db
         .update(pages)
         .set({ draftSections: body.draftSections, updatedAt: new Date().toISOString() })
-        .where(eq(pages.id, pageId))
+        .where(and(eq(pages.id, pageId), eq(pages.tenantId, tenantId)))
         .returning();
       return NextResponse.json(updated);
     }
@@ -91,7 +94,7 @@ export async function PATCH(
     const [updated] = await db
       .update(pages)
       .set({ draft: draftData, updatedAt: new Date().toISOString() })
-      .where(eq(pages.id, pageId))
+      .where(and(eq(pages.id, pageId), eq(pages.tenantId, tenantId)))
       .returning();
 
     return NextResponse.json(updated);

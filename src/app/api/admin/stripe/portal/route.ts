@@ -3,6 +3,8 @@ import { getToken } from "next-auth/jwt";
 import { stripe } from "@/lib/stripe";
 import { db } from "@brasa/core/db";
 import { subscriptions } from "@brasa/core/schema";
+import { eq } from "drizzle-orm";
+import { getTenantId } from "@/lib/tenant";
 
 export async function POST(req: NextRequest) {
   const token = await getToken({ req, secret: process.env.AUTH_SECRET });
@@ -11,12 +13,13 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    const tenantId = await getTenantId();
     const origin =
       process.env.NEXT_PUBLIC_SITE_URL ||
       req.headers.get("origin") ||
       "http://localhost:3000";
 
-    const [sub] = await db.select().from(subscriptions).limit(1);
+    const [sub] = await db.select().from(subscriptions).where(eq(subscriptions.tenantId, tenantId)).limit(1);
 
     if (!sub?.stripeCustomerId) {
       return NextResponse.json(

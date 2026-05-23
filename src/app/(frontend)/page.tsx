@@ -17,7 +17,8 @@ import Link from "next/link";
 import { resolveRelation } from "@/lib/utils";
 import { db } from "@brasa/core/db";
 import { pages } from "@brasa/core/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
+import { getTenantId } from "@/lib/tenant";
 import { SectionRenderer } from "@/components/SectionRenderer";
 import type { SectionBlock } from "@brasa/core/manifest";
 
@@ -121,13 +122,14 @@ export default async function HomePage({
   const isPreview = params.preview === "draft" && params.pageId;
 
   // Check if home page has CMS sections configured
+  const tenantId = await getTenantId();
   const [homePage] = await db
     .select({
       sections: pages.sections,
       draftSections: pages.draftSections,
     })
     .from(pages)
-    .where(eq(pages.slug, "home"))
+    .where(and(eq(pages.slug, "home"), eq(pages.tenantId, tenantId)))
     .limit(1);
 
   // In preview mode, use draftSections; otherwise use published sections

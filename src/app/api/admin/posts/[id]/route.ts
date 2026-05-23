@@ -1,12 +1,13 @@
 import { auth } from "@brasa/core/auth";
 import { db } from "@brasa/core/db";
 import { posts, categories, authors, tags, media } from "@brasa/core/schema";
-import { eq, desc } from "drizzle-orm";
+import { and, eq, desc } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { generateSlug } from "@brasa/core/slug";
 import { parseBody, updatePostSchema } from "@brasa/core/validations";
 import { getContentStats } from "@/lib/content-utils";
+import { getTenantId } from "@/lib/tenant";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -18,6 +19,7 @@ export async function GET(req: NextRequest, ctx: RouteContext) {
 
     const { id } = await ctx.params;
     const postId = Number(id);
+    const tenantId = await getTenantId();
 
     if (isNaN(postId)) {
       return NextResponse.json({ error: "ID invalido" }, { status: 400 });
@@ -51,7 +53,7 @@ export async function GET(req: NextRequest, ctx: RouteContext) {
       .leftJoin(categories, eq(posts.categoryId, categories.id))
       .leftJoin(authors, eq(posts.authorId, authors.id))
       .leftJoin(media, eq(posts.heroImageId, media.id))
-      .where(eq(posts.id, postId))
+      .where(and(eq(posts.id, postId), eq(posts.tenantId, tenantId)))
       .limit(1);
 
     if (!post) {
@@ -61,7 +63,7 @@ export async function GET(req: NextRequest, ctx: RouteContext) {
     const postTags = await db
       .select({ id: tags.id, tag: tags.tag })
       .from(tags)
-      .where(eq(tags.postId, postId));
+      .where(and(eq(tags.postId, postId), eq(tags.tenantId, tenantId)));
 
     return NextResponse.json({ ...post, tags: postTags });
   } catch (error) {
@@ -81,6 +83,7 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
 
     const { id } = await ctx.params;
     const postId = Number(id);
+    const tenantId = await getTenantId();
 
     if (isNaN(postId)) {
       return NextResponse.json({ error: "ID invalido" }, { status: 400 });
@@ -89,7 +92,7 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
     const [existing] = await db
       .select()
       .from(posts)
-      .where(eq(posts.id, postId))
+      .where(and(eq(posts.id, postId), eq(posts.tenantId, tenantId)))
       .limit(1);
 
     if (!existing) {
@@ -110,7 +113,7 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
       const [slugConflict] = await db
         .select({ id: posts.id })
         .from(posts)
-        .where(eq(posts.slug, updateData.slug as string))
+        .where(and(eq(posts.slug, updateData.slug as string), eq(posts.tenantId, tenantId)))
         .limit(1);
 
       if (slugConflict && slugConflict.id !== postId) {
@@ -141,17 +144,18 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
     const [updated] = await db
       .update(posts)
       .set(updateData)
-      .where(eq(posts.id, postId))
+      .where(and(eq(posts.id, postId), eq(posts.tenantId, tenantId)))
       .returning();
 
     if (postTags && Array.isArray(postTags)) {
-      await db.delete(tags).where(eq(tags.postId, postId));
+      await db.delete(tags).where(and(eq(tags.postId, postId), eq(tags.tenantId, tenantId)));
 
       if (postTags.length > 0) {
         await db.insert(tags).values(
           postTags.map((tag: string) => ({
             postId,
             tag,
+            tenantId,
           }))
         );
       }
@@ -177,6 +181,7 @@ export async function DELETE(req: NextRequest, ctx: RouteContext) {
 
     const { id } = await ctx.params;
     const postId = Number(id);
+    const tenantId = await getTenantId();
 
     if (isNaN(postId)) {
       return NextResponse.json({ error: "ID invalido" }, { status: 400 });
@@ -185,15 +190,15 @@ export async function DELETE(req: NextRequest, ctx: RouteContext) {
     const [existing] = await db
       .select({ id: posts.id })
       .from(posts)
-      .where(eq(posts.id, postId))
+      .where(and(eq(posts.id, postId), eq(posts.tenantId, tenantId)))
       .limit(1);
 
     if (!existing) {
       return NextResponse.json({ error: "Post nao encontrado" }, { status: 404 });
     }
 
-    await db.delete(tags).where(eq(tags.postId, postId));
-    await db.delete(posts).where(eq(posts.id, postId));
+    await db.delete(tags).where(and(eq(tags.postId, postId), eq(tags.tenantId, tenantId)));
+    await db.delete(posts).where(and(eq(posts.id, postId), eq(posts.tenantId, tenantId)));
 
     revalidateTag("posts");
 

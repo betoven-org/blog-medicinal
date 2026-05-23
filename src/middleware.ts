@@ -2,23 +2,48 @@ import { auth } from "@brasa/core/auth";
 import { NextResponse } from "next/server";
 
 const INGEST_SECRET = process.env.METRICS_INGEST_SECRET || "metrics-internal-key";
+const TENANT_HEADER = "x-tenant-id";
 
-// Paths to skip metrics collection (static assets, internal APIs)
-const SKIP_METRICS = /^\/((_next|favicon|logo|apple-touch|manifest|robots|sitemap|feed|api\/metrics))/;
+// Paths to skip metrics collection
+const SKIP_METRICS = /^\/((_next|favicon|logo|apple-touch|manifest|robots|sitemap|feed|api\/metrics|api\/tenant))/;
 
-// Bots maliciosos / scrapers que inflam pageviews (bloquear com 403)
-// Bots legitimos (Googlebot, Bingbot) sao permitidos mas marcados como bot nas metricas
+// Bots maliciosos
 const BLOCK_BOTS = /semrush|ahref|mj12bot|dotbot|petalbot|bytespider|gptbot|ccbot|claudebot|anthropic|dataprovider|barkrowler|seekport|zoominfobot|censys|netcraft|masscan|nmap|zgrab|httpx|nuclei|nikto|sqlmap|dirbuster|gobuster|wpscan|acunetix|nessus|openvas/i;
 
-// Bots legitimos — permitir mas nao contar como pageview
-const LEGIT_BOTS = /googlebot|bingbot|slurp|duckduckbot|yandex|baiduspider|facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegram|applebot|pinterest|redditbot/i;
+// In-memory tenant cache (hostname -> tenantId, TTL 5min)
+const tenantCache = new Map<string, { id: number; ts: number }>();
+const CACHE_TTL = 5 * 60 * 1000;
+
+async function resolveTenantId(host: string, origin: string): Promise<number> {
+  const hostname = host.split(":")[0];
+
+  // Check cache
+  const cached = tenantCache.get(hostname);
+  if (cached && Date.now() - cached.ts < CACHE_TTL) {
+    return cached.id;
+  }
+
+  try {
+    const res = await fetch(`${origin}/api/tenant?host=${encodeURIComponent(hostname)}`);
+    if (res.ok) {
+      const data = await res.json();
+      const id = data.id || 1;
+      tenantCache.set(hostname, { id, ts: Date.now() });
+      return id;
+    }
+  } catch {
+    // Fallback on error
+  }
+
+  return 1;
+}
 
 export default auth(async (req) => {
   const start = Date.now();
   const { pathname } = req.nextUrl;
   const ua = req.headers.get("user-agent") || "";
 
-  // Bloquear bots maliciosos / scrapers
+  // Bloquear bots maliciosos
   if (BLOCK_BOTS.test(ua)) {
     return new Response("Forbidden", { status: 403 });
   }
@@ -27,6 +52,15 @@ export default auth(async (req) => {
   if (!ua && !pathname.startsWith("/api/")) {
     return new Response("Forbidden", { status: 403 });
   }
+
+  // Skip tenant resolution for internal APIs
+  if (pathname === "/api/tenant") {
+    return NextResponse.next();
+  }
+
+  // Resolve tenant
+  const host = req.headers.get("host") || "localhost";
+  const tenantId = await resolveTenantId(host, req.nextUrl.origin);
 
   const isLoginPage = pathname === "/admin/login";
   const isPaymentPage = pathname === "/admin/pagamento-pendente";
@@ -42,7 +76,7 @@ export default auth(async (req) => {
     pathname.startsWith("/api/cron") ||
     pathname.startsWith("/api/subscription-status")
   ) {
-    return trackAndReturn(NextResponse.next(), req, start);
+    return trackAndReturn(injectTenant(tenantId, req), req, start, tenantId);
   }
 
   // Admin nao autenticado — redirecionar para login
@@ -51,6 +85,7 @@ export default auth(async (req) => {
       Response.redirect(new URL("/admin/login", req.nextUrl.origin)),
       req,
       start,
+      tenantId,
     );
   }
 
@@ -60,6 +95,7 @@ export default auth(async (req) => {
       Response.redirect(new URL("/admin", req.nextUrl.origin)),
       req,
       start,
+      tenantId,
     );
   }
 
@@ -78,24 +114,39 @@ export default auth(async (req) => {
             ),
             req,
             start,
+            tenantId,
           );
         }
       }
     } catch {
-      // Falha na verificacao — permitir acesso (fail open)
+      // Fail open
     }
   }
 
-  return trackAndReturn(NextResponse.next(), req, start);
+  return trackAndReturn(injectTenant(tenantId, req), req, start, tenantId);
 });
 
-function trackAndReturn(response: Response, req: Parameters<Parameters<typeof auth>[0]>[0], start: number) {
+function injectTenant(tenantId: number, req: { headers: Headers }): NextResponse {
+  // Clone request headers and add tenant ID
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set(TENANT_HEADER, String(tenantId));
+  const res = NextResponse.next({
+    request: { headers: requestHeaders },
+  });
+  res.headers.set(TENANT_HEADER, String(tenantId));
+  return res;
+}
+
+function trackAndReturn(
+  response: Response,
+  req: Parameters<Parameters<typeof auth>[0]>[0],
+  start: number,
+  tenantId: number,
+) {
   const { pathname } = req.nextUrl;
 
-  // Skip metrics for static assets and internal routes
   if (SKIP_METRICS.test(pathname)) return response;
 
-  // Fire-and-forget metrics collection (non-blocking)
   const latencyMs = Date.now() - start;
   const statusCode = response.status || 200;
 
@@ -112,6 +163,7 @@ function trackAndReturn(response: Response, req: Parameters<Parameters<typeof au
         method: req.method,
         statusCode,
         latencyMs,
+        tenantId,
         country: req.headers.get("x-vercel-ip-country") || req.headers.get("cf-ipcountry") || null,
         city: req.headers.get("x-vercel-ip-city") || null,
         userAgent: req.headers.get("user-agent") || "",
@@ -120,9 +172,9 @@ function trackAndReturn(response: Response, req: Parameters<Parameters<typeof au
           ? parseInt(response.headers.get("content-length")!, 10)
           : null,
       }),
-    }).catch(() => {}); // Silently ignore failures
+    }).catch(() => {});
   } catch {
-    // Never block the response
+    // Never block
   }
 
   return response;
@@ -130,7 +182,6 @@ function trackAndReturn(response: Response, req: Parameters<Parameters<typeof au
 
 export const config = {
   matcher: [
-    // Match all routes except static files
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|woff|woff2|ttf|eot)).*)",
   ],
 };

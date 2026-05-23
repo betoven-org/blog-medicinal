@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@brasa/core/auth";
 import { db } from "@brasa/core/db";
 import { pages } from "@brasa/core/schema";
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
 import { z } from "zod";
 import { parseBody } from "@brasa/core/validations";
+import { getTenantId } from "@/lib/tenant";
 
 const schema = z.object({
   ids: z.array(z.number().int()).min(1, "Selecione ao menos uma pagina"),
@@ -22,11 +23,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: parsed.error }, { status: 400 });
 
   const { ids } = parsed.data;
+  const tenantId = await getTenantId();
 
   const pending = await db
     .select()
     .from(pages)
-    .where(inArray(pages.id, ids));
+    .where(and(inArray(pages.id, ids), eq(pages.tenantId, tenantId)));
 
   let published = 0;
 
@@ -47,7 +49,7 @@ export async function POST(request: NextRequest) {
         draft: null,
         updatedAt: new Date().toISOString(),
       })
-      .where(eq(pages.id, page.id));
+      .where(and(eq(pages.id, page.id), eq(pages.tenantId, tenantId)));
 
     published++;
   }

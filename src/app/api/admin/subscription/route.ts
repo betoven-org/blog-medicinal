@@ -3,6 +3,7 @@ import { auth } from "@brasa/core/auth";
 import { db } from "@brasa/core/db";
 import { subscriptions } from "@brasa/core/schema";
 import { eq } from "drizzle-orm";
+import { getTenantId } from "@/lib/tenant";
 
 export async function GET() {
   const session = await auth();
@@ -10,7 +11,8 @@ export async function GET() {
     return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
   }
 
-  const [sub] = await db.select().from(subscriptions).limit(1);
+  const tenantId = await getTenantId();
+  const [sub] = await db.select().from(subscriptions).where(eq(subscriptions.tenantId, tenantId)).limit(1);
 
   if (!sub) {
     return NextResponse.json({ error: "Nenhuma assinatura encontrada" }, { status: 404 });
@@ -25,10 +27,11 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
   }
 
+  const tenantId = await getTenantId();
   const body = await req.json();
   const { status, nextDueDate, graceDays } = body;
 
-  const [sub] = await db.select().from(subscriptions).limit(1);
+  const [sub] = await db.select().from(subscriptions).where(eq(subscriptions.tenantId, tenantId)).limit(1);
   if (!sub) {
     return NextResponse.json({ error: "Nenhuma assinatura encontrada" }, { status: 404 });
   }

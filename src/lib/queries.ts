@@ -10,6 +10,7 @@ import {
   pages,
 } from "@brasa/core/schema";
 import { eq, and, ne, desc, asc, ilike, or, count, sql } from "drizzle-orm";
+import { getTenantId } from "@/lib/tenant";
 
 // ── Helpers ─────────────────────────────────────────────────────────────────────
 
@@ -75,9 +76,10 @@ function mapPost(row: any) {
 
 // ── Queries ─────────────────────────────────────────────────────────────────────
 
-export const getSiteSettings = unstable_cache(
-  async () => {
+const _getSiteSettings = unstable_cache(
+  async (tenantId: number) => {
     const row = await db.query.siteSettings.findFirst({
+      where: eq(siteSettings.tenantId, tenantId),
       with: {
         logo: true,
         favicon: true,
@@ -126,10 +128,16 @@ export const getSiteSettings = unstable_cache(
   { revalidate: 3600, tags: ["settings"] },
 );
 
-export const getFeaturedPost = unstable_cache(
-  async () => {
+export async function getSiteSettings() {
+  const tenantId = await getTenantId();
+  return _getSiteSettings(tenantId);
+}
+
+const _getFeaturedPost = unstable_cache(
+  async (tenantId: number) => {
     const rows = await db.query.posts.findMany({
       where: and(
+        eq(posts.tenantId, tenantId),
         eq(posts.status, "published"),
         eq(posts.featured, true),
       ),
@@ -149,12 +157,18 @@ export const getFeaturedPost = unstable_cache(
   { revalidate: 300, tags: ["posts"] },
 );
 
+export async function getFeaturedPost() {
+  const tenantId = await getTenantId();
+  return _getFeaturedPost(tenantId);
+}
+
 export async function getLatestPosts(limit = 9, page = 1) {
+  const tenantId = await getTenantId();
   return unstable_cache(
-    async () => {
+    async (tenantId: number) => {
       const offset = (page - 1) * limit;
 
-      const whereCondition = eq(posts.status, "published");
+      const whereCondition = and(eq(posts.tenantId, tenantId), eq(posts.status, "published"));
 
       const [{ total }] = await db
         .select({ total: count() })
@@ -187,15 +201,15 @@ export async function getLatestPosts(limit = 9, page = 1) {
         hasPrevPage: page > 1,
       };
     },
-    ["latest-posts", String(limit), String(page)],
+    ["latest-posts", String(tenantId), String(limit), String(page)],
     { revalidate: 300, tags: ["posts"] },
-  )();
+  )(tenantId);
 }
 
-export const getRecentPosts = unstable_cache(
-  async (limit = 5) => {
+const _getRecentPosts = unstable_cache(
+  async (tenantId: number, limit = 5) => {
     const rows = await db.query.posts.findMany({
-      where: eq(posts.status, "published"),
+      where: and(eq(posts.tenantId, tenantId), eq(posts.status, "published")),
       orderBy: [desc(posts.createdAt)],
       limit,
       with: {
@@ -212,11 +226,17 @@ export const getRecentPosts = unstable_cache(
   { revalidate: 300, tags: ["posts"] },
 );
 
+export async function getRecentPosts(limit = 5) {
+  const tenantId = await getTenantId();
+  return _getRecentPosts(tenantId, limit);
+}
+
 export async function getPostBySlug(slug: string) {
+  const tenantId = await getTenantId();
   return unstable_cache(
-    async () => {
+    async (tenantId: number) => {
       const row = await db.query.posts.findFirst({
-        where: eq(posts.slug, slug),
+        where: and(eq(posts.tenantId, tenantId), eq(posts.slug, slug)),
         with: {
           category: true,
           author: { with: { avatar: true } },
@@ -227,9 +247,9 @@ export async function getPostBySlug(slug: string) {
       if (!row) return null;
       return mapPost(row);
     },
-    ["post-by-slug", slug],
+    ["post-by-slug", String(tenantId), slug],
     { revalidate: 600, tags: ["posts"] },
-  )();
+  )(tenantId);
 }
 
 export async function getPostsByCategory(
@@ -237,16 +257,18 @@ export async function getPostsByCategory(
   limit = 12,
   page = 1,
 ) {
+  const tenantId = await getTenantId();
   return unstable_cache(
-    async () => {
+    async (tenantId: number) => {
       const category = await db.query.categories.findFirst({
-        where: eq(categories.slug, categorySlug),
+        where: and(eq(categories.tenantId, tenantId), eq(categories.slug, categorySlug)),
       });
 
       if (!category)
         return { docs: [], category: null, totalPages: 0, totalDocs: 0 };
 
       const whereCondition = and(
+        eq(posts.tenantId, tenantId),
         eq(posts.status, "published"),
         eq(posts.categoryId, category.id),
       );
@@ -281,25 +303,27 @@ export async function getPostsByCategory(
         totalDocs,
       };
     },
-    ["posts-by-category", categorySlug, String(limit), String(page)],
+    ["posts-by-category", String(tenantId), categorySlug, String(limit), String(page)],
     { revalidate: 300, tags: ["posts", "categories"] },
-  )();
+  )(tenantId);
 }
 
 export async function getPostsByCategorySlug(
   categorySlug: string,
   limit = 6,
 ) {
+  const tenantId = await getTenantId();
   return unstable_cache(
-    async () => {
+    async (tenantId: number) => {
       const category = await db.query.categories.findFirst({
-        where: eq(categories.slug, categorySlug),
+        where: and(eq(categories.tenantId, tenantId), eq(categories.slug, categorySlug)),
       });
 
       if (!category) return { docs: [] };
 
       const rows = await db.query.posts.findMany({
         where: and(
+          eq(posts.tenantId, tenantId),
           eq(posts.status, "published"),
           eq(posts.categoryId, category.id),
         ),
@@ -315,9 +339,9 @@ export async function getPostsByCategorySlug(
 
       return { docs: rows.map(mapPost) };
     },
-    ["posts-by-cat-slug", categorySlug, String(limit)],
+    ["posts-by-cat-slug", String(tenantId), categorySlug, String(limit)],
     { revalidate: 300, tags: ["posts"] },
-  )();
+  )(tenantId);
 }
 
 export async function getRelatedPosts(
@@ -325,10 +349,12 @@ export async function getRelatedPosts(
   excludePostId: string | number,
   limit = 3,
 ) {
+  const tenantId = await getTenantId();
   return unstable_cache(
-    async () => {
+    async (tenantId: number) => {
       const rows = await db.query.posts.findMany({
         where: and(
+          eq(posts.tenantId, tenantId),
           eq(posts.status, "published"),
           eq(posts.categoryId, Number(categoryId)),
           ne(posts.id, Number(excludePostId)),
@@ -349,9 +375,9 @@ export async function getRelatedPosts(
         totalPages: 1,
       };
     },
-    ["related-posts", String(categoryId), String(excludePostId)],
+    ["related-posts", String(tenantId), String(categoryId), String(excludePostId)],
     { revalidate: 300, tags: ["posts"] },
-  )();
+  )(tenantId);
 }
 
 export async function searchPosts(
@@ -360,10 +386,12 @@ export async function searchPosts(
   limit = 12,
   page = 1,
 ) {
+  const tenantId = await getTenantId();
   return unstable_cache(
-    async () => {
+    async (tenantId: number) => {
       const searchPattern = `%${query}%`;
       const conditions = [
+        eq(posts.tenantId, tenantId),
         eq(posts.status, "published"),
         or(
           ilike(posts.title, searchPattern),
@@ -373,7 +401,7 @@ export async function searchPosts(
 
       if (categorySlug) {
         const category = await db.query.categories.findFirst({
-          where: eq(categories.slug, categorySlug),
+          where: and(eq(categories.tenantId, tenantId), eq(categories.slug, categorySlug)),
         });
         if (category) {
           conditions.push(eq(posts.categoryId, category.id));
@@ -414,9 +442,9 @@ export async function searchPosts(
         hasPrevPage: page > 1,
       };
     },
-    ["search-posts", query, categorySlug ?? "", String(limit), String(page)],
+    ["search-posts", String(tenantId), query, categorySlug ?? "", String(limit), String(page)],
     { revalidate: 120, tags: ["posts"] },
-  )();
+  )(tenantId);
 }
 
 export async function getPostsByAuthor(
@@ -424,9 +452,11 @@ export async function getPostsByAuthor(
   limit = 12,
   page = 1,
 ) {
+  const tenantId = await getTenantId();
   return unstable_cache(
-    async () => {
+    async (tenantId: number) => {
       const whereCondition = and(
+        eq(posts.tenantId, tenantId),
         eq(posts.status, "published"),
         eq(posts.authorId, Number(authorId)),
       );
@@ -464,16 +494,17 @@ export async function getPostsByAuthor(
         hasPrevPage: page > 1,
       };
     },
-    ["posts-by-author", String(authorId), String(limit), String(page)],
+    ["posts-by-author", String(tenantId), String(authorId), String(limit), String(page)],
     { revalidate: 300, tags: ["posts"] },
-  )();
+  )(tenantId);
 }
 
 export async function getAuthorBySlug(slug: string) {
+  const tenantId = await getTenantId();
   return unstable_cache(
-    async () => {
+    async (tenantId: number) => {
       const row = await db.query.authors.findFirst({
-        where: eq(authors.slug, slug),
+        where: and(eq(authors.tenantId, tenantId), eq(authors.slug, slug)),
         with: { avatar: true },
       });
       if (!row) return null;
@@ -482,14 +513,15 @@ export async function getAuthorBySlug(slug: string) {
         avatar: row.avatar ? { url: row.avatar.url } : null,
       };
     },
-    ["author-by-slug", slug],
+    ["author-by-slug", String(tenantId), slug],
     { revalidate: 600, tags: ["authors"] },
-  )();
+  )(tenantId);
 }
 
-export const getCategories = unstable_cache(
-  async () => {
+const _getCategories = unstable_cache(
+  async (tenantId: number) => {
     const rows = await db.query.categories.findMany({
+      where: eq(categories.tenantId, tenantId),
       orderBy: [asc(categories.name)],
     });
     return { docs: rows };
@@ -498,12 +530,17 @@ export const getCategories = unstable_cache(
   { revalidate: 3600, tags: ["categories"] },
 );
 
-export const getPageBySlug = unstable_cache(
-  async (slug: string) => {
+export async function getCategories() {
+  const tenantId = await getTenantId();
+  return _getCategories(tenantId);
+}
+
+const _getPageBySlug = unstable_cache(
+  async (tenantId: number, slug: string) => {
     const [page] = await db
       .select()
       .from(pages)
-      .where(eq(pages.slug, slug))
+      .where(and(eq(pages.tenantId, tenantId), eq(pages.slug, slug)))
       .limit(1);
     return page ?? null;
   },
@@ -511,8 +548,13 @@ export const getPageBySlug = unstable_cache(
   { revalidate: 3600, tags: ["pages"] },
 );
 
-export const getCategoriesWithCount = unstable_cache(
-  async () => {
+export async function getPageBySlug(slug: string) {
+  const tenantId = await getTenantId();
+  return _getPageBySlug(tenantId, slug);
+}
+
+const _getCategoriesWithCount = unstable_cache(
+  async (tenantId: number) => {
     const rows = await db
       .select({
         id: categories.id,
@@ -525,8 +567,9 @@ export const getCategoriesWithCount = unstable_cache(
       .from(categories)
       .leftJoin(
         posts,
-        and(eq(posts.categoryId, categories.id), eq(posts.status, "published")),
+        and(eq(posts.categoryId, categories.id), eq(posts.status, "published"), eq(posts.tenantId, tenantId)),
       )
+      .where(eq(categories.tenantId, tenantId))
       .groupBy(categories.id)
       .orderBy(asc(categories.name));
 
@@ -535,3 +578,8 @@ export const getCategoriesWithCount = unstable_cache(
   ["categories-with-count"],
   { revalidate: 600, tags: ["posts", "categories"] },
 );
+
+export async function getCategoriesWithCount() {
+  const tenantId = await getTenantId();
+  return _getCategoriesWithCount(tenantId);
+}

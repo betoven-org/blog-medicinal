@@ -128,7 +128,8 @@
       "Bash(PGPASSWORD=npg_iZc9zoXQ8glY psql \"postgresql://neondb_owner@ep-calm-union-acpade3o-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require\" -c \"SELECT slug, title FROM pages ORDER BY title;\")",
       "Bash(gh run:*)",
       "Bash(source /Users/wesleymoraesserafim/blog-medicinal/.env.local)",
-      "WebFetch(domain:www.uol.com.br)"
+      "WebFetch(domain:www.uol.com.br)",
+      "Bash(psql \"$DATABASE_URI\" -c \":*)"
     ]
   }
 }

@@ -1,10 +1,11 @@
 import { auth } from "@brasa/core/auth";
 import { db } from "@brasa/core/db";
 import { products } from "@brasa/core/schema";
-import { inArray } from "drizzle-orm";
+import { and, inArray, eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { parseBody, bulkActionSchema } from "@brasa/core/validations";
+import { getTenantId } from "@/lib/tenant";
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,6 +13,7 @@ export async function POST(req: NextRequest) {
     if (!session?.user)
       return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
 
+    const tenantId = await getTenantId();
     const body = await req.json();
     const parsed = parseBody(bulkActionSchema, body);
     if (!parsed.success) return NextResponse.json({ error: parsed.error }, { status: 400 });
@@ -20,17 +22,17 @@ export async function POST(req: NextRequest) {
     const now = new Date().toISOString();
 
     if (action === "delete") {
-      await db.delete(products).where(inArray(products.id, ids));
+      await db.delete(products).where(and(inArray(products.id, ids), eq(products.tenantId, tenantId)));
     } else if (action === "publish") {
       await db
         .update(products)
         .set({ status: "published", publishedAt: now, updatedAt: now })
-        .where(inArray(products.id, ids));
+        .where(and(inArray(products.id, ids), eq(products.tenantId, tenantId)));
     } else if (action === "unpublish") {
       await db
         .update(products)
         .set({ status: "draft", updatedAt: now })
-        .where(inArray(products.id, ids));
+        .where(and(inArray(products.id, ids), eq(products.tenantId, tenantId)));
     }
 
     revalidateTag("products");

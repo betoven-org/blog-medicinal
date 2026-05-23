@@ -1,6 +1,7 @@
 import { db } from "@brasa/core/db";
 import { categories } from "@brasa/core/schema";
-import { asc } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
+import { getTenantId } from "@/lib/tenant";
 
 /**
  * @title Barra de Categorias
@@ -25,9 +26,11 @@ export default async function CategoryBar({
   showAll = true,
   limit = 10,
 }: Props) {
+  const tenantId = await getTenantId();
   const rows = await db
     .select({ id: categories.id, name: categories.name, slug: categories.slug })
     .from(categories)
+    .where(eq(categories.tenantId, tenantId))
     .orderBy(asc(categories.name))
     .limit(limit);
 

@@ -2,10 +2,11 @@ import { db } from "@brasa/core/db";
 import {
   categories, authors, posts, tags, media, products, siteSettings,
 } from "@brasa/core/schema";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { generateSlug } from "@brasa/core/slug";
 import { revalidateTag } from "next/cache";
+import { getTenantId } from "@/lib/tenant";
 
 // ── Supabase helpers ────────────────────────────────────────────────────────────
 
@@ -63,25 +64,25 @@ type SbProduct = {
 
 // ── Helpers ─────────────────────────────────────────────────────────────────────
 
-async function getOrCreateMedia(url: string, alt: string): Promise<number> {
-  const [existing] = await db.select({ id: media.id }).from(media).where(eq(media.supabaseUrl, url)).limit(1);
+async function getOrCreateMedia(url: string, alt: string, tenantId: number): Promise<number> {
+  const [existing] = await db.select({ id: media.id }).from(media).where(and(eq(media.supabaseUrl, url), eq(media.tenantId, tenantId))).limit(1);
   if (existing) return existing.id;
   const filename = url.split("/").pop() || "image";
-  const [created] = await db.insert(media).values({ supabaseUrl: url, filename, alt, url, createdAt: new Date().toISOString() }).returning({ id: media.id });
+  const [created] = await db.insert(media).values({ supabaseUrl: url, filename, alt, url, tenantId, createdAt: new Date().toISOString() }).returning({ id: media.id });
   return created.id;
 }
 
-async function getOrCreateAuthor(name: string): Promise<number> {
+async function getOrCreateAuthor(name: string, tenantId: number): Promise<number> {
   const slug = generateSlug(name);
-  const [existing] = await db.select({ id: authors.id }).from(authors).where(eq(authors.slug, slug)).limit(1);
+  const [existing] = await db.select({ id: authors.id }).from(authors).where(and(eq(authors.slug, slug), eq(authors.tenantId, tenantId))).limit(1);
   if (existing) return existing.id;
   const now = new Date().toISOString();
-  const [created] = await db.insert(authors).values({ name, slug, createdAt: now, updatedAt: now }).returning({ id: authors.id });
+  const [created] = await db.insert(authors).values({ name, slug, tenantId, createdAt: now, updatedAt: now }).returning({ id: authors.id });
   return created.id;
 }
 
-async function getCategoryMap(): Promise<Map<string, number>> {
-  const rows = await db.select({ id: categories.id, supabaseId: categories.supabaseId }).from(categories);
+async function getCategoryMap(tenantId: number): Promise<Map<string, number>> {
+  const rows = await db.select({ id: categories.id, supabaseId: categories.supabaseId }).from(categories).where(eq(categories.tenantId, tenantId));
   const map = new Map<string, number>();
   for (const r of rows) if (r.supabaseId) map.set(r.supabaseId, r.id);
   return map;
@@ -96,8 +97,9 @@ export async function GET(req: NextRequest) {
   }
 
   try {
+    const tenantId = await getTenantId();
     // Read last sync timestamp
-    const [settings] = await db.select({ lastSyncAt: siteSettings.lastSyncAt }).from(siteSettings).limit(1);
+    const [settings] = await db.select({ lastSyncAt: siteSettings.lastSyncAt }).from(siteSettings).where(eq(siteSettings.tenantId, tenantId)).limit(1);
     const since = settings?.lastSyncAt || "2000-01-01T00:00:00.000Z";
     const syncStart = new Date().toISOString();
 
@@ -119,14 +121,14 @@ export async function GET(req: NextRequest) {
     let prodCreated = 0, prodUpdated = 0;
 
     // ── Categories ──────────────────────────────────────────────────────────
-    const catMap = await getCategoryMap();
+    const catMap = await getCategoryMap(tenantId);
     for (const sc of sbCategories) {
       const existingId = catMap.get(sc.id);
       if (existingId) {
-        await db.update(categories).set({ name: sc.name, slug: sc.slug, description: sc.description, updatedAt: now }).where(eq(categories.id, existingId));
+        await db.update(categories).set({ name: sc.name, slug: sc.slug, description: sc.description, updatedAt: now }).where(and(eq(categories.id, existingId), eq(categories.tenantId, tenantId)));
         catUpdated++;
       } else {
-        const [row] = await db.insert(categories).values({ supabaseId: sc.id, name: sc.name, slug: sc.slug, description: sc.description, createdAt: sc.created_at, updatedAt: now }).returning({ id: categories.id });
+        const [row] = await db.insert(categories).values({ supabaseId: sc.id, name: sc.name, slug: sc.slug, description: sc.description, tenantId, createdAt: sc.created_at, updatedAt: now }).returning({ id: categories.id });
         catMap.set(sc.id, row.id);
         catCreated++;
       }
@@ -153,13 +155,13 @@ export async function GET(req: NextRequest) {
 
       for (const sa of sbArticles) {
         const categoryId = sa.category_id ? catMap.get(sa.category_id) ?? null : null;
-        const authorId = sa.author_name ? await getOrCreateAuthor(sa.author_name) : null;
+        const authorId = sa.author_name ? await getOrCreateAuthor(sa.author_name, tenantId) : null;
         let heroImageId: number | null = null;
-        if (sa.cover_image_url) heroImageId = await getOrCreateMedia(sa.cover_image_url, sa.cover_image_alt || sa.title);
+        if (sa.cover_image_url) heroImageId = await getOrCreateMedia(sa.cover_image_url, sa.cover_image_alt || sa.title, tenantId);
         const content = sa.content ? { type: "doc", _html: sa.content } : null;
         const status: "draft" | "published" = sa.status === "published" ? "published" : "draft";
 
-        const [existing] = await db.select({ id: posts.id }).from(posts).where(eq(posts.supabaseId, sa.id)).limit(1);
+        const [existing] = await db.select({ id: posts.id }).from(posts).where(and(eq(posts.supabaseId, sa.id), eq(posts.tenantId, tenantId))).limit(1);
         const postData = {
           title: sa.title, slug: sa.slug, excerpt: sa.excerpt, content, categoryId, authorId,
           heroImageId, coverUrl: sa.cover_image_url, metaTitle: sa.meta_title,
@@ -176,23 +178,23 @@ export async function GET(req: NextRequest) {
 
         let localPostId: number;
         if (existing) {
-          await db.update(posts).set(postData).where(eq(posts.id, existing.id));
+          await db.update(posts).set(postData).where(and(eq(posts.id, existing.id), eq(posts.tenantId, tenantId)));
           localPostId = existing.id;
           postUpdated++;
         } else {
           const [row] = await db.insert(posts).values({
-            supabaseId: sa.id, ...postData, createdAt: sa.created_at,
+            supabaseId: sa.id, ...postData, tenantId, createdAt: sa.created_at,
           }).returning({ id: posts.id });
           localPostId = row.id;
           postCreated++;
         }
 
         // Re-sync tags for this post
-        await db.delete(tags).where(eq(tags.postId, localPostId));
+        await db.delete(tags).where(and(eq(tags.postId, localPostId), eq(tags.tenantId, tenantId)));
         const postTags = sbArticleTags.filter((at) => at.article_id === sa.id);
         for (const at of postTags) {
           const tagName = tagNameMap.get(at.tag_id);
-          if (tagName) await db.insert(tags).values({ postId: localPostId, tag: tagName });
+          if (tagName) await db.insert(tags).values({ postId: localPostId, tag: tagName, tenantId });
         }
       }
     }
@@ -200,11 +202,11 @@ export async function GET(req: NextRequest) {
     // ── Products ────────────────────────────────────────────────────────────
     for (const sp of sbProducts) {
       let imageId: number | null = null;
-      if (sp.cover_image_url) imageId = await getOrCreateMedia(sp.cover_image_url, sp.cover_image_alt || sp.title);
+      if (sp.cover_image_url) imageId = await getOrCreateMedia(sp.cover_image_url, sp.cover_image_alt || sp.title, tenantId);
       const content = sp.content ? { type: "doc", _html: sp.content } : null;
       const status: "draft" | "published" = sp.status === "published" ? "published" : "draft";
 
-      const [existing] = await db.select({ id: products.id }).from(products).where(eq(products.slug, sp.slug)).limit(1);
+      const [existing] = await db.select({ id: products.id }).from(products).where(and(eq(products.slug, sp.slug), eq(products.tenantId, tenantId))).limit(1);
       if (existing) {
         const updateData: Record<string, unknown> = {
           name: sp.title, description: sp.excerpt, content,
@@ -212,20 +214,20 @@ export async function GET(req: NextRequest) {
           status, updatedAt: sp.updated_at,
         };
         if (imageId) updateData.imageId = imageId;
-        await db.update(products).set(updateData).where(eq(products.id, existing.id));
+        await db.update(products).set(updateData).where(and(eq(products.id, existing.id), eq(products.tenantId, tenantId)));
         prodUpdated++;
       } else {
         await db.insert(products).values({
           name: sp.title, slug: sp.slug, description: sp.excerpt, content, imageId,
           seoTitle: sp.meta_title, seoDescription: sp.meta_description,
-          status, createdAt: sp.created_at, updatedAt: sp.updated_at,
+          status, tenantId, createdAt: sp.created_at, updatedAt: sp.updated_at,
         });
         prodCreated++;
       }
     }
 
     // Update last sync timestamp
-    await db.update(siteSettings).set({ lastSyncAt: syncStart }).where(sql`true`);
+    await db.update(siteSettings).set({ lastSyncAt: syncStart }).where(eq(siteSettings.tenantId, tenantId));
 
     // Revalidate caches
     revalidateTag("posts");

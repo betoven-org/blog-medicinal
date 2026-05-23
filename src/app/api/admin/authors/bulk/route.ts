@@ -1,10 +1,11 @@
 import { auth } from "@brasa/core/auth";
 import { db } from "@brasa/core/db";
 import { authors, posts } from "@brasa/core/schema";
-import { inArray, eq, count } from "drizzle-orm";
+import { and, inArray, eq, count } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { parseBody, bulkDeleteSchema } from "@brasa/core/validations";
+import { getTenantId } from "@/lib/tenant";
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,6 +13,7 @@ export async function POST(req: NextRequest) {
     if (!session?.user)
       return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
 
+    const tenantId = await getTenantId();
     const body = await req.json();
     const parsed = parseBody(bulkDeleteSchema, body);
     if (!parsed.success) return NextResponse.json({ error: parsed.error }, { status: 400 });
@@ -21,7 +23,7 @@ export async function POST(req: NextRequest) {
       const [postCount] = await db
         .select({ total: count() })
         .from(posts)
-        .where(eq(posts.authorId, id));
+        .where(and(eq(posts.authorId, id), eq(posts.tenantId, tenantId)));
 
       if (postCount.total > 0) {
         return NextResponse.json(
@@ -31,7 +33,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    await db.delete(authors).where(inArray(authors.id, ids));
+    await db.delete(authors).where(and(inArray(authors.id, ids), eq(authors.tenantId, tenantId)));
 
     revalidateTag("authors");
 

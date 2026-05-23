@@ -1,6 +1,7 @@
 import { db } from "@brasa/core/db";
 import { posts, categories, authors, media, requestMetrics } from "@brasa/core/schema";
 import { eq, desc, and, sql, inArray, gte } from "drizzle-orm";
+import { getTenantId } from "@/lib/tenant";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -37,15 +38,17 @@ const baseSelect = {
   readingTimeMinutes: posts.readingTimeMinutes,
 };
 
-const baseFrom = () =>
+const baseFrom = (tenantId: number) =>
   db
     .select(baseSelect)
     .from(posts)
     .leftJoin(media, eq(posts.heroImageId, media.id))
     .leftJoin(categories, eq(posts.categoryId, categories.id))
-    .leftJoin(authors, eq(posts.authorId, authors.id));
+    .leftJoin(authors, eq(posts.authorId, authors.id))
+    .$dynamic();
 
-const publishedFilter = eq(posts.status, "published");
+const publishedWhere = (tenantId: number) =>
+  and(eq(posts.status, "published"), eq(posts.tenantId, tenantId));
 
 /**
  * Busca posts por modo. Usado pelas sections HeroPost, PostGrid, PostCarousel.
@@ -55,16 +58,19 @@ export async function getPostsByMode(
   limit: number = 6,
   manualSlugs?: string[],
 ): Promise<PostCard[]> {
+  const tenantId = await getTenantId();
+  const published = publishedWhere(tenantId);
+
   switch (mode) {
     case "recent":
-      return baseFrom()
-        .where(publishedFilter)
+      return baseFrom(tenantId)
+        .where(published)
         .orderBy(desc(posts.publishedAt))
         .limit(limit);
 
     case "editor-picks":
-      return baseFrom()
-        .where(and(publishedFilter, eq(posts.featured, true)))
+      return baseFrom(tenantId)
+        .where(and(published, eq(posts.featured, true)))
         .orderBy(desc(posts.publishedAt))
         .limit(limit);
 
@@ -80,6 +86,7 @@ export async function getPostsByMode(
         .from(requestMetrics)
         .where(
           and(
+            eq(requestMetrics.tenantId, tenantId),
             gte(requestMetrics.createdAt, sevenDaysAgo),
             eq(requestMetrics.isBot, false),
             sql`${requestMetrics.path} NOT LIKE '/admin%'`,
@@ -100,8 +107,8 @@ export async function getPostsByMode(
       const slugs = topPaths.map((p) => p.slug);
       const viewsMap = Object.fromEntries(topPaths.map((p) => [p.slug, p.views]));
 
-      const result = await baseFrom()
-        .where(and(publishedFilter, inArray(posts.slug, slugs)))
+      const result = await baseFrom(tenantId)
+        .where(and(published, inArray(posts.slug, slugs)))
         .limit(limit);
 
       return result
@@ -120,6 +127,7 @@ export async function getPostsByMode(
         .from(requestMetrics)
         .where(
           and(
+            eq(requestMetrics.tenantId, tenantId),
             eq(requestMetrics.isBot, false),
             sql`${requestMetrics.path} NOT LIKE '/admin%'`,
             sql`${requestMetrics.path} NOT LIKE '/api%'`,
@@ -138,8 +146,8 @@ export async function getPostsByMode(
       const slugs = topPaths.map((p) => p.slug);
       const viewsMap = Object.fromEntries(topPaths.map((p) => [p.slug, p.views]));
 
-      const result = await baseFrom()
-        .where(and(publishedFilter, inArray(posts.slug, slugs)))
+      const result = await baseFrom(tenantId)
+        .where(and(published, inArray(posts.slug, slugs)))
         .limit(limit);
 
       return result
@@ -151,8 +159,8 @@ export async function getPostsByMode(
     case "manual": {
       if (!manualSlugs || manualSlugs.length === 0) return [];
 
-      const result = await baseFrom()
-        .where(and(publishedFilter, inArray(posts.slug, manualSlugs)))
+      const result = await baseFrom(tenantId)
+        .where(and(published, inArray(posts.slug, manualSlugs)))
         .limit(limit);
 
       // Preservar a ordem dos slugs manuais
@@ -173,23 +181,26 @@ export async function getFeaturedPost(
   mode: "featured" | "manual" = "featured",
   manualSlug?: string,
 ): Promise<PostCard | null> {
+  const tenantId = await getTenantId();
+  const published = publishedWhere(tenantId);
+
   if (mode === "manual" && manualSlug) {
-    const result = await baseFrom()
-      .where(and(publishedFilter, eq(posts.slug, manualSlug)))
+    const result = await baseFrom(tenantId)
+      .where(and(published, eq(posts.slug, manualSlug)))
       .limit(1);
     return result[0] || null;
   }
 
   // Featured: pega o post mais recente com featured=true
-  const result = await baseFrom()
-    .where(and(publishedFilter, eq(posts.featured, true)))
+  const result = await baseFrom(tenantId)
+    .where(and(published, eq(posts.featured, true)))
     .orderBy(desc(posts.publishedAt))
     .limit(1);
 
   // Fallback: post mais recente
   if (result.length === 0) {
-    const fallback = await baseFrom()
-      .where(publishedFilter)
+    const fallback = await baseFrom(tenantId)
+      .where(published)
       .orderBy(desc(posts.publishedAt))
       .limit(1);
     return fallback[0] || null;

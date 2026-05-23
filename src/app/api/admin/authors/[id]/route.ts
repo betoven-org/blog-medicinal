@@ -1,11 +1,12 @@
 import { auth } from "@brasa/core/auth";
 import { db } from "@brasa/core/db";
 import { authors, posts, media } from "@brasa/core/schema";
-import { eq, count } from "drizzle-orm";
+import { and, eq, count } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { generateSlug } from "@brasa/core/slug";
 import { parseBody, updateAuthorSchema } from "@brasa/core/validations";
+import { getTenantId } from "@/lib/tenant";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -17,6 +18,7 @@ export async function GET(req: NextRequest, ctx: RouteContext) {
 
     const { id } = await ctx.params;
     const authorId = Number(id);
+    const tenantId = await getTenantId();
 
     if (isNaN(authorId)) {
       return NextResponse.json({ error: "ID invalido" }, { status: 400 });
@@ -36,7 +38,7 @@ export async function GET(req: NextRequest, ctx: RouteContext) {
       })
       .from(authors)
       .leftJoin(media, eq(authors.avatarId, media.id))
-      .where(eq(authors.id, authorId))
+      .where(and(eq(authors.id, authorId), eq(authors.tenantId, tenantId)))
       .limit(1);
 
     if (!author) {
@@ -64,6 +66,7 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
 
     const { id } = await ctx.params;
     const authorId = Number(id);
+    const tenantId = await getTenantId();
 
     if (isNaN(authorId)) {
       return NextResponse.json({ error: "ID invalido" }, { status: 400 });
@@ -72,7 +75,7 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
     const [existing] = await db
       .select()
       .from(authors)
-      .where(eq(authors.id, authorId))
+      .where(and(eq(authors.id, authorId), eq(authors.tenantId, tenantId)))
       .limit(1);
 
     if (!existing) {
@@ -94,7 +97,7 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
       const [slugConflict] = await db
         .select({ id: authors.id })
         .from(authors)
-        .where(eq(authors.slug, updateData.slug as string))
+        .where(and(eq(authors.slug, updateData.slug as string), eq(authors.tenantId, tenantId)))
         .limit(1);
 
       if (slugConflict && slugConflict.id !== authorId) {
@@ -113,7 +116,7 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
     const [updated] = await db
       .update(authors)
       .set(updateData)
-      .where(eq(authors.id, authorId))
+      .where(and(eq(authors.id, authorId), eq(authors.tenantId, tenantId)))
       .returning();
 
     revalidateTag("authors");
@@ -136,6 +139,7 @@ export async function DELETE(req: NextRequest, ctx: RouteContext) {
 
     const { id } = await ctx.params;
     const authorId = Number(id);
+    const tenantId = await getTenantId();
 
     if (isNaN(authorId)) {
       return NextResponse.json({ error: "ID invalido" }, { status: 400 });
@@ -144,7 +148,7 @@ export async function DELETE(req: NextRequest, ctx: RouteContext) {
     const [existing] = await db
       .select({ id: authors.id })
       .from(authors)
-      .where(eq(authors.id, authorId))
+      .where(and(eq(authors.id, authorId), eq(authors.tenantId, tenantId)))
       .limit(1);
 
     if (!existing) {
@@ -157,7 +161,7 @@ export async function DELETE(req: NextRequest, ctx: RouteContext) {
     const [postCount] = await db
       .select({ total: count() })
       .from(posts)
-      .where(eq(posts.authorId, authorId));
+      .where(and(eq(posts.authorId, authorId), eq(posts.tenantId, tenantId)));
 
     if (postCount.total > 0) {
       return NextResponse.json(
@@ -168,7 +172,7 @@ export async function DELETE(req: NextRequest, ctx: RouteContext) {
       );
     }
 
-    await db.delete(authors).where(eq(authors.id, authorId));
+    await db.delete(authors).where(and(eq(authors.id, authorId), eq(authors.tenantId, tenantId)));
 
     revalidateTag("authors");
 

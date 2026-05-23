@@ -18,6 +18,7 @@ export async function POST(req: NextRequest) {
     const isBot = BOT_PATTERNS.test(userAgent);
 
     await db.insert(requestMetrics).values({
+      tenantId: body.tenantId || 1,
       path: body.path,
       method: body.method,
       statusCode: body.statusCode,

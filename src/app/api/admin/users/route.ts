@@ -1,10 +1,11 @@
 import { auth } from "@brasa/core/auth";
 import { db } from "@brasa/core/db";
 import { users } from "@brasa/core/schema";
-import { desc, count, eq } from "drizzle-orm";
+import { and, desc, count, eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { parseBody, createUserSchema } from "@brasa/core/validations";
+import { getTenantId } from "@/lib/tenant";
 
 export async function GET(req: NextRequest) {
   try {
@@ -12,6 +13,7 @@ export async function GET(req: NextRequest) {
     if (!session?.user || session.user.role !== "admin")
       return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
 
+    const tenantId = await getTenantId();
     const { searchParams } = req.nextUrl;
     const page = Math.max(1, Number(searchParams.get("page") || "1"));
     const limit = Math.min(100, Math.max(1, Number(searchParams.get("limit") || "50")));
@@ -27,10 +29,11 @@ export async function GET(req: NextRequest) {
           createdAt: users.createdAt,
         })
         .from(users)
+        .where(eq(users.tenantId, tenantId))
         .orderBy(desc(users.createdAt))
         .limit(limit)
         .offset(offset),
-      db.select({ total: count() }).from(users),
+      db.select({ total: count() }).from(users).where(eq(users.tenantId, tenantId)),
     ]);
 
     const totalDocs = totalResult[0]?.total ?? 0;
@@ -49,6 +52,7 @@ export async function POST(req: NextRequest) {
     if (!session?.user || session.user.role !== "admin")
       return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
 
+    const tenantId = await getTenantId();
     const body = await req.json();
     const parsed = parseBody(createUserSchema, body);
     if (!parsed.success) return NextResponse.json({ error: parsed.error }, { status: 400 });
@@ -57,7 +61,7 @@ export async function POST(req: NextRequest) {
     const [existing] = await db
       .select({ id: users.id })
       .from(users)
-      .where(eq(users.email, email))
+      .where(and(eq(users.email, email), eq(users.tenantId, tenantId)))
       .limit(1);
 
     if (existing) {
@@ -74,6 +78,7 @@ export async function POST(req: NextRequest) {
         email,
         passwordHash,
         role: role ?? "viewer",
+        tenantId,
         createdAt: now,
         updatedAt: now,
       })
