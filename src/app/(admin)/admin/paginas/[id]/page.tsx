@@ -325,9 +325,120 @@ export default function EditPagePage({
   const [previewDevice, setPreviewDevice] = useState<"desktop" | "tablet" | "mobile">("desktop");
   const [sectionBlocks, setSectionBlocks] = useState<SectionBlock[]>([]);
   const [savingSections, setSavingSections] = useState(false);
+  const [inlineEdit, setInlineEdit] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const sectionsDebounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const saveSectionsRef = useRef<((blocks: SectionBlock[]) => Promise<void>) | null>(null);
+
+  // ── Inline editor: inject script and toggle ──────────────────────
+  function sendToIframe(msg: object) {
+    iframeRef.current?.contentWindow?.postMessage(msg, "*");
+  }
+
+  function injectEditorScript() {
+    const iframe = iframeRef.current;
+    if (!iframe?.contentDocument) return;
+    if (iframe.contentDocument.querySelector("script[data-brasa-editor]")) return;
+    const script = iframe.contentDocument.createElement("script");
+    script.setAttribute("data-brasa-editor", "true");
+    script.src = "/brasa-editor.js";
+    iframe.contentDocument.head.appendChild(script);
+  }
+
+  function toggleInlineEdit() {
+    setInlineEdit((prev) => {
+      const next = !prev;
+      if (next) {
+        injectEditorScript();
+        // Give the script a tick to load, then send enable
+        setTimeout(() => {
+          sendToIframe({ type: "brasa:init", blocks: sectionBlocks });
+          sendToIframe({ type: "brasa:enable" });
+        }, 150);
+      } else {
+        sendToIframe({ type: "brasa:disable" });
+      }
+      return next;
+    });
+  }
+
+  // Re-send enable when iframe reloads while inline edit is active
+  useEffect(() => {
+    const iframe = iframeRef.current;
+    if (!iframe) return;
+    function onLoad() {
+      if (!inlineEdit) return;
+      injectEditorScript();
+      setTimeout(() => {
+        sendToIframe({ type: "brasa:init", blocks: sectionBlocks });
+        sendToIframe({ type: "brasa:enable" });
+      }, 150);
+    }
+    iframe.addEventListener("load", onLoad);
+    return () => iframe.removeEventListener("load", onLoad);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inlineEdit, sectionBlocks]);
+
+  // Listen for messages from the iframe
+  useEffect(() => {
+    function onMessage(event: MessageEvent) {
+      const msg = event.data;
+      if (!msg || typeof msg.type !== "string") return;
+
+      switch (msg.type) {
+        case "brasa:update": {
+          const { blockId, propKey, value } = msg as {
+            blockId: string;
+            propKey: string;
+            value: string;
+          };
+          setSectionBlocks((prev) => {
+            const next = prev.map((block) => {
+              if (block.id !== blockId) return block;
+              return { ...block, props: { ...block.props, [propKey]: value } };
+            });
+            // Debounced save — use ref to avoid stale closure
+            if (sectionsDebounceRef.current) clearTimeout(sectionsDebounceRef.current);
+            sectionsDebounceRef.current = setTimeout(() => saveSectionsRef.current?.(next), 1000);
+            return next;
+          });
+          break;
+        }
+
+        case "brasa:select": {
+          const { blockId } = msg as { blockId: string };
+          // Ensure sections panel is open and the block is visible
+          setOpenColumns((prev) => {
+            const next = new Set(prev);
+            next.add("sections");
+            return next;
+          });
+          // Scroll to the block in the sidebar — best-effort via data attribute
+          setTimeout(() => {
+            const el = document.querySelector(`[data-section-id="${blockId}"]`);
+            if (el) el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+          }, 50);
+          break;
+        }
+
+        case "brasa:media-request": {
+          // For now, open the sections panel — MediaLibrary integration can be added later
+          toast("Selecione uma imagem no painel de secoes");
+          setOpenColumns((prev) => {
+            const next = new Set(prev);
+            next.add("sections");
+            return next;
+          });
+          break;
+        }
+      }
+    }
+
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function toggleColumn(key: ColumnKey) {
     setOpenColumns((prev) => {
@@ -419,6 +530,9 @@ export default function EditPagePage({
       setSavingSections(false);
     }
   }, [id]);
+
+  // Keep ref in sync so the message listener always calls the latest version
+  saveSectionsRef.current = saveSections;
 
   function handleSectionsChange(blocks: SectionBlock[]) {
     setSectionBlocks(blocks);
@@ -598,6 +712,24 @@ export default function EditPagePage({
                     </svg>
                   </button>
                 </div>
+
+                {/* Inline edit toggle */}
+                <button
+                  type="button"
+                  onClick={toggleInlineEdit}
+                  title={inlineEdit ? "Desativar edicao inline" : "Edicao inline"}
+                  aria-pressed={inlineEdit}
+                  className={`rounded p-1 transition-colors ${
+                    inlineEdit
+                      ? "bg-[#0d61ac] text-white"
+                      : "text-gray-400 hover:bg-gray-200 hover:text-gray-600"
+                  }`}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z" />
+                    <path d="m15 5 4 4" />
+                  </svg>
+                </button>
 
                 <span className="flex-1 rounded bg-white px-2 py-0.5 text-[11px] text-gray-400 font-mono border border-gray-200 truncate">
                   {typeof window !== "undefined" ? window.location.origin : ""}{slugToPath(page.slug)}

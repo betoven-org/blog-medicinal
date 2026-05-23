@@ -34,3 +34,4 @@ export { default as DomainsField } from "./DomainsField";
 export { default as DomainsView } from "./DomainsView";
 export { default as PageBuilder } from "./PageBuilder";
 export { default as SectionEditor } from "./SectionEditor";
+export { default as MediaLibrary } from "./MediaLibrary";

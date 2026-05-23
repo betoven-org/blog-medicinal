@@ -1,6 +1,23 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import {
+  DndContext,
+  DragOverlay,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragStartEvent,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import type { BrasaManifest, SectionBlock, SectionSchema } from "@brasa/core/manifest";
 import SectionEditor from "./SectionEditor";
 
@@ -13,22 +30,6 @@ type PageBuilderProps = {
 };
 
 // ── SVG icons ─────────────────────────────────────────────────────────────────
-
-function IconChevronUp() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="m18 15-6-6-6 6" />
-    </svg>
-  );
-}
-
-function IconChevronDown() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="m6 9 6 6 6-6" />
-    </svg>
-  );
-}
 
 function IconTrash() {
   return (
@@ -191,35 +192,31 @@ function SectionPicker({ sections, onSelect, onClose }: SectionPickerProps) {
   );
 }
 
-// ── Block list item ───────────────────────────────────────────────────────────
+// ── Block item (base UI, reused by SortableItem and DragOverlay) ──────────────
 
 type BlockItemProps = {
-  block: SectionBlock;
   title: string;
-  isFirst: boolean;
-  isLast: boolean;
   isSelected: boolean;
+  isDragging?: boolean;
+  dragHandleProps?: React.HTMLAttributes<HTMLSpanElement>;
   onSelect: () => void;
-  onMoveUp: () => void;
-  onMoveDown: () => void;
   onDelete: () => void;
 };
 
 function BlockItem({
-  block,
   title,
-  isFirst,
-  isLast,
   isSelected,
+  isDragging = false,
+  dragHandleProps,
   onSelect,
-  onMoveUp,
-  onMoveDown,
   onDelete,
 }: BlockItemProps) {
   return (
     <div
       className={`group flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2.5 transition-colors ${
-        isSelected
+        isDragging
+          ? "opacity-50"
+          : isSelected
           ? "border-[#0d61ac] bg-[#0d61ac]/5"
           : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50"
       }`}
@@ -234,8 +231,13 @@ function BlockItem({
         }
       }}
     >
-      {/* grip */}
-      <span className="flex-shrink-0 text-gray-300">
+      {/* drag handle */}
+      <span
+        className="flex-shrink-0 cursor-grab text-gray-300 active:cursor-grabbing"
+        aria-hidden="true"
+        {...dragHandleProps}
+        onClick={(e) => e.stopPropagation()}
+      >
         <IconGrip />
       </span>
 
@@ -248,31 +250,13 @@ function BlockItem({
         {title}
       </span>
 
-      {/* actions — always visible on selected, on hover otherwise */}
+      {/* delete action */}
       <div
-        className={`flex flex-shrink-0 items-center gap-0.5 ${
+        className={`flex flex-shrink-0 items-center ${
           isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"
         }`}
         onClick={(e) => e.stopPropagation()}
       >
-        <button
-          type="button"
-          onClick={onMoveUp}
-          disabled={isFirst}
-          aria-label={`Mover ${title} para cima`}
-          className="rounded p-1 text-gray-400 hover:bg-gray-200 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-30"
-        >
-          <IconChevronUp />
-        </button>
-        <button
-          type="button"
-          onClick={onMoveDown}
-          disabled={isLast}
-          aria-label={`Mover ${title} para baixo`}
-          className="rounded p-1 text-gray-400 hover:bg-gray-200 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-30"
-        >
-          <IconChevronDown />
-        </button>
         <button
           type="button"
           onClick={onDelete}
@@ -286,6 +270,45 @@ function BlockItem({
   );
 }
 
+// ── Sortable wrapper ──────────────────────────────────────────────────────────
+
+type SortableItemProps = {
+  id: string;
+  title: string;
+  isSelected: boolean;
+  onSelect: () => void;
+  onDelete: () => void;
+};
+
+function SortableItem({ id, title, isSelected, onSelect, onDelete }: SortableItemProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <li ref={setNodeRef} style={style}>
+      <BlockItem
+        title={title}
+        isSelected={isSelected}
+        isDragging={isDragging}
+        dragHandleProps={{ ...attributes, ...listeners }}
+        onSelect={onSelect}
+        onDelete={onDelete}
+      />
+    </li>
+  );
+}
+
 // ── PageBuilder ───────────────────────────────────────────────────────────────
 
 export default function PageBuilder({ manifest, value, onChange }: PageBuilderProps) {
@@ -293,6 +316,7 @@ export default function PageBuilder({ manifest, value, onChange }: PageBuilderPr
     value[0]?.id ?? null
   );
   const [showPicker, setShowPicker] = useState(false);
+  const [activeId, setActiveId] = useState<string | null>(null);
 
   // Build a lookup map from section key -> SectionSchema
   const schemaMap = useMemo(() => {
@@ -304,15 +328,38 @@ export default function PageBuilder({ manifest, value, onChange }: PageBuilderPr
   const selectedBlock = value.find((b) => b.id === selectedId) ?? null;
   const selectedSchema = selectedBlock ? schemaMap.get(selectedBlock.component) : null;
 
-  // ── Mutations ──────────────────────────────────────────────────────────────
+  const activeBlock = activeId ? value.find((b) => b.id === activeId) ?? null : null;
+  const activeSchema = activeBlock ? schemaMap.get(activeBlock.component) : null;
 
-  const moveBlock = (index: number, direction: "up" | "down") => {
-    const target = direction === "up" ? index - 1 : index + 1;
-    if (target < 0 || target >= value.length) return;
-    const next = [...value];
-    [next[index], next[target]] = [next[target], next[index]];
-    onChange(next);
+  // ── DnD sensors ────────────────────────────────────────────────────────────
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        // Require 5px movement before activating drag — prevents accidental
+        // drag on click/select
+        distance: 5,
+      },
+    })
+  );
+
+  // ── DnD handlers ───────────────────────────────────────────────────────────
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(String(event.active.id));
   };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveId(null);
+    if (!over || active.id === over.id) return;
+    const oldIndex = value.findIndex((b) => b.id === active.id);
+    const newIndex = value.findIndex((b) => b.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+    onChange(arrayMove(value, oldIndex, newIndex));
+  };
+
+  // ── Mutations ──────────────────────────────────────────────────────────────
 
   const deleteBlock = (id: string) => {
     const next = value.filter((b) => b.id !== id);
@@ -365,26 +412,46 @@ export default function PageBuilder({ manifest, value, onChange }: PageBuilderPr
                 Nenhuma secao adicionada.
               </p>
             ) : (
-              <ul className="space-y-1.5 p-3" role="list">
-                {value.map((block, index) => {
-                  const schema = schemaMap.get(block.component);
-                  return (
-                    <li key={block.id}>
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext
+                  items={value.map((b) => b.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <ul className="space-y-1.5 p-3" role="list">
+                    {value.map((block) => {
+                      const schema = schemaMap.get(block.component);
+                      return (
+                        <SortableItem
+                          key={block.id}
+                          id={block.id}
+                          title={schema?.title ?? block.component}
+                          isSelected={selectedId === block.id}
+                          onSelect={() => setSelectedId(block.id)}
+                          onDelete={() => deleteBlock(block.id)}
+                        />
+                      );
+                    })}
+                  </ul>
+                </SortableContext>
+
+                <DragOverlay>
+                  {activeBlock && (
+                    <div className="rounded-lg shadow-lg ring-2 ring-[#0d61ac]">
                       <BlockItem
-                        block={block}
-                        title={schema?.title ?? block.component}
-                        isFirst={index === 0}
-                        isLast={index === value.length - 1}
-                        isSelected={selectedId === block.id}
-                        onSelect={() => setSelectedId(block.id)}
-                        onMoveUp={() => moveBlock(index, "up")}
-                        onMoveDown={() => moveBlock(index, "down")}
-                        onDelete={() => deleteBlock(block.id)}
+                        title={activeSchema?.title ?? activeBlock.component}
+                        isSelected={false}
+                        onSelect={() => {}}
+                        onDelete={() => {}}
                       />
-                    </li>
-                  );
-                })}
-              </ul>
+                    </div>
+                  )}
+                </DragOverlay>
+              </DndContext>
             )}
           </div>
 
