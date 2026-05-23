@@ -73,20 +73,28 @@ function delta(current: number, previous: number): { label: string; positive: bo
   if (!previous || !current || !isFinite(current) || !isFinite(previous)) return null;
   const pct = ((current - previous) / previous) * 100;
   if (!isFinite(pct) || Math.abs(pct) < 0.5) return null;
-  return { label: `${pct > 0 ? "+" : ""}${pct.toFixed(0)}%`, positive: pct < 0 };
+  // Cap at +/- 999% to avoid alarming numbers from near-zero baselines
+  const capped = Math.max(-999, Math.min(999, pct));
+  return { label: `${capped > 0 ? "+" : ""}${capped.toFixed(0)}%`, positive: capped < 0 };
 }
 
 function latencyColor(ms: number): string {
-  if (ms <= 100) return "text-green-600";
-  if (ms <= 300) return "text-yellow-600";
+  if (ms <= 200) return "text-green-600";
+  if (ms <= 500) return "text-yellow-600";
   return "text-red-600";
 }
 
-function latencyBar(ms: number, max: number): string {
-  const pct = Math.min((ms / max) * 100, 100);
-  if (ms <= 100) return `bg-green-500/20`;
-  if (ms <= 300) return `bg-yellow-500/20`;
-  return `bg-red-500/20`;
+function latencyBar(ms: number): string {
+  if (ms <= 200) return "bg-green-500/20";
+  if (ms <= 500) return "bg-yellow-500/20";
+  return "bg-red-500/20";
+}
+
+function healthLabel(avgMs: number, errorRate: number): { text: string; color: string } {
+  if (errorRate > 5) return { text: "Atencao necessaria", color: "text-red-600" };
+  if (avgMs > 500) return { text: "Pode melhorar", color: "text-yellow-600" };
+  if (avgMs > 200) return { text: "Bom", color: "text-green-600" };
+  return { text: "Excelente", color: "text-green-600" };
 }
 
 /* ── Component ────────────────────────────────────────────────────────────────── */
@@ -162,19 +170,25 @@ export default function DashboardPage() {
         <div className="space-y-6">
           {/* ── Performance Benchmark ─────────────────────────────────────── */}
           <section className="rounded-xl border border-gray-200 bg-white">
-            <div className="border-b border-gray-100 px-5 py-4">
-              <h2 className="text-sm font-semibold text-gray-900">Performance Benchmark</h2>
+            <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
+              <h2 className="text-sm font-semibold text-gray-900">Desempenho do Site</h2>
+              {data.performance.current.totalRequests > 0 && (() => {
+                const h = healthLabel(data.performance.current.avgLatency, data.performance.current.errorRate);
+                return (
+                  <span className={`rounded-full bg-gray-50 px-2.5 py-1 text-xs font-semibold ${h.color}`}>
+                    {h.text}
+                  </span>
+                );
+              })()}
             </div>
             <div className="p-5">
               {/* Metricas resumo */}
-              <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+              <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
                 {[
-                  { label: "Requests", value: formatNumber(data.performance.current.totalRequests), diff: delta(data.performance.current.totalRequests, data.performance.previous.totalRequests), invertColor: false },
-                  { label: "Avg Latency", value: `${data.performance.current.avgLatency}ms`, diff: delta(data.performance.current.avgLatency, data.performance.previous.avgLatency), invertColor: true },
-                  { label: "P50", value: `${data.performance.current.p50Latency}ms`, diff: null, invertColor: true },
+                  { label: "Visualizacoes", value: formatNumber(data.performance.current.totalRequests), diff: delta(data.performance.current.totalRequests, data.performance.previous.totalRequests), invertColor: false },
+                  { label: "Tempo de Resposta", value: `${data.performance.current.avgLatency}ms`, diff: delta(data.performance.current.avgLatency, data.performance.previous.avgLatency), invertColor: true },
                   { label: "P95", value: `${data.performance.current.p95Latency}ms`, diff: null, invertColor: true },
-                  { label: "P99", value: `${data.performance.current.p99Latency}ms`, diff: null, invertColor: true },
-                  { label: "Error Rate", value: `${data.performance.current.errorRate}%`, diff: delta(data.performance.current.errorRate, data.performance.previous.errorRate), invertColor: true },
+                  { label: "Taxa de Erro", value: `${data.performance.current.errorRate}%`, diff: delta(data.performance.current.errorRate, data.performance.previous.errorRate), invertColor: true },
                 ].map((item) => (
                   <div key={item.label} className="rounded-lg bg-gray-50 px-3 py-2.5">
                     <p className="text-[11px] font-medium text-gray-500">{item.label}</p>
@@ -194,18 +208,18 @@ export default function DashboardPage() {
                 ))}
               </div>
 
-              {/* Slowest pages */}
-              {data.performance.slowestPages.length > 0 && (
+              {/* Pages by response time — only show if any page is above 300ms */}
+              {data.performance.slowestPages.some((p) => p.avgLatency > 300) && (
                 <div>
-                  <p className="mb-2 text-xs font-medium text-gray-500">Paginas mais lentas</p>
+                  <p className="mb-2 text-xs font-medium text-gray-500">Tempo de Resposta por Pagina</p>
                   <div className="space-y-1">
-                    {data.performance.slowestPages.map((page, i) => {
+                    {data.performance.slowestPages.filter((p) => p.avgLatency > 200).map((page, i) => {
                       const maxLatency = data.performance.slowestPages[0]?.avgLatency || 1;
                       const pct = (page.avgLatency / maxLatency) * 100;
                       return (
                         <div key={i} className="relative rounded-md py-1.5">
                           <div
-                            className={`absolute inset-y-0 left-0 rounded-md ${latencyBar(page.avgLatency, 500)}`}
+                            className={`absolute inset-y-0 left-0 rounded-md ${latencyBar(page.avgLatency)}`}
                             style={{ width: `${pct}%` }}
                           />
                           <div className="relative flex items-center justify-between px-3 text-sm">
