@@ -9,8 +9,7 @@ import PostCarousel from "@/components/sections/PostCarousel";
 // ── Component map ─────────────────────────────────────────────────────────────
 // Add new section components here as they are created.
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const SECTION_MAP: Record<string, React.ComponentType<any>> = {
+const SECTION_MAP: Record<string, React.ComponentType<Record<string, unknown>>> = {
   Hero,
   Features,
   Banner,
