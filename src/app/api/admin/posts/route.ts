@@ -1,11 +1,13 @@
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { posts, categories, authors, tags, media } from "@/db/schema";
-import { eq, desc, like, and, count, sql } from "drizzle-orm";
+import { eq, desc, and, count, sql } from "drizzle-orm";
+import { buildTsQuery } from "@/lib/search";
 import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { generateSlug } from "@/lib/slug";
 import { parseBody, createPostSchema } from "@/lib/validations";
+import { getContentStats } from "@/lib/content-utils";
 
 export async function GET(req: NextRequest) {
   try {
@@ -23,7 +25,8 @@ export async function GET(req: NextRequest) {
 
     const conditions = [];
     if (search) {
-      conditions.push(like(posts.title, `%${search}%`));
+      const tsq = buildTsQuery(search);
+      conditions.push(sql`(${posts.searchVector} @@ ${tsq} OR similarity(${posts.title}, ${search}) > 0.15)`);
     }
     if (status) {
       conditions.push(eq(posts.status, status));
@@ -104,6 +107,7 @@ export async function POST(req: NextRequest) {
     const now = new Date().toISOString();
     const publishedAt =
       status === "published" ? now : undefined;
+    const { wordCount, readingTimeMinutes } = getContentStats(content);
 
     const [created] = await db
       .insert(posts)
@@ -119,6 +123,8 @@ export async function POST(req: NextRequest) {
         status: status || "draft",
         featured: featured ?? false,
         publishedAt,
+        wordCount,
+        readingTimeMinutes,
         createdAt: now,
         updatedAt: now,
       })

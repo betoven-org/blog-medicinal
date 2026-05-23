@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { generateSlug } from "@/lib/slug";
 import { parseBody, updatePostSchema } from "@/lib/validations";
+import { getContentStats } from "@/lib/content-utils";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -129,6 +130,13 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
     }
 
     updateData.updatedAt = now;
+
+    // Recalcular wordCount e readingTime se content mudou
+    if (validated.content !== undefined) {
+      const stats = getContentStats(validated.content);
+      updateData.wordCount = stats.wordCount;
+      updateData.readingTimeMinutes = stats.readingTimeMinutes;
+    }
 
     const [updated] = await db
       .update(posts)
