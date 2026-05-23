@@ -7,7 +7,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import AdminShell from "@/components/admin/AdminShell";
 import { createPageSchema } from "@/lib/validations";
+import { z as z3 } from "zod/v3";
 import type { z } from "zod";
+
+// Re-define for zod/v3 compat with zodResolver
+const createPageSchemaV3 = z3.object({
+  title: z3.string().min(1, "Titulo e obrigatorio"),
+  slug: z3.string().min(1, "Slug e obrigatorio"),
+});
 
 type CreatePageForm = z.infer<typeof createPageSchema>;
 
@@ -107,7 +114,7 @@ export default function PaginasPage() {
   const router = useRouter();
 
   const form = useForm<CreatePageForm>({
-    resolver: zodResolver(createPageSchema),
+    resolver: zodResolver(createPageSchemaV3),
     defaultValues: { title: "", slug: "" },
   });
 

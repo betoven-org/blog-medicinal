@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { diffWords } from "diff";
 import AdminShell from "@/components/admin/AdminShell";
 
 type EditState = {
@@ -72,6 +73,24 @@ function getChanges(page: PendingPage): Change[] {
 function truncate(str: string, max: number) {
   if (str.length <= max) return str;
   return str.slice(0, max) + "...";
+}
+
+function InlineDiff({ oldStr, newStr, isContent }: { oldStr: string; newStr: string; isContent?: boolean }) {
+  const parts = diffWords(oldStr, newStr);
+  const Tag = isContent ? "pre" : "p";
+  return (
+    <Tag className={`mt-1 rounded border border-gray-200 bg-gray-50 px-3 py-2 text-xs leading-relaxed break-words ${isContent ? "max-h-48 overflow-y-auto whitespace-pre-wrap font-mono text-[10px]" : ""}`}>
+      {parts.map((part, i) => {
+        if (part.added) {
+          return <span key={i} className="bg-green-200 text-green-900">{part.value}</span>;
+        }
+        if (part.removed) {
+          return <span key={i} className="bg-red-200 text-red-900 line-through">{part.value}</span>;
+        }
+        return <span key={i} className="text-gray-700">{part.value}</span>;
+      })}
+    </Tag>
+  );
 }
 
 function Spinner() {
@@ -474,45 +493,22 @@ export default function PublicarPage() {
                                 <span className="text-[11px] font-semibold text-gray-600">{change.label}</span>
                               </div>
 
-                              <div className="grid grid-cols-2 divide-x divide-gray-100">
-                                {/* Published */}
-                                <div className="px-3 py-2">
-                                  <span className="mb-1 inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-red-500">
-                                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" aria-hidden="true">
-                                      <line x1="5" y1="12" x2="19" y2="12" />
-                                    </svg>
-                                    Publicado
+                              <div className="px-3 py-2">
+                                <div className="mb-1.5 flex items-center gap-3 text-[9px] font-bold uppercase tracking-wider">
+                                  <span className="flex items-center gap-1 text-red-500">
+                                    <span className="inline-block h-2 w-2 rounded-sm bg-red-200 ring-1 ring-red-300" />
+                                    Removido
                                   </span>
-                                  {change.field === "content" ? (
-                                    <pre className="mt-1 max-h-32 overflow-y-auto whitespace-pre-wrap break-words rounded bg-red-50 p-2 font-mono text-[10px] leading-relaxed text-red-800">
-                                      {change.published ? truncate(change.published, 400) : <span className="italic text-gray-400">(vazio)</span>}
-                                    </pre>
-                                  ) : (
-                                    <p className="mt-1 rounded bg-red-50 px-2 py-1 text-[11px] text-red-800 break-words">
-                                      {change.published || <span className="italic text-gray-400">(vazio)</span>}
-                                    </p>
-                                  )}
-                                </div>
-
-                                {/* Draft */}
-                                <div className="px-3 py-2">
-                                  <span className="mb-1 inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-green-600">
-                                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" aria-hidden="true">
-                                      <line x1="12" y1="5" x2="12" y2="19" />
-                                      <line x1="5" y1="12" x2="19" y2="12" />
-                                    </svg>
-                                    Rascunho
+                                  <span className="flex items-center gap-1 text-green-600">
+                                    <span className="inline-block h-2 w-2 rounded-sm bg-green-200 ring-1 ring-green-300" />
+                                    Adicionado
                                   </span>
-                                  {change.field === "content" ? (
-                                    <pre className="mt-1 max-h-32 overflow-y-auto whitespace-pre-wrap break-words rounded bg-green-50 p-2 font-mono text-[10px] leading-relaxed text-green-800">
-                                      {change.draft ? truncate(change.draft, 400) : <span className="italic text-gray-400">(vazio)</span>}
-                                    </pre>
-                                  ) : (
-                                    <p className="mt-1 rounded bg-green-50 px-2 py-1 text-[11px] text-green-800 break-words">
-                                      {change.draft || <span className="italic text-gray-400">(vazio)</span>}
-                                    </p>
-                                  )}
                                 </div>
+                                <InlineDiff
+                                  oldStr={change.published}
+                                  newStr={change.draft}
+                                  isContent={change.field === "content"}
+                                />
                               </div>
                             </div>
                           ))}
