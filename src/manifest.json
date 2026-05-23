@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-23T15:48:52.090Z",
+  "generatedAt": "2026-05-23T16:26:38.405Z",
   "sections": [
     {
       "key": "Banner",
@@ -196,7 +196,7 @@
     {
       "key": "HeroPost",
       "title": "Post Destaque",
-      "description": "Banner principal com o post em destaque",
+      "description": "Hero principal estilo UOL — post em destaque + lista lateral de posts recentes",
       "group": "Home",
       "path": "sections/HeroPost",
       "props": {
@@ -218,24 +218,6 @@
           "description": "Informe o slug do post para exibir manualmente",
           "required": false
         },
-        "height": {
-          "type": "string",
-          "format": "select",
-          "title": "Altura",
-          "required": false,
-          "default": "grande",
-          "options": [
-            "pequeno",
-            "medio",
-            "grande"
-          ]
-        },
-        "overlay": {
-          "type": "boolean",
-          "title": "Overlay escuro",
-          "required": false,
-          "default": true
-        },
         "showCategory": {
           "type": "boolean",
           "title": "Mostrar categoria",
@@ -253,13 +235,25 @@
           "title": "Mostrar tempo de leitura",
           "required": false,
           "default": true
+        },
+        "sideCount": {
+          "type": "string",
+          "format": "select",
+          "title": "Posts laterais",
+          "required": false,
+          "default": "4",
+          "options": [
+            "3",
+            "4",
+            "5"
+          ]
         }
       }
     },
     {
       "key": "PostCarousel",
-      "title": "Carrossel de Posts",
-      "description": "Carrossel horizontal de posts com scroll",
+      "title": "Lista de Posts",
+      "description": "Lista vertical numerada de posts",
       "group": "Home",
       "path": "sections/PostCarousel",
       "props": {
@@ -280,7 +274,7 @@
           "format": "select",
           "title": "Modo",
           "required": false,
-          "default": "recent",
+          "default": "trending",
           "options": [
             "recent",
             "trending",
@@ -300,7 +294,7 @@
           "type": "number",
           "title": "Limite de posts",
           "required": false,
-          "default": 8
+          "default": 5
         },
         "showCategory": {
           "type": "boolean",
@@ -312,7 +306,7 @@
           "type": "boolean",
           "title": "Mostrar views",
           "required": false,
-          "default": false
+          "default": true
         },
         "viewAllHref": {
           "type": "string",

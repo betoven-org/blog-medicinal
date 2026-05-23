@@ -4,7 +4,7 @@ import Features from "@/components/sections/Features";
 import Banner from "@/components/sections/Banner";
 import HeroPost from "@/components/sections/HeroPost";
 import PostGrid from "@/components/sections/PostGrid";
-import PostCarousel from "@/components/sections/PostCarousel";
+import PostList from "@/components/sections/PostCarousel";
 
 // ── Component map ─────────────────────────────────────────────────────────────
 // Add new section components here as they are created.
@@ -16,7 +16,7 @@ const SECTION_MAP: Record<string, React.ComponentType<any>> = {
   Banner,
   HeroPost,
   PostGrid,
-  PostCarousel,
+  PostCarousel: PostList,
 };
 
 // ── SectionRenderer ───────────────────────────────────────────────────────────

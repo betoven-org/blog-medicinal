@@ -2,8 +2,8 @@ import { getPostsByMode } from "@/lib/loaders";
 import type { PostMode } from "@/lib/loaders";
 
 /**
- * @title Carrossel de Posts
- * @description Carrossel horizontal de posts com scroll
+ * @title Lista de Posts
+ * @description Lista vertical numerada de posts
  * @group Home
  */
 export interface Props {
@@ -15,7 +15,7 @@ export interface Props {
 
   /** @title Modo */
   /** @options recent,trending,popular,editor-picks,manual */
-  /** @default recent */
+  /** @default trending */
   mode?: "recent" | "trending" | "popular" | "editor-picks" | "manual";
 
   /** @title Slugs manuais */
@@ -23,7 +23,7 @@ export interface Props {
   manualSlugs?: string;
 
   /** @title Limite de posts */
-  /** @default 8 */
+  /** @default 5 */
   limit?: number;
 
   /** @title Mostrar categoria */
@@ -31,33 +31,23 @@ export interface Props {
   showCategory?: boolean;
 
   /** @title Mostrar views */
-  /** @default false */
+  /** @default true */
   showViews?: boolean;
 
   /** @title Link "Ver todos" */
   viewAllHref?: string;
 }
 
-// ── Mode badge labels ─────────────────────────────────────────────────────────
-
-const MODE_LABEL: Record<PostMode, string> = {
-  recent: "Recentes",
-  trending: "Em alta",
-  popular: "Mais lidos",
-  "editor-picks": "Escolha da redacao",
-  manual: "Selecao",
-};
-
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export default async function PostCarousel({
+export default async function PostList({
   title,
   subtitle,
-  mode = "recent",
+  mode = "trending",
   manualSlugs,
-  limit = 8,
+  limit = 5,
   showCategory = true,
-  showViews = false,
+  showViews = true,
   viewAllHref,
 }: Props) {
   const parsedSlugs =
@@ -73,25 +63,24 @@ export default async function PostCarousel({
   if (!posts.length) return null;
 
   return (
-    <section className="w-full py-12">
-      <div className="max-w-7xl mx-auto px-6">
-        {/* Header */}
-        <div className="flex items-end justify-between mb-6">
-          <div>
-            <div className="flex items-center gap-3 mb-1">
-              <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
-              <span className="rounded-full bg-[#0d61ac]/10 px-3 py-0.5 text-xs font-semibold text-[#0d61ac]">
-                {MODE_LABEL[mode]}
-              </span>
-            </div>
-            {subtitle && (
-              <p className="text-sm text-gray-500">{subtitle}</p>
-            )}
+    <section className="max-w-7xl mx-auto px-4 py-8">
+      {/* Card container */}
+      <div className="rounded-xl border border-gray-200 bg-white p-5">
+        {/* Section header */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div
+              className="h-6 w-1 rounded-full bg-[#0d61ac]"
+              aria-hidden="true"
+            />
+            <h2 className="text-lg font-bold text-gray-900 uppercase tracking-wide">
+              {title}
+            </h2>
           </div>
           {viewAllHref && (
             <a
               href={viewAllHref}
-              className="shrink-0 text-sm font-medium text-[#0d61ac] hover:underline"
+              className="shrink-0 text-sm font-medium text-[#0d61ac] hover:underline flex items-center gap-1"
             >
               Ver todos
               <svg
@@ -104,7 +93,6 @@ export default async function PostCarousel({
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="inline ml-1 -mt-0.5"
                 aria-hidden="true"
               >
                 <path d="M5 12h14M12 5l7 7-7 7" />
@@ -113,72 +101,61 @@ export default async function PostCarousel({
           )}
         </div>
 
-        {/* Scroll container */}
-        <div className="relative">
-          <ul
-            className="flex gap-4 overflow-x-auto scroll-smooth pb-4 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
-            role="list"
-          >
-            {posts.map((post) => {
-              const imageUrl = post.coverUrl ?? post.heroImageUrl;
+        {subtitle && (
+          <p className="text-sm text-gray-500 -mt-4 mb-6">{subtitle}</p>
+        )}
 
-              return (
-                <li
-                  key={post.id}
-                  className="w-[280px] flex-shrink-0 snap-start"
+        {/* Numbered list */}
+        <ol role="list">
+          {posts.map((post, index) => (
+            <li
+              key={post.id}
+              className="flex gap-4 py-4 border-b border-gray-100 last:border-0"
+            >
+              <a
+                href={`/posts/${post.slug}`}
+                className="flex gap-4 w-full group"
+                aria-label={`Ler post: ${post.title}`}
+              >
+                {/* Rank number */}
+                <span
+                  className="text-2xl font-bold text-[#0d61ac]/20 w-8 flex-shrink-0 text-center leading-none pt-1"
+                  aria-hidden="true"
                 >
-                  <a
-                    href={`/posts/${post.slug}`}
-                    className="group block h-full"
-                    aria-label={`Ler post: ${post.title}`}
-                  >
-                    {/* Card image */}
-                    <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-gray-100">
-                      {imageUrl ? (
-                        <img
-                          src={imageUrl}
-                          alt={post.title}
-                          width={280}
-                          height={210}
-                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                          loading="lazy"
-                        />
-                      ) : (
-                        <div
-                          className="h-full w-full bg-[#0d61ac]/10"
-                          aria-hidden="true"
-                        />
-                      )}
-                    </div>
+                  {index + 1}
+                </span>
 
-                    {/* Card body */}
-                    <div className="mt-3">
-                      {showCategory && post.categoryName && (
-                        <p className="text-xs font-medium text-[#0d61ac] mt-2">
-                          {post.categoryName}
-                        </p>
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  {showCategory && post.categoryName && (
+                    <p className="text-xs font-semibold text-[#0d61ac] uppercase tracking-wide">
+                      {post.categoryName}
+                    </p>
+                  )}
+                  <h3 className="text-base font-semibold text-gray-900 mt-1 line-clamp-2 group-hover:text-[#0d61ac] transition-colors">
+                    {post.title}
+                  </h3>
+                  {(post.readingTimeMinutes != null ||
+                    (showViews && post.views != null)) && (
+                    <p className="text-xs text-gray-400 mt-1.5">
+                      {post.readingTimeMinutes != null && (
+                        <span>{post.readingTimeMinutes} min</span>
                       )}
-                      <h3 className="mt-1 text-base font-semibold text-gray-900 line-clamp-2 group-hover:text-[#0d61ac] transition-colors">
-                        {post.title}
-                      </h3>
-                      {showViews && post.views !== undefined && (
-                        <p className="mt-1 text-xs text-gray-400">
-                          {post.views.toLocaleString("pt-BR")} visualizacoes
-                        </p>
+                      {post.readingTimeMinutes != null &&
+                        showViews &&
+                        post.views != null && <span> · </span>}
+                      {showViews && post.views != null && (
+                        <span>
+                          {post.views.toLocaleString("pt-BR")} views
+                        </span>
                       )}
-                    </div>
-                  </a>
-                </li>
-              );
-            })}
-          </ul>
-
-          {/* Right-edge fade overlay */}
-          <div
-            className="pointer-events-none absolute right-0 top-0 h-full w-16 bg-gradient-to-l from-white to-transparent"
-            aria-hidden="true"
-          />
-        </div>
+                    </p>
+                  )}
+                </div>
+              </a>
+            </li>
+          ))}
+        </ol>
       </div>
     </section>
   );
