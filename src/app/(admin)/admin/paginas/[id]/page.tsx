@@ -361,7 +361,13 @@ export default function EditPagePage({
         setEditState(initial);
         setSavedSnapshot(JSON.stringify(initial));
         setOgImagePreview(initial.ogImageUrl || null);
-        setSectionBlocks((data.draftSections ?? data.sections ?? []) as SectionBlock[]);
+        // Use draftSections only if it differs from published sections
+        const pub = JSON.stringify(data.sections ?? []);
+        const draft = JSON.stringify(data.draftSections ?? []);
+        const effectiveSections = (draft !== pub && data.draftSections)
+          ? data.draftSections
+          : (data.sections ?? []);
+        setSectionBlocks(effectiveSections as SectionBlock[]);
       })
       .catch((err) => setFetchError(err.message))
       .finally(() => setLoading(false));
@@ -474,7 +480,9 @@ export default function EditPagePage({
     );
   }
 
-  const hasDraft = page.draft !== null || page.draftSections !== null;
+  const hasSectionsDraft = page.draftSections !== null &&
+    JSON.stringify(page.draftSections) !== JSON.stringify(page.sections);
+  const hasDraft = page.draft !== null || hasSectionsDraft;
   const hasContent = !!(editState?.content || page.content);
   const hasSections = sectionBlocks.length > 0 || (page.sections as SectionBlock[] | null)?.length;
   const previewUrl = hasSections
