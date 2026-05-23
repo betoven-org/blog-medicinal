@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-23T16:26:38.405Z",
+  "generatedAt": "2026-05-23T16:29:38.811Z",
   "sections": [
     {
       "key": "Banner",
@@ -402,6 +402,110 @@
           "type": "string",
           "format": "text",
           "title": "Link \"Ver todos\"",
+          "required": false
+        }
+      }
+    },
+    {
+      "key": "PostGridWithSidebar",
+      "title": "Grade + Lista Lateral",
+      "description": "Posts em grid (2/3) com lista numerada lateral (1/3)",
+      "group": "Home",
+      "path": "sections/PostGridWithSidebar",
+      "props": {
+        "gridTitle": {
+          "type": "string",
+          "format": "text",
+          "title": "Titulo do grid",
+          "required": true
+        },
+        "gridMode": {
+          "type": "string",
+          "format": "select",
+          "title": "Modo do grid",
+          "required": false,
+          "default": "recent",
+          "options": [
+            "recent",
+            "trending",
+            "popular",
+            "editor-picks",
+            "manual"
+          ]
+        },
+        "gridManualSlugs": {
+          "type": "string",
+          "format": "text",
+          "title": "Slugs manuais (grid)",
+          "description": "Slugs separados por virgula",
+          "required": false
+        },
+        "gridLimit": {
+          "type": "number",
+          "title": "Limite do grid",
+          "required": false,
+          "default": 4
+        },
+        "gridColumns": {
+          "type": "string",
+          "format": "select",
+          "title": "Colunas do grid",
+          "required": false,
+          "default": "2",
+          "options": [
+            "1",
+            "2"
+          ]
+        },
+        "gridShowCategory": {
+          "type": "boolean",
+          "title": "Mostrar categoria no grid",
+          "required": false,
+          "default": true
+        },
+        "sidebarTitle": {
+          "type": "string",
+          "format": "text",
+          "title": "Titulo da lista",
+          "required": true
+        },
+        "sidebarMode": {
+          "type": "string",
+          "format": "select",
+          "title": "Modo da lista",
+          "required": false,
+          "default": "trending",
+          "options": [
+            "recent",
+            "trending",
+            "popular",
+            "editor-picks",
+            "manual"
+          ]
+        },
+        "sidebarManualSlugs": {
+          "type": "string",
+          "format": "text",
+          "title": "Slugs manuais (lista)",
+          "description": "Slugs separados por virgula",
+          "required": false
+        },
+        "sidebarLimit": {
+          "type": "number",
+          "title": "Limite da lista",
+          "required": false,
+          "default": 5
+        },
+        "sidebarShowViews": {
+          "type": "boolean",
+          "title": "Mostrar views na lista",
+          "required": false,
+          "default": true
+        },
+        "gridViewAllHref": {
+          "type": "string",
+          "format": "text",
+          "title": "Link \"Ver todos\" do grid",
           "required": false
         }
       }
