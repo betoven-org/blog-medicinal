@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/db";
-import { subscriptions } from "@/db/schema";
+import { db } from "@brasa/core/db";
+import { subscriptions } from "@brasa/core/schema";
 import { eq } from "drizzle-orm";
 
 export async function GET(req: NextRequest) {

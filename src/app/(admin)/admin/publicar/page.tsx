@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { diffWords } from "diff";
-import AdminShell from "@/components/admin/AdminShell";
+import { AdminShell } from "@brasa/admin";
 
 type EditState = {
   title: string;

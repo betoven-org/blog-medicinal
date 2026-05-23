@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
-import { db } from "@/db";
-import { posts, categories, authors, products, productCategories } from "@/db/schema";
+import { db } from "@brasa/core/db";
+import { posts, categories, authors, products, productCategories } from "@brasa/core/schema";
 import { eq, count } from "drizzle-orm";
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";

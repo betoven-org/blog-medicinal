@@ -6,7 +6,9 @@
     "node": ">=22"
   },
   "scripts": {
-    "dev": "next dev",
+    "dev": "tsx scripts/watch-sections.ts & next dev",
+    "dev:next": "next dev",
+    "dev:watch": "tsx scripts/watch-sections.ts",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",

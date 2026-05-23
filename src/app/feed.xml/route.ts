@@ -1,5 +1,5 @@
-import { db } from "@/db";
-import { posts, categories } from "@/db/schema";
+import { db } from "@brasa/core/db";
+import { posts, categories } from "@brasa/core/schema";
 import { eq, desc } from "drizzle-orm";
 
 function escapeXml(str: string): string {

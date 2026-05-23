@@ -25,6 +25,24 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "@brasa/core/*": [
+        "./packages/brasa-core/src/*"
+      ],
+      "@brasa/core": [
+        "./packages/brasa-core/src/index.ts"
+      ],
+      "@brasa/admin/*": [
+        "./packages/brasa-admin/src/*"
+      ],
+      "@brasa/admin": [
+        "./packages/brasa-admin/src/index.ts"
+      ],
+      "@brasa/api/*": [
+        "./packages/brasa-api/src/*"
+      ],
+      "@brasa/api": [
+        "./packages/brasa-api/src/index.ts"
       ]
     }
   },

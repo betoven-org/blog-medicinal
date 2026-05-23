@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/auth";
-import { db } from "@/db";
-import { pages } from "@/db/schema";
+import { auth } from "@brasa/core/auth";
+import { db } from "@brasa/core/db";
+import { pages } from "@brasa/core/schema";
 import { eq } from "drizzle-orm";
-import { parseBody, updatePageSchema } from "@/lib/validations";
+import { parseBody, updatePageSchema } from "@brasa/core/validations";
 
 export async function GET(
   _request: NextRequest,

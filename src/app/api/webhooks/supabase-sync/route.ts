@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/db";
+import { db } from "@brasa/core/db";
 import {
   categories, authors, posts, tags, media, products, subscribers,
-} from "@/db/schema";
+} from "@brasa/core/schema";
 import { eq } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
-import { generateSlug } from "@/lib/slug";
+import { generateSlug } from "@brasa/core/slug";
 
 // ── Helpers ─────────────────────────────────────────────────────────────────────
 

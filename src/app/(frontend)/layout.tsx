@@ -3,6 +3,7 @@ import { Roboto } from "next/font/google";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { NavigationProgress } from "@/components/NavigationProgress";
+import { UmamiScript } from "@/components/UmamiScript";
 import "../globals.css";
 
 const roboto = Roboto({
@@ -38,6 +39,9 @@ export default function FrontendLayout({
         <Header />
         <main className="flex-1">{children}</main>
         <Footer />
+        <Suspense fallback={null}>
+          <UmamiScript />
+        </Suspense>
       </body>
     </html>
   );

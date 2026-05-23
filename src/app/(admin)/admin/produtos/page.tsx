@@ -5,12 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Search, Plus, Package, Pencil, Trash2, X, MoreVertical, ExternalLink, SlidersHorizontal, Calendar, ChevronLeft, ChevronRight as ChevronRightIcon } from "lucide-react";
-import AdminShell from "@/components/admin/AdminShell";
-import StatusBadge from "@/components/admin/StatusBadge";
-import DeleteConfirm from "@/components/admin/DeleteConfirm";
-import ProductDrawer from "@/components/admin/ProductDrawer";
-import BulkBar from "@/components/admin/BulkBar";
-import Spinner from "@/components/admin/Spinner";
+import { AdminShell, StatusBadge, DeleteConfirm, ProductDrawer, BulkBar, Spinner } from "@brasa/admin";
 import { Button } from "@/components/ui/button";
 import {
   Popover,

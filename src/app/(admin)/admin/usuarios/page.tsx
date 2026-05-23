@@ -2,10 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Plus, Pencil, Trash2, Users } from "lucide-react";
-import AdminShell from "@/components/admin/AdminShell";
-import DeleteConfirm from "@/components/admin/DeleteConfirm";
-import UserDrawer from "@/components/admin/UserDrawer";
-import Spinner from "@/components/admin/Spinner";
+import { AdminShell, DeleteConfirm, UserDrawer, Spinner } from "@brasa/admin";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {

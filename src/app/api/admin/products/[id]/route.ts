@@ -1,11 +1,11 @@
-import { auth } from "@/auth";
-import { db } from "@/db";
-import { products, productCategories, media } from "@/db/schema";
+import { auth } from "@brasa/core/auth";
+import { db } from "@brasa/core/db";
+import { products, productCategories, media } from "@brasa/core/schema";
 import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
-import { generateSlug } from "@/lib/slug";
-import { parseBody, updateProductSchema } from "@/lib/validations";
+import { generateSlug } from "@brasa/core/slug";
+import { parseBody, updateProductSchema } from "@brasa/core/validations";
 
 type RouteContext = { params: Promise<{ id: string }> };
 

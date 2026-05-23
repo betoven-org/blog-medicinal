@@ -4,12 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Search, Plus, FileText, Pencil, Trash2, X, MoreVertical, ExternalLink } from "lucide-react";
-import AdminShell from "@/components/admin/AdminShell";
-import StatusBadge from "@/components/admin/StatusBadge";
-import DeleteConfirm from "@/components/admin/DeleteConfirm";
-import PostDrawer from "@/components/admin/PostDrawer";
-import BulkBar from "@/components/admin/BulkBar";
-import Spinner from "@/components/admin/Spinner";
+import { AdminShell, StatusBadge, DeleteConfirm, PostDrawer, BulkBar, Spinner } from "@brasa/admin";
 import { Button } from "@/components/ui/button";
 import {
   Popover,

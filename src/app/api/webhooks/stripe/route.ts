@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { stripe } from "@/lib/stripe";
-import { db } from "@/db";
-import { subscriptions } from "@/db/schema";
+import { db } from "@brasa/core/db";
+import { subscriptions } from "@brasa/core/schema";
 import { eq } from "drizzle-orm";
 
 export async function POST(req: NextRequest) {

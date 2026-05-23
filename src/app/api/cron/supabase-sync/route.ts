@@ -1,10 +1,10 @@
-import { db } from "@/db";
+import { db } from "@brasa/core/db";
 import {
   categories, authors, posts, tags, media, products, siteSettings,
-} from "@/db/schema";
+} from "@brasa/core/schema";
 import { eq, sql } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
-import { generateSlug } from "@/lib/slug";
+import { generateSlug } from "@brasa/core/slug";
 import { revalidateTag } from "next/cache";
 
 // ── Supabase helpers ────────────────────────────────────────────────────────────

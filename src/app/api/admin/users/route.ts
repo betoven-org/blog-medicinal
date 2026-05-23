@@ -1,10 +1,10 @@
-import { auth } from "@/auth";
-import { db } from "@/db";
-import { users } from "@/db/schema";
+import { auth } from "@brasa/core/auth";
+import { db } from "@brasa/core/db";
+import { users } from "@brasa/core/schema";
 import { desc, count, eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { parseBody, createUserSchema } from "@/lib/validations";
+import { parseBody, createUserSchema } from "@brasa/core/validations";
 
 export async function GET(req: NextRequest) {
   try {

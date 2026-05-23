@@ -1,10 +1,10 @@
-import { auth } from "@/auth";
-import { db } from "@/db";
-import { posts, tags } from "@/db/schema";
+import { auth } from "@brasa/core/auth";
+import { db } from "@brasa/core/db";
+import { posts, tags } from "@brasa/core/schema";
 import { inArray } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
-import { parseBody, bulkActionSchema } from "@/lib/validations";
+import { parseBody, bulkActionSchema } from "@brasa/core/validations";
 
 export async function POST(req: NextRequest) {
   try {

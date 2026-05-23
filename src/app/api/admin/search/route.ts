@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/auth";
-import { db } from "@/db";
-import { posts, categories, authors, products } from "@/db/schema";
+import { auth } from "@brasa/core/auth";
+import { db } from "@brasa/core/db";
+import { posts, categories, authors, products } from "@brasa/core/schema";
 import { like, desc } from "drizzle-orm";
 
 export async function GET(req: NextRequest) {

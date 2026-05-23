@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
-import { db } from "@/db";
-import { subscriptions } from "@/db/schema";
+import { auth } from "@brasa/core/auth";
+import { db } from "@brasa/core/db";
+import { subscriptions } from "@brasa/core/schema";
 
 export async function GET() {
   const session = await auth();

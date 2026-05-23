@@ -1,10 +1,10 @@
-import { auth } from "@/auth";
-import { db } from "@/db";
-import { users } from "@/db/schema";
+import { auth } from "@brasa/core/auth";
+import { db } from "@brasa/core/db";
+import { users } from "@brasa/core/schema";
 import { eq, count } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { parseBody, updateUserSchema } from "@/lib/validations";
+import { parseBody, updateUserSchema } from "@brasa/core/validations";
 
 type RouteContext = { params: Promise<{ id: string }> };
 

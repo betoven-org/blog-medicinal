@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/auth";
-import { db } from "@/db";
-import { pages } from "@/db/schema";
+import { auth } from "@brasa/core/auth";
+import { db } from "@brasa/core/db";
+import { pages } from "@brasa/core/schema";
 import { asc } from "drizzle-orm";
-import { parseBody, createPageSchema } from "@/lib/validations";
+import { parseBody, createPageSchema } from "@brasa/core/validations";
 
 export async function GET() {
   const session = await auth();

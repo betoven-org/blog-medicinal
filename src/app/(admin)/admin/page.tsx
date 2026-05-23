@@ -1,502 +1,316 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import Link from "next/link";
-import AdminShell from "@/components/admin/AdminShell";
+import { AdminShell } from "@brasa/admin";
 
 /* ── Types ────────────────────────────────────────────────────────────────────── */
 
-type StatCard = {
-  label: string;
-  value: number | null;
-  icon: React.ReactNode;
-  href: string;
+type Performance = {
+  current: {
+    totalRequests: number;
+    avgLatency: number;
+    p50Latency: number;
+    p95Latency: number;
+    p99Latency: number;
+    errorRate: number;
+  };
+  previous: {
+    totalRequests: number;
+    avgLatency: number;
+    errorRate: number;
+  };
+  slowestPages: {
+    path: string;
+    avgLatency: number;
+    p95Latency: number;
+    count: number;
+  }[];
 };
 
-type AnalyticsOverview = {
-  totalViews: number;
-  uniqueVisitors: number;
-  bounceRate: number;
-  topPage: string;
-  topCountry: string;
+type RecentChange = {
+  type: string;
+  name: string;
+  slug: string;
+  status: string;
+  updated_at: string;
+  created_at: string;
 };
 
-type TimeseriesPoint = {
-  date: string;
+type Release = {
+  title: string;
+  slug: string;
+  published_at: string;
   views: number;
 };
 
-type RankedItem = {
-  name: string;
-  count: number;
-};
-
-type AnalyticsData = {
-  overview: AnalyticsOverview | null;
-  timeseries: TimeseriesPoint[];
-  topPages: RankedItem[];
-  topCountries: RankedItem[];
-  topReferrers: RankedItem[];
+type DashboardData = {
+  performance: Performance;
+  recentChanges: RecentChange[];
+  releases: Release[];
 };
 
 /* ── Helpers ──────────────────────────────────────────────────────────────────── */
 
-function getDateRange(days: number) {
-  const to = new Date();
-  const from = new Date();
-  from.setDate(from.getDate() - days);
-  return {
-    from: from.toISOString().split("T")[0],
-    to: to.toISOString().split("T")[0],
-  };
+function formatNumber(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+  return n.toLocaleString("pt-BR");
 }
 
-async function fetchCount(url: string): Promise<number> {
-  try {
-    const res = await fetch(url);
-    if (!res.ok) return 0;
-    const json = await res.json();
-    return json.totalDocs ?? json.docs?.length ?? 0;
-  } catch {
-    return 0;
-  }
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "agora";
+  if (mins < 60) return `${mins}min`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days}d`;
+  return `${Math.floor(days / 30)}m`;
 }
 
-/* ── Skeleton ─────────────────────────────────────────────────────────────────── */
-
-function SkeletonCard() {
-  return (
-    <div className="animate-pulse rounded-xl border border-gray-200 bg-white p-5">
-      <div className="mb-3 h-10 w-10 rounded-lg bg-gray-100" />
-      <div className="mb-2 h-8 w-16 rounded bg-gray-100" />
-      <div className="h-4 w-24 rounded bg-gray-100" />
-    </div>
-  );
+function delta(current: number, previous: number): { label: string; positive: boolean } | null {
+  if (!previous || !current || !isFinite(current) || !isFinite(previous)) return null;
+  const pct = ((current - previous) / previous) * 100;
+  if (!isFinite(pct) || Math.abs(pct) < 0.5) return null;
+  return { label: `${pct > 0 ? "+" : ""}${pct.toFixed(0)}%`, positive: pct < 0 };
 }
 
-const SKELETON_HEIGHTS = [45, 62, 38, 71, 53, 29, 67, 41, 58, 34, 73, 50, 36, 64];
-
-function SkeletonBar() {
-  return (
-    <div className="flex items-end gap-1">
-      {SKELETON_HEIGHTS.map((h, i) => (
-        <div
-          key={i}
-          className="flex-1 animate-pulse rounded-t bg-gray-100"
-          style={{ height: `${h}%` }}
-        />
-      ))}
-    </div>
-  );
+function latencyColor(ms: number): string {
+  if (ms <= 100) return "text-green-600";
+  if (ms <= 300) return "text-yellow-600";
+  return "text-red-600";
 }
 
-/* ── SVG Icons ────────────────────────────────────────────────────────────────── */
-
-const ICONS = {
-  posts: (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true">
-      <path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40Zm0,160H40V56H216V200ZM184,96a8,8,0,0,1-8,8H80a8,8,0,0,1,0-16h96A8,8,0,0,1,184,96Zm0,32a8,8,0,0,1-8,8H80a8,8,0,0,1,0-16h96A8,8,0,0,1,184,128Zm0,32a8,8,0,0,1-8,8H80a8,8,0,0,1,0-16h96A8,8,0,0,1,184,160Z" />
-    </svg>
-  ),
-  published: (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true">
-      <path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z" />
-    </svg>
-  ),
-  draft: (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true">
-      <path d="M227.31,73.37,182.63,28.68a16,16,0,0,0-22.63,0L36.69,152A15.86,15.86,0,0,0,32,163.31V208a16,16,0,0,0,16,16H92.69A15.86,15.86,0,0,0,104,219.31L227.31,96a16,16,0,0,0,0-22.63ZM92.69,208H48V163.31l88-88L180.69,120ZM192,108.68,147.31,64l24-24L216,84.68Z" />
-    </svg>
-  ),
-  categories: (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true">
-      <path d="M104,40H56A16,16,0,0,0,40,56v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V56A16,16,0,0,0,104,40Zm0,64H56V56h48v48Zm96-64H152a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V56A16,16,0,0,0,200,40Zm0,64H152V56h48v48Zm-96,32H56a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V152A16,16,0,0,0,104,136Zm0,64H56V152h48v48Zm96-64H152a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V152A16,16,0,0,0,200,136Zm0,64H152V152h48v48Z" />
-    </svg>
-  ),
-  subscribers: (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true">
-      <path d="M224,48H32a8,8,0,0,0-8,8V192a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A8,8,0,0,0,224,48ZM203.43,64,128,133.15,52.57,64ZM216,192H40V74.19l82.59,75.71a8,8,0,0,0,10.82,0L216,74.19V192Z" />
-    </svg>
-  ),
-  media: (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true">
-      <path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40Zm0,16V158.75l-26.07-26.06a16,16,0,0,0-22.63,0l-20,20-44-44a16,16,0,0,0-22.62,0L40,149.37V56ZM40,200V172l52-52,80,80H40Zm176,0H194.63l-36-36,20-20L216,181.38V200ZM144,100a12,12,0,1,1,12,12A12,12,0,0,1,144,100Z" />
-    </svg>
-  ),
-};
+function latencyBar(ms: number, max: number): string {
+  const pct = Math.min((ms / max) * 100, 100);
+  if (ms <= 100) return `bg-green-500/20`;
+  if (ms <= 300) return `bg-yellow-500/20`;
+  return `bg-red-500/20`;
+}
 
 /* ── Component ────────────────────────────────────────────────────────────────── */
 
 export default function DashboardPage() {
-  const [stats, setStats] = useState<StatCard[]>([]);
-  const [statsLoading, setStatsLoading] = useState(true);
-  const [analyticsPeriod, setAnalyticsPeriod] = useState(7);
-  const [analytics, setAnalytics] = useState<AnalyticsData>({
-    overview: null,
-    timeseries: [],
-    topPages: [],
-    topCountries: [],
-    topReferrers: [],
-  });
-  const [analyticsLoading, setAnalyticsLoading] = useState(true);
-  const [analyticsError, setAnalyticsError] = useState(false);
+  const [period, setPeriod] = useState(7);
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-  /* ── Fetch CMS stats ─────────────────────────────────────────────────────── */
-
-  useEffect(() => {
-    async function loadStats() {
-      setStatsLoading(true);
-      const [total, published, drafts, cats, subs, mediaCount] =
-        await Promise.all([
-          fetchCount("/api/admin/posts?limit=1"),
-          fetchCount("/api/admin/posts?limit=1&status=published"),
-          fetchCount("/api/admin/posts?limit=1&status=draft"),
-          fetchCount("/api/admin/categories?limit=1"),
-          fetchCount("/api/admin/subscribers?limit=1"),
-          fetchCount("/api/admin/media?limit=1"),
-        ]);
-
-      setStats([
-        { label: "Posts", value: total, icon: ICONS.posts, href: "/admin/posts" },
-        { label: "Publicados", value: published, icon: ICONS.published, href: "/admin/posts?status=published" },
-        { label: "Rascunhos", value: drafts, icon: ICONS.draft, href: "/admin/posts?status=draft" },
-        { label: "Categorias", value: cats, icon: ICONS.categories, href: "/admin/categorias" },
-        { label: "Inscritos", value: subs, icon: ICONS.subscribers, href: "/admin/inscritos" },
-        { label: "Midias", value: mediaCount, icon: ICONS.media, href: "/admin/midias" },
-      ]);
-      setStatsLoading(false);
-    }
-
-    loadStats();
-  }, []);
-
-  /* ── Fetch Analytics ─────────────────────────────────────────────────────── */
-
-  const fetchAnalytics = useCallback(async (days: number) => {
-    setAnalyticsLoading(true);
-    setAnalyticsError(false);
-    const { from, to } = getDateRange(days);
-
+  const fetchData = useCallback(async (days: number) => {
+    setLoading(true);
+    setError(false);
     try {
-      const base = `/api/admin/analytics?from=${from}&to=${to}`;
-
-      const [overviewRes, timeseriesRes, pagesRes, countriesRes, referrersRes] =
-        await Promise.allSettled([
-          fetch(`${base}&type=overview`),
-          fetch(`${base}&type=timeseries`),
-          fetch(`${base}&groupBy=path&limit=10`),
-          fetch(`${base}&groupBy=country&limit=10`),
-          fetch(`${base}&groupBy=referrer&limit=10`),
-        ]);
-
-      const parseJson = async (result: PromiseSettledResult<Response>) => {
-        if (result.status === "fulfilled" && result.value.ok) {
-          return result.value.json();
-        }
-        return null;
-      };
-
-      const [overviewData, timeseriesData, pagesData, countriesData, referrersData] =
-        await Promise.all([
-          parseJson(overviewRes),
-          parseJson(timeseriesRes),
-          parseJson(pagesRes),
-          parseJson(countriesRes),
-          parseJson(referrersRes),
-        ]);
-
-      // Se nenhuma requisicao retornou dados, marca erro
-      if (!overviewData && !timeseriesData) {
-        setAnalyticsError(true);
-        return;
-      }
-
-      setAnalytics({
-        overview: overviewData,
-        timeseries: Array.isArray(timeseriesData) ? timeseriesData : [],
-        topPages: Array.isArray(pagesData) ? pagesData : [],
-        topCountries: Array.isArray(countriesData) ? countriesData : [],
-        topReferrers: Array.isArray(referrersData) ? referrersData : [],
-      });
+      const res = await fetch(`/api/admin/dashboard?days=${days}`);
+      if (!res.ok) throw new Error();
+      setData(await res.json());
     } catch {
-      setAnalyticsError(true);
+      setError(true);
     } finally {
-      setAnalyticsLoading(false);
+      setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchAnalytics(analyticsPeriod);
-  }, [analyticsPeriod, fetchAnalytics]);
-
-  /* ── Mini bar chart ──────────────────────────────────────────────────────── */
-
-  const maxViews = Math.max(...analytics.timeseries.map((p) => p.views), 1);
-
-  /* ── Render ──────────────────────────────────────────────────────────────── */
+    fetchData(period);
+  }, [period, fetchData]);
 
   return (
     <AdminShell title="Dashboard">
-      {/* ── CMS Stats ───────────────────────────────────────────────────────── */}
-      <section className="mb-10">
-        <h2 className="mb-4 text-lg font-semibold text-gray-900">
-          Estatisticas do CMS
-        </h2>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-6">
-          {statsLoading
-            ? Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)
-            : stats.map((card) => (
-                <Link
-                  key={card.label}
-                  href={card.href}
-                  className="group rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all hover:border-[#0d61ac]/30 hover:shadow-md"
-                >
-                  <div className="mb-3 inline-flex rounded-lg bg-[#0d61ac]/10 p-2.5 text-[#0d61ac] transition-colors group-hover:bg-[#0d61ac]/20">
-                    {card.icon}
-                  </div>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {card.value ?? "--"}
-                  </p>
-                  <p className="mt-0.5 text-sm text-gray-500">{card.label}</p>
-                </Link>
-              ))}
-        </div>
-      </section>
-
-      {/* ── Analytics ───────────────────────────────────────────────────────── */}
-      <section>
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-lg font-semibold text-gray-900">Analytics</h2>
-          <div className="flex gap-1 rounded-lg border border-gray-200 bg-gray-50 p-1">
-            {[
-              { days: 7, label: "7 dias" },
-              { days: 30, label: "30 dias" },
-              { days: 90, label: "90 dias" },
-            ].map((opt) => (
-              <button
-                key={opt.days}
-                type="button"
-                onClick={() => setAnalyticsPeriod(opt.days)}
-                className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                  analyticsPeriod === opt.days
-                    ? "bg-white text-[#0d61ac] shadow-sm"
-                    : "text-gray-600 hover:text-gray-900"
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {analyticsError ? (
-          <div className="rounded-xl border border-gray-200 bg-white p-8 text-center">
-            <svg
-              className="mx-auto mb-3 text-gray-300"
-              xmlns="http://www.w3.org/2000/svg"
-              width="48"
-              height="48"
-              viewBox="0 0 256 256"
-              fill="currentColor"
-              aria-hidden="true"
+      {/* Period selector */}
+      <div className="mb-6 flex items-center justify-end">
+        <div className="flex gap-1 rounded-lg border border-gray-200 bg-gray-50 p-1">
+          {[
+            { days: 1, label: "24h" },
+            { days: 7, label: "7 dias" },
+            { days: 30, label: "30 dias" },
+          ].map((opt) => (
+            <button
+              key={opt.days}
+              type="button"
+              onClick={() => setPeriod(opt.days)}
+              className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                period === opt.days
+                  ? "bg-white text-[#0d61ac] shadow-sm"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
             >
-              <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm-8,56a8,8,0,0,1,16,0v56a8,8,0,0,1-16,0Zm8,104a12,12,0,1,1,12-12A12,12,0,0,1,128,184Z" />
-            </svg>
-            <p className="text-sm font-medium text-gray-500">
-              Analytics indisponivel
-            </p>
-            <p className="mt-1 text-xs text-gray-400">
-              Nao foi possivel carregar os dados de analytics no momento.
-            </p>
-          </div>
-        ) : analyticsLoading ? (
-          <div className="space-y-4">
-            {/* Skeleton overview */}
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="animate-pulse rounded-xl border border-gray-200 bg-white p-4"
-                >
-                  <div className="mb-2 h-3 w-20 rounded bg-gray-100" />
-                  <div className="h-7 w-14 rounded bg-gray-100" />
-                </div>
-              ))}
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {error ? (
+        <div className="rounded-xl border border-gray-200 bg-white p-8 text-center">
+          <p className="text-sm font-medium text-gray-500">Erro ao carregar dashboard</p>
+          <button
+            type="button"
+            onClick={() => fetchData(period)}
+            className="mt-3 rounded-md bg-[#0d61ac] px-4 py-2 text-sm font-medium text-white hover:bg-[#0b5499]"
+          >
+            Tentar novamente
+          </button>
+        </div>
+      ) : loading ? (
+        <div className="space-y-6">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="h-64 animate-pulse rounded-xl border border-gray-200 bg-white" />
+          ))}
+        </div>
+      ) : data ? (
+        <div className="space-y-6">
+          {/* ── Performance Benchmark ─────────────────────────────────────── */}
+          <section className="rounded-xl border border-gray-200 bg-white">
+            <div className="border-b border-gray-100 px-5 py-4">
+              <h2 className="text-sm font-semibold text-gray-900">Performance Benchmark</h2>
             </div>
-            {/* Skeleton chart */}
-            <div className="h-48 rounded-xl border border-gray-200 bg-white p-4">
-              <SkeletonBar />
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {/* Overview stats */}
-            {analytics.overview && (
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+            <div className="p-5">
+              {/* Metricas resumo */}
+              <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
                 {[
-                  {
-                    label: "Total Visualizacoes",
-                    value: analytics.overview.totalViews?.toLocaleString("pt-BR") ?? "--",
-                  },
-                  {
-                    label: "Visitantes Unicos",
-                    value: analytics.overview.uniqueVisitors?.toLocaleString("pt-BR") ?? "--",
-                  },
-                  {
-                    label: "Bounce Rate",
-                    value: analytics.overview.bounceRate != null
-                      ? `${analytics.overview.bounceRate.toFixed(1)}%`
-                      : "--",
-                  },
-                  {
-                    label: "Pagina Mais Vista",
-                    value: analytics.overview.topPage || "--",
-                  },
-                  {
-                    label: "Pais Principal",
-                    value: analytics.overview.topCountry || "--",
-                  },
+                  { label: "Requests", value: formatNumber(data.performance.current.totalRequests), diff: delta(data.performance.current.totalRequests, data.performance.previous.totalRequests), invertColor: false },
+                  { label: "Avg Latency", value: `${data.performance.current.avgLatency}ms`, diff: delta(data.performance.current.avgLatency, data.performance.previous.avgLatency), invertColor: true },
+                  { label: "P50", value: `${data.performance.current.p50Latency}ms`, diff: null, invertColor: true },
+                  { label: "P95", value: `${data.performance.current.p95Latency}ms`, diff: null, invertColor: true },
+                  { label: "P99", value: `${data.performance.current.p99Latency}ms`, diff: null, invertColor: true },
+                  { label: "Error Rate", value: `${data.performance.current.errorRate}%`, diff: delta(data.performance.current.errorRate, data.performance.previous.errorRate), invertColor: true },
                 ].map((item) => (
-                  <div
-                    key={item.label}
-                    className="rounded-xl border border-gray-200 bg-white p-4"
-                  >
-                    <p className="text-xs font-medium text-gray-500">
-                      {item.label}
-                    </p>
-                    <p className="mt-1 truncate text-xl font-bold text-gray-900">
-                      {item.value}
-                    </p>
+                  <div key={item.label} className="rounded-lg bg-gray-50 px-3 py-2.5">
+                    <p className="text-[11px] font-medium text-gray-500">{item.label}</p>
+                    <div className="mt-0.5 flex items-baseline gap-1.5">
+                      <span className="text-lg font-bold text-gray-900">{item.value}</span>
+                      {item.diff && (
+                        <span className={`text-[11px] font-medium ${
+                          item.invertColor
+                            ? item.diff.positive ? "text-green-600" : "text-red-500"
+                            : item.diff.positive ? "text-red-500" : "text-green-600"
+                        }`}>
+                          {item.diff.label}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
-            )}
 
-            {/* Mini bar chart */}
-            {analytics.timeseries.length > 0 && (
-              <div className="rounded-xl border border-gray-200 bg-white p-5">
-                <h3 className="mb-4 text-sm font-semibold text-gray-700">
-                  Visualizacoes Diarias
-                </h3>
-                <div className="flex h-40 items-end gap-[2px]">
-                  {analytics.timeseries.map((point, i) => {
-                    const pct = (point.views / maxViews) * 100;
-                    return (
-                      <div
-                        key={i}
-                        className="group relative flex-1"
-                        title={`${point.date}: ${point.views} visualizacoes`}
-                      >
-                        <div
-                          className="w-full rounded-t bg-[#0d61ac]/70 transition-colors group-hover:bg-[#0d61ac]"
-                          style={{ height: `${Math.max(pct, 2)}%` }}
-                        />
-                        {/* Tooltip */}
-                        <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 hidden -translate-x-1/2 whitespace-nowrap rounded bg-gray-800 px-2 py-1 text-xs text-white shadow group-hover:block">
-                          <span className="font-medium">{point.views}</span>
-                          <br />
-                          <span className="text-gray-300">{point.date}</span>
+              {/* Slowest pages */}
+              {data.performance.slowestPages.length > 0 && (
+                <div>
+                  <p className="mb-2 text-xs font-medium text-gray-500">Paginas mais lentas</p>
+                  <div className="space-y-1">
+                    {data.performance.slowestPages.map((page, i) => {
+                      const maxLatency = data.performance.slowestPages[0]?.avgLatency || 1;
+                      const pct = (page.avgLatency / maxLatency) * 100;
+                      return (
+                        <div key={i} className="relative rounded-md py-1.5">
+                          <div
+                            className={`absolute inset-y-0 left-0 rounded-md ${latencyBar(page.avgLatency, 500)}`}
+                            style={{ width: `${pct}%` }}
+                          />
+                          <div className="relative flex items-center justify-between px-3 text-sm">
+                            <span className="truncate text-gray-700" title={page.path}>
+                              {page.path.length > 50 ? page.path.slice(0, 50) + "..." : page.path}
+                            </span>
+                            <div className="ml-3 flex items-center gap-3 text-xs">
+                              <span className="text-gray-400">{page.count} req</span>
+                              <span className="text-gray-400">p95: {page.p95Latency}ms</span>
+                              <span className={`font-semibold ${latencyColor(page.avgLatency)}`}>
+                                {page.avgLatency}ms
+                              </span>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
-                <div className="mt-2 flex justify-between text-[10px] text-gray-400">
-                  <span>{analytics.timeseries[0]?.date ?? ""}</span>
-                  <span>
-                    {analytics.timeseries[analytics.timeseries.length - 1]?.date ?? ""}
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {/* Ranked lists */}
-            <div className="grid gap-4 lg:grid-cols-3">
-              {/* Top Pages */}
-              {analytics.topPages.length > 0 && (
-                <RankedList title="Top Paginas" items={analytics.topPages} />
               )}
 
-              {/* Top Countries */}
-              {analytics.topCountries.length > 0 && (
-                <RankedList title="Top Paises" items={analytics.topCountries} />
-              )}
-
-              {/* Top Referrers */}
-              {analytics.topReferrers.length > 0 && (
-                <RankedList
-                  title="Top Referrers"
-                  items={analytics.topReferrers}
-                />
+              {data.performance.current.totalRequests === 0 && (
+                <p className="py-6 text-center text-sm text-gray-400">Sem dados de performance no periodo</p>
               )}
             </div>
+          </section>
 
-            {/* Empty analytics state */}
-            {!analytics.overview &&
-              analytics.timeseries.length === 0 &&
-              analytics.topPages.length === 0 && (
-                <div className="rounded-xl border border-gray-200 bg-white p-8 text-center">
-                  <svg
-                    className="mx-auto mb-3 text-gray-300"
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="48"
-                    height="48"
-                    viewBox="0 0 256 256"
-                    fill="currentColor"
-                    aria-hidden="true"
-                  >
-                    <path d="M232,208a8,8,0,0,1-8,8H32a8,8,0,0,1-8-8V48a8,8,0,0,1,16,0V156.69l56-56a8,8,0,0,1,11.31,0L148,141.37,207.31,82a8,8,0,0,1,11.32,11.31l-64,64a8,8,0,0,1-11.32,0L103,116.69,48,171.31V200H224A8,8,0,0,1,232,208Z" />
-                  </svg>
-                  <p className="text-sm font-medium text-gray-500">
-                    Sem dados de analytics
-                  </p>
-                  <p className="mt-1 text-xs text-gray-400">
-                    Os dados aparecerão aqui quando houver trafego registrado.
-                  </p>
-                </div>
+          {/* ── Recent Changes ────────────────────────────────────────────── */}
+          <section className="rounded-xl border border-gray-200 bg-white">
+            <div className="border-b border-gray-100 px-5 py-4">
+              <h2 className="text-sm font-semibold text-gray-900">Recent Changes</h2>
+            </div>
+            <div className="divide-y divide-gray-50">
+              {data.recentChanges.length > 0 ? (
+                data.recentChanges.map((item, i) => (
+                  <div key={i} className="flex items-center gap-3 px-5 py-3">
+                    <span className={`inline-flex rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase ${
+                      item.type === "post"
+                        ? "bg-blue-50 text-blue-600"
+                        : "bg-purple-50 text-purple-600"
+                    }`}>
+                      {item.type === "post" ? "Post" : "Produto"}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-gray-900">{item.name}</p>
+                      <p className="text-xs text-gray-400">/{item.slug}</p>
+                    </div>
+                    <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                      item.status === "published"
+                        ? "bg-green-50 text-green-700"
+                        : "bg-gray-100 text-gray-500"
+                    }`}>
+                      {item.status === "published" ? "publicado" : "rascunho"}
+                    </span>
+                    <span className="flex-shrink-0 text-xs text-gray-400" title={item.updated_at}>
+                      {timeAgo(item.updated_at)}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <p className="px-5 py-6 text-center text-sm text-gray-400">Nenhuma alteracao recente</p>
               )}
-          </div>
-        )}
-      </section>
+            </div>
+          </section>
+
+          {/* ── Releases & Impact ─────────────────────────────────────────── */}
+          <section className="rounded-xl border border-gray-200 bg-white">
+            <div className="border-b border-gray-100 px-5 py-4">
+              <h2 className="text-sm font-semibold text-gray-900">Releases & Impact</h2>
+            </div>
+            <div className="divide-y divide-gray-50">
+              {data.releases.length > 0 ? (
+                data.releases.map((item, i) => {
+                  const maxViews = Math.max(...data.releases.map((r) => r.views), 1);
+                  const pct = (item.views / maxViews) * 100;
+                  return (
+                    <div key={i} className="relative px-5 py-3">
+                      <div
+                        className="absolute inset-y-0 right-0 rounded-r-xl bg-[#0d61ac]/[0.03]"
+                        style={{ width: `${pct}%` }}
+                      />
+                      <div className="relative flex items-center justify-between">
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium text-gray-900">{item.title}</p>
+                          <p className="text-xs text-gray-400">
+                            Publicado {timeAgo(item.published_at)}
+                          </p>
+                        </div>
+                        <div className="ml-3 flex items-center gap-2">
+                          <span className="text-sm font-semibold text-gray-900">
+                            {formatNumber(item.views)}
+                          </span>
+                          <span className="text-xs text-gray-400">views</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <p className="px-5 py-6 text-center text-sm text-gray-400">Nenhum post publicado ainda</p>
+              )}
+            </div>
+          </section>
+        </div>
+      ) : null}
     </AdminShell>
-  );
-}
-
-/* ── Ranked List Component ────────────────────────────────────────────────────── */
-
-function RankedList({
-  title,
-  items,
-}: {
-  title: string;
-  items: RankedItem[];
-}) {
-  const maxCount = Math.max(...items.map((i) => i.count), 1);
-
-  return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5">
-      <h3 className="mb-3 text-sm font-semibold text-gray-700">{title}</h3>
-      <ul className="space-y-2">
-        {items.map((item, i) => {
-          const pct = (item.count / maxCount) * 100;
-          return (
-            <li key={i} className="relative">
-              <div
-                className="absolute inset-y-0 left-0 rounded bg-[#0d61ac]/5"
-                style={{ width: `${pct}%` }}
-              />
-              <div className="relative flex items-center justify-between px-2 py-1.5">
-                <span className="truncate text-sm text-gray-700">
-                  {item.name || "(direto)"}
-                </span>
-                <span className="ml-2 flex-shrink-0 text-sm font-medium text-gray-900">
-                  {item.count.toLocaleString("pt-BR")}
-                </span>
-              </div>
-            </li>
-          );
-        })}
-      </ul>
-    </div>
   );
 }

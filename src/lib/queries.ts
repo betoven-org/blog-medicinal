@@ -1,5 +1,5 @@
 import { unstable_cache } from "next/cache";
-import { db } from "@/db";
+import { db } from "@brasa/core/db";
 import {
   posts,
   categories,
@@ -8,7 +8,7 @@ import {
   tags,
   siteSettings,
   pages,
-} from "@/db/schema";
+} from "@brasa/core/schema";
 import { eq, and, ne, desc, asc, ilike, or, count, sql } from "drizzle-orm";
 
 // ── Helpers ─────────────────────────────────────────────────────────────────────
@@ -83,7 +83,39 @@ export const getSiteSettings = unstable_cache(
         favicon: true,
       },
     });
-    if (!row) return null;
+    if (!row) {
+      return {
+        id: 0,
+        siteName: "Medicinal na Web",
+        siteDescription: null,
+        logoId: null,
+        faviconId: null,
+        whatsapp: null,
+        facebook: null,
+        instagram: null,
+        youtube: null,
+        footerText: null,
+        copyrightText: null,
+        newsletterTitle: null,
+        newsletterDescription: null,
+        newsletterConsent: null,
+        seoTitle: null,
+        seoDescription: null,
+        seoKeywords: null,
+        privacyPolicy: null,
+        robotsTxt: "User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /api",
+        supabaseUrl: null,
+        supabaseAnonKey: null,
+        supabaseServiceRoleKey: null,
+        umamiWebsiteId: null,
+        umamiUrl: null,
+        supabaseSyncEnabled: false,
+        lastSyncAt: null,
+        updatedAt: new Date().toISOString(),
+        logo: null,
+        favicon: null,
+      };
+    }
     return {
       ...row,
       logo: mapMedia(row.logo),

@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import AdminShell from "@/components/admin/AdminShell";
-import DataTable from "@/components/admin/DataTable";
+import { AdminShell, DataTable } from "@brasa/admin";
 
 type Subscriber = {
   id: number;

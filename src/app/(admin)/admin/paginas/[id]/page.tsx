@@ -2,9 +2,7 @@
 
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { toast } from "sonner";
-import AdminShell from "@/components/admin/AdminShell";
-import FormField from "@/components/admin/FormField";
-import ImageUpload from "@/components/admin/ImageUpload";
+import { AdminShell, FormField, ImageUpload } from "@brasa/admin";
 
 type EditState = {
   title: string;

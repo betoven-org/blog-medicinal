@@ -13,8 +13,8 @@ import {
   Lock,
 } from "lucide-react";
 
-import { db } from "@/db";
-import { products, productCategories, media } from "@/db/schema";
+import { db } from "@brasa/core/db";
+import { products, productCategories, media } from "@brasa/core/schema";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { TipTapRenderer, markdownToHtml } from "@/components/TipTapRenderer";
 import { ProductGallery } from "@/components/ProductGallery";

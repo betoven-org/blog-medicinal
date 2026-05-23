@@ -3,8 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import AdminShell from "@/components/admin/AdminShell";
-import FormField from "@/components/admin/FormField";
+import { AdminShell, FormField } from "@brasa/admin";
 
 export default function NovaCategoriaPage() {
   const router = useRouter();

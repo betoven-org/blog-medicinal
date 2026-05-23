@@ -3,11 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { Plus, Pencil, Trash2, FolderOpen } from "lucide-react";
-import AdminShell from "@/components/admin/AdminShell";
-import DeleteConfirm from "@/components/admin/DeleteConfirm";
-import BulkBar from "@/components/admin/BulkBar";
-import CategoryDrawer from "@/components/admin/CategoryDrawer";
-import Spinner from "@/components/admin/Spinner";
+import { AdminShell, DeleteConfirm, BulkBar, CategoryDrawer, Spinner } from "@brasa/admin";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {

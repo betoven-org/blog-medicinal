@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { db } from "@/db";
-import { siteSettings } from "@/db/schema";
+import { db } from "@brasa/core/db";
+import { siteSettings } from "@brasa/core/schema";
 
 const DEFAULT_ROBOTS = `User-agent: *
 Allow: /

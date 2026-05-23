@@ -3,9 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import AdminShell from "@/components/admin/AdminShell";
-import FormField from "@/components/admin/FormField";
-import DeleteConfirm from "@/components/admin/DeleteConfirm";
+import { AdminShell, FormField, DeleteConfirm } from "@brasa/admin";
 
 export default function EditarCategoriaPage() {
   const router = useRouter();

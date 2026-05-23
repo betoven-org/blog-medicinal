@@ -3,10 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import AdminShell from "@/components/admin/AdminShell";
-import FormField from "@/components/admin/FormField";
-import ImageUpload from "@/components/admin/ImageUpload";
-import DeleteConfirm from "@/components/admin/DeleteConfirm";
+import { AdminShell, FormField, ImageUpload, DeleteConfirm } from "@brasa/admin";
 
 export default function EditarAutorPage() {
   const router = useRouter();

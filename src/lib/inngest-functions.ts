@@ -1,6 +1,6 @@
 import { inngest } from "./inngest";
-import { db } from "@/db";
-import { posts } from "@/db/schema";
+import { db } from "@brasa/core/db";
+import { posts } from "@brasa/core/schema";
 import { eq, and, lte, isNotNull } from "drizzle-orm";
 
 /**

@@ -1,0 +1,175 @@
+type SelectOption = {
+  value: string;
+  label: string;
+};
+
+type Props = {
+  label: string;
+  name: string;
+  type?: "text" | "email" | "password" | "textarea" | "select" | "file" | "checkbox";
+  value?: string | boolean;
+  onChange?: (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => void;
+  error?: string;
+  required?: boolean;
+  options?: SelectOption[];
+  placeholder?: string;
+  description?: string;
+};
+
+export default function FormField({
+  label,
+  name,
+  type = "text",
+  value,
+  onChange,
+  error,
+  required = false,
+  options = [],
+  placeholder,
+  description,
+}: Props) {
+  const baseInputClasses =
+    "w-full rounded-md border bg-white px-3 py-2 text-sm text-gray-900 shadow-sm transition-colors placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-ring focus:border-primary";
+  const borderClass = error ? "border-red-300" : "border-gray-300";
+
+  const inputId = `field-${name}`;
+  const errorId = `error-${name}`;
+  const descId = `desc-${name}`;
+
+  const ariaProps = {
+    "aria-invalid": error ? (true as const) : undefined,
+    "aria-describedby": [error && errorId, description && descId]
+      .filter(Boolean)
+      .join(" ") || undefined,
+  };
+
+  const renderInput = () => {
+    if (type === "textarea") {
+      return (
+        <textarea
+          id={inputId}
+          name={name}
+          value={value as string}
+          onChange={onChange}
+          placeholder={placeholder}
+          required={required}
+          rows={4}
+          className={`${baseInputClasses} ${borderClass} resize-y`}
+          {...ariaProps}
+        />
+      );
+    }
+
+    if (type === "select") {
+      return (
+        <select
+          id={inputId}
+          name={name}
+          value={value as string}
+          onChange={onChange}
+          required={required}
+          className={`${baseInputClasses} ${borderClass}`}
+          {...ariaProps}
+        >
+          <option value="">{placeholder || "Selecione..."}</option>
+          {options.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+      );
+    }
+
+    if (type === "checkbox") {
+      return (
+        <div className="flex items-center gap-2">
+          <input
+            id={inputId}
+            name={name}
+            type="checkbox"
+            checked={value as boolean}
+            onChange={onChange}
+            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-ring"
+            {...ariaProps}
+          />
+          <label htmlFor={inputId} className="text-sm text-gray-700">
+            {label}
+            {required && <span className="ml-0.5 text-red-500">*</span>}
+          </label>
+        </div>
+      );
+    }
+
+    if (type === "file") {
+      return (
+        <input
+          id={inputId}
+          name={name}
+          type="file"
+          onChange={onChange}
+          required={required}
+          className={`${baseInputClasses} ${borderClass} file:mr-3 file:rounded file:border-0 file:bg-primary file:px-3 file:py-1 file:text-sm file:font-medium file:text-white hover:file:bg-primary/90`}
+          {...ariaProps}
+        />
+      );
+    }
+
+    return (
+      <input
+        id={inputId}
+        name={name}
+        type={type}
+        value={value as string}
+        onChange={onChange}
+        placeholder={placeholder}
+        required={required}
+        className={`${baseInputClasses} ${borderClass}`}
+        {...ariaProps}
+      />
+    );
+  };
+
+  // Checkbox has its own label rendering
+  if (type === "checkbox") {
+    return (
+      <div className="space-y-1">
+        {renderInput()}
+        {description && (
+          <p id={descId} className="text-xs text-gray-500">
+            {description}
+          </p>
+        )}
+        {error && (
+          <p id={errorId} className="text-xs text-red-600">
+            {error}
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-1.5">
+      <label htmlFor={inputId} className="block text-sm font-medium text-gray-700">
+        {label}
+        {required && <span className="ml-0.5 text-red-500">*</span>}
+      </label>
+      {renderInput()}
+      {description && (
+        <p id={descId} className="text-xs text-gray-500">
+          {description}
+        </p>
+      )}
+      {error && (
+        <p id={errorId} className="text-xs text-red-600">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}

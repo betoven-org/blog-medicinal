@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import AdminShell from "@/components/admin/AdminShell";
-import { createPageSchema } from "@/lib/validations";
+import { AdminShell } from "@brasa/admin";
+import { createPageSchema } from "@brasa/core/validations";
 import { z as z3 } from "zod/v3";
 import type { z } from "zod";
 

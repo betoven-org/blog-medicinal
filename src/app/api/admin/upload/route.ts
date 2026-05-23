@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/auth";
-import { db } from "@/db";
-import { media } from "@/db/schema";
+import { auth } from "@brasa/core/auth";
+import { db } from "@brasa/core/db";
+import { media } from "@brasa/core/schema";
 import { put } from "@vercel/blob";
 import sharp from "sharp";
 import { encode } from "blurhash";

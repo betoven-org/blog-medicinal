@@ -1,8 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { db } from "@/db";
-import { products, media } from "@/db/schema";
+import { db } from "@brasa/core/db";
+import { products, media } from "@brasa/core/schema";
 import { eq, desc, count } from "drizzle-orm";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { Package, ChevronLeft, ChevronRight } from "lucide-react";

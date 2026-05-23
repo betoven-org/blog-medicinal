@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import AdminShell from "@/components/admin/AdminShell";
-import { SettingsContent } from "@/components/admin/SettingsContent";
+import { AdminShell, SettingsContent } from "@brasa/admin";
 import { useSettings } from "@/hooks/useSettings";
 
 export default function SupabasePage() {

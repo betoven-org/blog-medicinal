@@ -12,10 +12,7 @@ import {
   Copy,
   Check,
 } from "lucide-react";
-import AdminShell from "@/components/admin/AdminShell";
-import DeleteConfirm from "@/components/admin/DeleteConfirm";
-import BulkBar from "@/components/admin/BulkBar";
-import Spinner from "@/components/admin/Spinner";
+import { AdminShell, DeleteConfirm, BulkBar, Spinner } from "@brasa/admin";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {

@@ -2,11 +2,7 @@
 
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
-import AdminShell from "@/components/admin/AdminShell";
-import FormField from "@/components/admin/FormField";
-import RichTextEditor from "@/components/admin/RichTextEditor";
-import ImageUpload from "@/components/admin/ImageUpload";
-import DeleteConfirm from "@/components/admin/DeleteConfirm";
+import { AdminShell, FormField, RichTextEditor, ImageUpload, DeleteConfirm } from "@brasa/admin";
 import Link from "next/link";
 
 type SelectOption = { value: string; label: string };

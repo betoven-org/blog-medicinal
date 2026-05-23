@@ -1,8 +1,8 @@
 import NextAuth, { type DefaultSession } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
-import { db } from "@/db";
-import { users } from "@/db/schema";
+import { db } from "@brasa/core/db";
+import { users } from "@brasa/core/schema";
 import { eq } from "drizzle-orm";
 
 declare module "next-auth" {

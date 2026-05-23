@@ -1,7 +1,6 @@
 "use client";
 
-import AdminShell from "@/components/admin/AdminShell";
-import AssinaturaSection from "@/components/admin/AssinaturaSection";
+import { AdminShell, AssinaturaSection } from "@brasa/admin";
 
 export default function AssinaturaPage() {
   return (

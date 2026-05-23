@@ -3,9 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import AdminShell from "@/components/admin/AdminShell";
-import FormField from "@/components/admin/FormField";
-import ImageUpload from "@/components/admin/ImageUpload";
+import { AdminShell, FormField, ImageUpload } from "@brasa/admin";
 
 export default function NovoAutorPage() {
   const router = useRouter();

@@ -1,11 +1,11 @@
-import { auth } from "@/auth";
-import { db } from "@/db";
-import { authors, media } from "@/db/schema";
+import { auth } from "@brasa/core/auth";
+import { db } from "@brasa/core/db";
+import { authors, media } from "@brasa/core/schema";
 import { eq, asc } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
-import { generateSlug } from "@/lib/slug";
-import { parseBody, createAuthorSchema } from "@/lib/validations";
+import { generateSlug } from "@brasa/core/slug";
+import { parseBody, createAuthorSchema } from "@brasa/core/validations";
 
 export async function GET() {
   try {

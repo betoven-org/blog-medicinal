@@ -1,8 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import { getSiteSettings } from "@/lib/queries";
-import { db } from "@/db";
-import { productCategories } from "@/db/schema";
+import { db } from "@brasa/core/db";
+import { productCategories } from "@brasa/core/schema";
 import { asc, sql } from "drizzle-orm";
 import { CategoryMenu } from "./CategoryMenu";
 import { MobileMenu } from "./MobileMenu";

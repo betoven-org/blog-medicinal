@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/auth";
-import { db } from "@/db";
-import { pages } from "@/db/schema";
+import { auth } from "@brasa/core/auth";
+import { db } from "@brasa/core/db";
+import { pages } from "@brasa/core/schema";
 import { eq, inArray } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
 import { z } from "zod";
-import { parseBody } from "@/lib/validations";
+import { parseBody } from "@brasa/core/validations";
 
 const schema = z.object({
   ids: z.array(z.number().int()).min(1, "Selecione ao menos uma pagina"),

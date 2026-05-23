@@ -9,7 +9,7 @@ import {
   users,
   pages,
   siteSettings,
-} from "@/db/schema";
+} from "@brasa/core/schema";
 
 // ── Helpers ─────────────────────────────────────────────────────────────────────
 

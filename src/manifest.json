@@ -1,0 +1,197 @@
+{
+  "generatedAt": "2026-05-23T06:39:39.866Z",
+  "sections": [
+    {
+      "key": "Banner",
+      "title": "Banner",
+      "description": "Banner promocional com imagem e texto",
+      "group": "Marketing",
+      "path": "sections/Banner",
+      "props": {
+        "image": {
+          "type": "string",
+          "format": "image",
+          "title": "Imagem",
+          "required": true
+        },
+        "alt": {
+          "type": "string",
+          "format": "text",
+          "title": "Alt da imagem",
+          "required": true
+        },
+        "title": {
+          "type": "string",
+          "format": "text",
+          "title": "Titulo",
+          "required": false
+        },
+        "description": {
+          "type": "string",
+          "format": "textarea",
+          "title": "Descricao",
+          "required": false
+        },
+        "backgroundColor": {
+          "type": "string",
+          "format": "color",
+          "title": "Cor de fundo",
+          "required": false
+        },
+        "href": {
+          "type": "string",
+          "format": "text",
+          "title": "Link",
+          "required": false
+        },
+        "height": {
+          "type": "string",
+          "format": "select",
+          "title": "Altura",
+          "required": false,
+          "default": "medio",
+          "options": [
+            "pequeno",
+            "medio",
+            "grande"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Features",
+      "title": "Destaques",
+      "description": "Grid de features com icone, titulo e descricao",
+      "group": "Conteudo",
+      "path": "sections/Features",
+      "props": {
+        "title": {
+          "type": "string",
+          "format": "text",
+          "title": "Titulo da secao",
+          "required": true
+        },
+        "subtitle": {
+          "type": "string",
+          "format": "text",
+          "title": "Subtitulo",
+          "required": false
+        },
+        "columns": {
+          "type": "string",
+          "format": "select",
+          "title": "Colunas",
+          "required": false,
+          "default": "3",
+          "options": [
+            "2",
+            "3",
+            "4"
+          ]
+        },
+        "items": {
+          "type": "array",
+          "title": "Itens",
+          "required": true,
+          "items": {
+            "type": "object",
+            "properties": {
+              "icon": {
+                "type": "string",
+                "format": "image",
+                "title": "Icone",
+                "required": false
+              },
+              "title": {
+                "type": "string",
+                "format": "text",
+                "title": "Titulo",
+                "required": true
+              },
+              "description": {
+                "type": "string",
+                "format": "textarea",
+                "title": "Descricao",
+                "required": true
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "key": "Hero",
+      "title": "Hero",
+      "description": "Secao principal com imagem de fundo, titulo e CTA",
+      "group": "Conteudo",
+      "path": "sections/Hero",
+      "props": {
+        "title": {
+          "type": "string",
+          "format": "text",
+          "title": "Titulo",
+          "required": true
+        },
+        "subtitle": {
+          "type": "string",
+          "format": "textarea",
+          "title": "Subtitulo",
+          "required": false
+        },
+        "content": {
+          "type": "string",
+          "format": "rich-text",
+          "title": "Conteudo",
+          "required": false
+        },
+        "backgroundImage": {
+          "type": "string",
+          "format": "image",
+          "title": "Imagem de fundo",
+          "required": false
+        },
+        "align": {
+          "type": "string",
+          "format": "select",
+          "title": "Alinhamento",
+          "required": false,
+          "options": [
+            "esquerda",
+            "centro",
+            "direita"
+          ]
+        },
+        "cta": {
+          "type": "object",
+          "title": "Botao CTA",
+          "required": false,
+          "properties": {
+            "label": {
+              "type": "string",
+              "format": "text",
+              "title": "Texto do botao",
+              "required": true
+            },
+            "href": {
+              "type": "string",
+              "format": "text",
+              "title": "Link",
+              "required": true
+            },
+            "newTab": {
+              "type": "boolean",
+              "title": "Abrir em nova aba",
+              "required": false
+            }
+          }
+        },
+        "dark": {
+          "type": "boolean",
+          "title": "Fundo escuro",
+          "required": false,
+          "default": false
+        }
+      }
+    }
+  ]
+}
