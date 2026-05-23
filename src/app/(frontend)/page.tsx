@@ -112,15 +112,28 @@ function SectionHeader({ title, href }: { title: string; href: string }) {
   );
 }
 
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ preview?: string; pageId?: string }>;
+}) {
+  const params = await searchParams;
+  const isPreview = params.preview === "draft" && params.pageId;
+
   // Check if home page has CMS sections configured
   const [homePage] = await db
-    .select({ sections: pages.sections })
+    .select({
+      sections: pages.sections,
+      draftSections: pages.draftSections,
+    })
     .from(pages)
     .where(eq(pages.slug, "home"))
     .limit(1);
 
-  const sectionBlocks = (homePage?.sections as SectionBlock[] | null) ?? [];
+  // In preview mode, use draftSections; otherwise use published sections
+  const sectionBlocks = isPreview
+    ? ((homePage?.draftSections ?? homePage?.sections) as SectionBlock[] | null) ?? []
+    : ((homePage?.sections) as SectionBlock[] | null) ?? [];
 
   if (sectionBlocks.length > 0) {
     return <SectionRenderer blocks={sectionBlocks} />;

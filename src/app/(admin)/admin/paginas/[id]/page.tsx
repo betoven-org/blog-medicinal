@@ -34,7 +34,7 @@ type Page = {
   updatedAt: string;
 };
 
-type ColumnKey = "properties" | "sections" | "preview" | "seo" | "changes";
+type ColumnKey = "sections" | "preview" | "seo" | "changes";
 
 function slugToPath(slug: string) {
   return slug === "home" ? "/" : `/${slug}`;
@@ -107,7 +107,6 @@ function IconSections() {
 }
 
 const COLUMNS: { key: ColumnKey; label: string; icon: React.ReactNode }[] = [
-  { key: "properties", label: "Propriedades", icon: <IconProperties /> },
   { key: "sections", label: "Sections", icon: <IconSections /> },
   { key: "preview", label: "Preview", icon: <IconPreview /> },
   { key: "seo", label: "Page SEO", icon: <IconSeo /> },
@@ -143,6 +142,95 @@ function ContentTabs({
       >
         Preview
       </button>
+    </div>
+  );
+}
+
+/* ── Preview Frame (responsive simulation) ─────────────────────────── */
+
+const DEVICE_CONFIGS = {
+  desktop: { width: 1440, height: 900, frame: false },
+  tablet: { width: 768, height: 1024, frame: true },
+  mobile: { width: 375, height: 812, frame: true },
+} as const;
+
+function PreviewFrame({
+  iframeRef,
+  src,
+  device,
+  title,
+}: {
+  iframeRef: React.RefObject<HTMLIFrameElement | null>;
+  src: string;
+  device: "desktop" | "tablet" | "mobile";
+  title: string;
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+  const config = DEVICE_CONFIGS[device];
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const container = containerRef.current;
+
+    function calc() {
+      const availableWidth = container.clientWidth;
+      const s = Math.min(availableWidth / config.width, 1);
+      setScale(s);
+    }
+
+    calc();
+    const observer = new ResizeObserver(calc);
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [device, config.width, config.frame]);
+
+  if (!config.frame) {
+    // Desktop: iframe at real width, scaled to fit column, full height
+    const iframeHeight = scale > 0 ? `${100 / scale}%` : "100%";
+    return (
+      <div ref={containerRef} className="flex-1 bg-gray-100 overflow-hidden">
+        <div
+          style={{
+            width: config.width,
+            height: "100%",
+            transform: `scale(${scale})`,
+            transformOrigin: "top left",
+          }}
+        >
+          <iframe
+            ref={iframeRef}
+            src={src}
+            className="border-0 bg-white"
+            style={{ width: config.width, height: iframeHeight }}
+            title={title}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Tablet / Mobile: same scaling approach, no device mockup
+  const frameHeight = scale > 0 ? `${100 / scale}%` : "100%";
+  return (
+    <div ref={containerRef} className="flex-1 bg-gray-100 overflow-hidden flex justify-center">
+      <div
+        style={{
+          width: config.width,
+          height: "100%",
+          transform: `scale(${scale})`,
+          transformOrigin: "top center",
+        }}
+      >
+        <iframe
+          ref={iframeRef}
+          src={src}
+          className="border-0 bg-white"
+          style={{ width: config.width, height: frameHeight }}
+          title={title}
+        />
+      </div>
     </div>
   );
 }
@@ -228,13 +316,14 @@ export default function EditPagePage({
   const [editState, setEditState] = useState<EditState | null>(null);
   const [savedSnapshot, setSavedSnapshot] = useState("");
   const [ogImagePreview, setOgImagePreview] = useState<string | null>(null);
-  const [openColumns, setOpenColumns] = useState<Set<ColumnKey>>(new Set(["properties", "seo"]));
+  const [openColumns, setOpenColumns] = useState<Set<ColumnKey>>(new Set(["sections", "preview"]));
   const [contentTab, setContentTab] = useState<"code" | "preview">("code");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
+  const [previewDevice, setPreviewDevice] = useState<"desktop" | "tablet" | "mobile">("desktop");
   const [sectionBlocks, setSectionBlocks] = useState<SectionBlock[]>([]);
   const [savingSections, setSavingSections] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -305,12 +394,20 @@ export default function EditPagePage({
   const saveSections = useCallback(async (blocks: SectionBlock[]) => {
     setSavingSections(true);
     try {
-      await fetch(`/api/admin/pages/${id}`, {
+      const res = await fetch(`/api/admin/pages/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ draftSections: blocks }),
       });
+      if (res.ok) {
+        const updated: Page = await res.json();
+        setPage(updated);
+      }
       setLastSaved(new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }));
+      // Reload preview iframe
+      if (iframeRef.current) {
+        iframeRef.current.src = iframeRef.current.src;
+      }
     } catch {
       toast.error("Erro ao salvar sections");
     } finally {
@@ -378,13 +475,20 @@ export default function EditPagePage({
     );
   }
 
-  const hasDraft = page.draft !== null;
+  const hasDraft = page.draft !== null || page.draftSections !== null;
   const hasContent = !!(editState?.content || page.content);
-  const previewUrl = hasContent ? `/api/admin/pages/${id}/preview` : slugToPath(page.slug);
+  const hasSections = sectionBlocks.length > 0 || (page.sections as SectionBlock[] | null)?.length;
+  const previewUrl = hasSections
+    ? `${slugToPath(page.slug)}${slugToPath(page.slug) === "/" ? "" : "/"}?preview=draft&pageId=${id}`
+    : hasContent
+      ? `/api/admin/pages/${id}/preview`
+      : slugToPath(page.slug);
   const isBusy = saving || publishing;
 
   // Draft count: number of fields changed vs published
-  const draftCount = hasDraft ? countChanges(page) : 0;
+  const contentDraftCount = page.draft ? countChanges(page) : 0;
+  const sectionChanges = getSectionChanges(page, sectionBlocks);
+  const draftCount = contentDraftCount + sectionChanges.length;
 
   // Header extra
   const publishButton = (
@@ -418,62 +522,23 @@ export default function EditPagePage({
   return (
     <AdminShell title={`${page.title}`} headerExtra={publishButton}>
       <div className="-mx-2 -mt-2 lg:-mx-4 lg:-mt-4 flex gap-1 pr-12" style={{ minHeight: "calc(100vh - 5.5rem)" }}>
-        {/* ── Properties column ──────────────────────────────────── */}
-        {openColumns.has("properties") && (
-          <div className="flex flex-col border border-gray-200 bg-white rounded-t-lg" style={{ width: colWidth(openColumns.size) }}>
-            <ColumnHeader title="Propriedades" onClose={() => toggleColumn("properties")} />
-            <div className="flex-1 overflow-y-auto p-5">
-              <div className="space-y-5">
-                <FormField label="Titulo" name="title" value={editState.title} onChange={handleChange} required />
-
-                <div className="space-y-1.5">
-                  <label className="block text-xs font-medium text-gray-500">Slug</label>
-                  <div className="flex items-center gap-1.5 text-xs text-gray-400 font-mono">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-                    </svg>
-                    {slugToPath(page.slug)}
-                  </div>
-                </div>
-
-                {hasContent ? (
-                  <div>
-                    <div className="mb-2 flex items-center justify-between">
-                      <label className="block text-sm font-medium text-gray-700">Conteudo</label>
-                      <ContentTabs active={contentTab} onSwitch={setContentTab} />
-                    </div>
-                    {contentTab === "code" ? (
-                      <textarea
-                        name="content"
-                        value={editState.content ?? ""}
-                        onChange={handleChange}
-                        rows={20}
-                        className="w-full resize-y rounded-md border border-gray-300 bg-gray-50 px-4 py-3 font-mono text-xs leading-relaxed text-gray-800 shadow-sm transition-colors focus:border-[#0d61ac] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#0d61ac]/20"
-                        spellCheck={false}
-                        placeholder={"<h1>Titulo</h1>\n<p>Conteudo...</p>"}
-                      />
-                    ) : editState.content ? (
-                      <div className="prose prose-sm max-w-none rounded-md border border-gray-200 bg-gray-50 px-6 py-5 text-gray-800" dangerouslySetInnerHTML={{ __html: editState.content }} />
-                    ) : (
-                      <div className="flex items-center justify-center rounded-md border border-dashed border-gray-300 bg-gray-50 py-16 text-sm text-gray-400">Nenhum conteudo</div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="rounded-md border border-gray-200 bg-gray-50 px-4 py-3">
-                    <p className="text-sm text-gray-500">O conteudo desta pagina e gerenciado por componentes. Use o Preview para visualizar.</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ── Sections column ────────────────────────────────────── */}
+        {/* ── Sections column (includes page properties) ─────────── */}
         {openColumns.has("sections") && (
           <div className="flex flex-col border border-gray-200 bg-white rounded-t-lg" style={{ width: colWidth(openColumns.size) }}>
             <ColumnHeader title={`Sections${savingSections ? " (salvando...)" : ""}`} onClose={() => toggleColumn("sections")} />
             <div className="flex-1 overflow-y-auto">
+              {/* Page properties */}
+              <div className="border-b border-gray-200 p-4 space-y-3">
+                <FormField label="Titulo" name="title" value={editState.title} onChange={handleChange} required />
+                <div className="flex items-center gap-1.5 text-xs text-gray-400 font-mono">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                  </svg>
+                  {slugToPath(page.slug)}
+                </div>
+              </div>
+              {/* Section builder */}
               <PageBuilder
                 manifest={manifest as unknown as BrasaManifest}
                 value={sectionBlocks}
@@ -489,10 +554,45 @@ export default function EditPagePage({
             <ColumnHeader title="Preview" onClose={() => toggleColumn("preview")} />
             <div className="flex-1 relative bg-gray-100 flex flex-col min-h-0">
               <div className="flex items-center gap-1.5 border-b border-gray-200 bg-gray-50 px-3 py-1.5">
-                <span className="h-2 w-2 rounded-full bg-red-400" />
-                <span className="h-2 w-2 rounded-full bg-yellow-400" />
-                <span className="h-2 w-2 rounded-full bg-green-400" />
-                <span className="ml-2 flex-1 rounded bg-white px-2 py-0.5 text-[11px] text-gray-400 font-mono border border-gray-200">
+                {/* Device switcher */}
+                <div className="flex gap-0.5 rounded-md bg-gray-200/60 p-0.5">
+                  <button
+                    type="button"
+                    onClick={() => setPreviewDevice("desktop")}
+                    className={`rounded p-1 transition-colors ${previewDevice === "desktop" ? "bg-white text-gray-700 shadow-sm" : "text-gray-400 hover:text-gray-600"}`}
+                    title="Desktop"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <rect x="2" y="3" width="20" height="14" rx="2" />
+                      <line x1="8" y1="21" x2="16" y2="21" />
+                      <line x1="12" y1="17" x2="12" y2="21" />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPreviewDevice("tablet")}
+                    className={`rounded p-1 transition-colors ${previewDevice === "tablet" ? "bg-white text-gray-700 shadow-sm" : "text-gray-400 hover:text-gray-600"}`}
+                    title="Tablet"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <rect x="4" y="2" width="16" height="20" rx="2" />
+                      <line x1="12" y1="18" x2="12" y2="18" />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPreviewDevice("mobile")}
+                    className={`rounded p-1 transition-colors ${previewDevice === "mobile" ? "bg-white text-gray-700 shadow-sm" : "text-gray-400 hover:text-gray-600"}`}
+                    title="Mobile"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <rect x="5" y="2" width="14" height="20" rx="2" />
+                      <line x1="12" y1="18" x2="12" y2="18" />
+                    </svg>
+                  </button>
+                </div>
+
+                <span className="flex-1 rounded bg-white px-2 py-0.5 text-[11px] text-gray-400 font-mono border border-gray-200 truncate">
                   {typeof window !== "undefined" ? window.location.origin : ""}{slugToPath(page.slug)}
                 </span>
                 <button
@@ -507,11 +607,10 @@ export default function EditPagePage({
                   </svg>
                 </button>
               </div>
-              <iframe
-                ref={iframeRef}
+              <PreviewFrame
+                iframeRef={iframeRef}
                 src={previewUrl}
-                className="flex-1 w-full border-0"
-                style={{ minHeight: "500px" }}
+                device={previewDevice}
                 title={`Preview: ${page.title}`}
               />
             </div>
@@ -642,6 +741,32 @@ export default function EditPagePage({
                     </div>
                   ))}
 
+                  {/* Section changes */}
+                  {sectionChanges.length > 0 && (
+                    <div className="mt-3">
+                      <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-gray-400">Sections</p>
+                      <div className="space-y-2">
+                        {sectionChanges.map((sc, i) => (
+                          <div key={i} className="flex items-center gap-2 rounded-md border border-gray-200 px-3 py-2">
+                            <span className={`inline-flex rounded px-1.5 py-0.5 text-[10px] font-bold uppercase ${
+                              sc.type === "added"
+                                ? "bg-green-50 text-green-600"
+                                : sc.type === "removed"
+                                  ? "bg-red-50 text-red-600"
+                                  : "bg-yellow-50 text-yellow-600"
+                            }`}>
+                              {sc.type === "added" ? "nova" : sc.type === "removed" ? "removida" : "editada"}
+                            </span>
+                            <span className="text-xs font-medium text-gray-700">{sc.component}</span>
+                            {sc.details && (
+                              <span className="text-[10px] text-gray-400">{sc.details}</span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Publish from changes panel */}
                   <button
                     type="button"
@@ -710,4 +835,65 @@ function countChanges(page: Page): number {
   const draft = page.draft;
   const keys: (keyof EditState)[] = ["title", "metaTitle", "metaDescription", "ogTitle", "ogDescription", "ogImageUrl", "content"];
   return keys.filter((k) => (draft[k] ?? "") !== (page[k] ?? "")).length;
+}
+
+type SectionChange = {
+  type: "added" | "removed" | "modified";
+  component: string;
+  id: string;
+  details?: string;
+};
+
+function getSectionChanges(page: Page, draftBlocks: SectionBlock[]): SectionChange[] {
+  const published = (page.sections ?? []) as SectionBlock[];
+  const changes: SectionChange[] = [];
+
+  const pubMap = new Map(published.map((b) => [b.id, b]));
+  const draftMap = new Map(draftBlocks.map((b) => [b.id, b]));
+
+  // Added
+  for (const block of draftBlocks) {
+    if (!pubMap.has(block.id)) {
+      changes.push({ type: "added", component: block.component, id: block.id });
+    }
+  }
+
+  // Removed
+  for (const block of published) {
+    if (!draftMap.has(block.id)) {
+      changes.push({ type: "removed", component: block.component, id: block.id });
+    }
+  }
+
+  // Modified
+  for (const block of draftBlocks) {
+    const pub = pubMap.get(block.id);
+    if (pub) {
+      const pubProps = JSON.stringify(pub.props);
+      const draftProps = JSON.stringify(block.props);
+      if (pubProps !== draftProps || pub.component !== block.component) {
+        const changedKeys = Object.keys(block.props).filter(
+          (k) => JSON.stringify(block.props[k]) !== JSON.stringify(pub.props[k])
+        );
+        changes.push({
+          type: "modified",
+          component: block.component,
+          id: block.id,
+          details: changedKeys.length > 0 ? changedKeys.join(", ") : undefined,
+        });
+      }
+    }
+  }
+
+  // Order changes (check if position changed)
+  if (changes.length === 0 && published.length === draftBlocks.length) {
+    for (let i = 0; i < published.length; i++) {
+      if (published[i].id !== draftBlocks[i]?.id) {
+        changes.push({ type: "modified", component: "Ordem", id: "reorder", details: "Sections reordenadas" });
+        break;
+      }
+    }
+  }
+
+  return changes;
 }
