@@ -3,6 +3,9 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { toast } from "sonner";
 import { AdminShell, FormField, ImageUpload } from "@brasa/admin";
+import PageBuilder from "@/components/admin/PageBuilder";
+import manifest from "@/manifest.json";
+import type { BrasaManifest, SectionBlock } from "@brasa/core/manifest";
 
 type EditState = {
   title: string;
@@ -25,11 +28,13 @@ type Page = {
   ogImageUrl: string;
   content: string;
   draft: EditState | null;
+  sections: SectionBlock[] | null;
+  draftSections: SectionBlock[] | null;
   createdAt: string;
   updatedAt: string;
 };
 
-type ColumnKey = "properties" | "preview" | "seo" | "changes";
+type ColumnKey = "properties" | "sections" | "preview" | "seo" | "changes";
 
 function slugToPath(slug: string) {
   return slug === "home" ? "/" : `/${slug}`;
@@ -91,8 +96,19 @@ function IconChanges() {
   );
 }
 
+function IconSections() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3" y="3" width="18" height="6" rx="1" />
+      <rect x="3" y="12" width="18" height="3" rx="1" />
+      <rect x="3" y="18" width="18" height="3" rx="1" />
+    </svg>
+  );
+}
+
 const COLUMNS: { key: ColumnKey; label: string; icon: React.ReactNode }[] = [
   { key: "properties", label: "Propriedades", icon: <IconProperties /> },
+  { key: "sections", label: "Sections", icon: <IconSections /> },
   { key: "preview", label: "Preview", icon: <IconPreview /> },
   { key: "seo", label: "Page SEO", icon: <IconSeo /> },
   { key: "changes", label: "Alteracoes", icon: <IconChanges /> },
@@ -219,7 +235,10 @@ export default function EditPagePage({
   const [publishing, setPublishing] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
+  const [sectionBlocks, setSectionBlocks] = useState<SectionBlock[]>([]);
+  const [savingSections, setSavingSections] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const sectionsDebounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   function toggleColumn(key: ColumnKey) {
@@ -254,6 +273,7 @@ export default function EditPagePage({
         setEditState(initial);
         setSavedSnapshot(JSON.stringify(initial));
         setOgImagePreview(initial.ogImageUrl || null);
+        setSectionBlocks((data.draftSections ?? data.sections ?? []) as SectionBlock[]);
       })
       .catch((err) => setFetchError(err.message))
       .finally(() => setLoading(false));
@@ -281,6 +301,28 @@ export default function EditPagePage({
       setSaving(false);
     }
   }, [id]);
+
+  const saveSections = useCallback(async (blocks: SectionBlock[]) => {
+    setSavingSections(true);
+    try {
+      await fetch(`/api/admin/pages/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ draftSections: blocks }),
+      });
+      setLastSaved(new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }));
+    } catch {
+      toast.error("Erro ao salvar sections");
+    } finally {
+      setSavingSections(false);
+    }
+  }, [id]);
+
+  function handleSectionsChange(blocks: SectionBlock[]) {
+    setSectionBlocks(blocks);
+    if (sectionsDebounceRef.current) clearTimeout(sectionsDebounceRef.current);
+    sectionsDebounceRef.current = setTimeout(() => saveSections(blocks), 1500);
+  }
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
     const { name, value } = e.target;
@@ -423,6 +465,20 @@ export default function EditPagePage({
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Sections column ────────────────────────────────────── */}
+        {openColumns.has("sections") && (
+          <div className="flex flex-col border border-gray-200 bg-white rounded-t-lg" style={{ width: colWidth(openColumns.size) }}>
+            <ColumnHeader title={`Sections${savingSections ? " (salvando...)" : ""}`} onClose={() => toggleColumn("sections")} />
+            <div className="flex-1 overflow-y-auto">
+              <PageBuilder
+                manifest={manifest as unknown as BrasaManifest}
+                value={sectionBlocks}
+                onChange={handleSectionsChange}
+              />
             </div>
           </div>
         )}

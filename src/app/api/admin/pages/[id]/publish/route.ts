@@ -21,22 +21,34 @@ export async function POST(
   if (!page)
     return NextResponse.json({ error: "Pagina nao encontrada" }, { status: 404 });
 
-  if (!page.draft)
+  if (!page.draft && !page.draftSections)
     return NextResponse.json({ error: "Nenhum rascunho para publicar" }, { status: 400 });
 
-  const draft = page.draft as Record<string, unknown>;
+  const draft = (page.draft as Record<string, unknown>) || {};
 
-  await db.update(pages).set({
-    title: (draft.title as string) ?? page.title,
-    metaTitle: (draft.metaTitle as string) ?? page.metaTitle,
-    metaDescription: (draft.metaDescription as string) ?? page.metaDescription,
-    ogTitle: (draft.ogTitle as string) ?? page.ogTitle,
-    ogDescription: (draft.ogDescription as string) ?? page.ogDescription,
-    ogImageUrl: (draft.ogImageUrl as string) ?? page.ogImageUrl,
-    content: (draft.content as string) ?? page.content,
+  const updateData: Record<string, unknown> = {
     draft: null,
+    draftSections: null,
     updatedAt: new Date().toISOString(),
-  }).where(eq(pages.id, numId));
+  };
+
+  // Publish content draft
+  if (page.draft) {
+    updateData.title = (draft.title as string) ?? page.title;
+    updateData.metaTitle = (draft.metaTitle as string) ?? page.metaTitle;
+    updateData.metaDescription = (draft.metaDescription as string) ?? page.metaDescription;
+    updateData.ogTitle = (draft.ogTitle as string) ?? page.ogTitle;
+    updateData.ogDescription = (draft.ogDescription as string) ?? page.ogDescription;
+    updateData.ogImageUrl = (draft.ogImageUrl as string) ?? page.ogImageUrl;
+    updateData.content = (draft.content as string) ?? page.content;
+  }
+
+  // Publish sections draft
+  if (page.draftSections) {
+    updateData.sections = page.draftSections;
+  }
+
+  await db.update(pages).set(updateData).where(eq(pages.id, numId));
 
   const [updated] = await db.select().from(pages).where(eq(pages.id, numId)).limit(1);
   return NextResponse.json(updated);

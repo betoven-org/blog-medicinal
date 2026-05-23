@@ -15,6 +15,11 @@ import {
 } from "@/lib/queries";
 import Link from "next/link";
 import { resolveRelation } from "@/lib/utils";
+import { db } from "@brasa/core/db";
+import { pages } from "@brasa/core/schema";
+import { eq } from "drizzle-orm";
+import { SectionRenderer } from "@/components/SectionRenderer";
+import type { SectionBlock } from "@brasa/core/manifest";
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = ((await getSiteSettings()) || {}) as any;
@@ -108,6 +113,20 @@ function SectionHeader({ title, href }: { title: string; href: string }) {
 }
 
 export default async function HomePage() {
+  // Check if home page has CMS sections configured
+  const [homePage] = await db
+    .select({ sections: pages.sections })
+    .from(pages)
+    .where(eq(pages.slug, "home"))
+    .limit(1);
+
+  const sectionBlocks = (homePage?.sections as SectionBlock[] | null) ?? [];
+
+  if (sectionBlocks.length > 0) {
+    return <SectionRenderer blocks={sectionBlocks} />;
+  }
+
+  // Fallback: hardcoded layout (legacy)
   const [featured, latest, recent, categories] = await Promise.all([
     getFeaturedPost(),
     getLatestPosts(20),

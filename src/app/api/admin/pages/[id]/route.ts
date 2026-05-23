@@ -55,8 +55,6 @@ export async function PATCH(
       return NextResponse.json({ error: "ID invalido" }, { status: 400 });
 
     const body = await request.json();
-    const parsed = parseBody(updatePageSchema, body);
-    if (!parsed.success) return NextResponse.json({ error: parsed.error }, { status: 400 });
 
     const [existing] = await db
       .select({ id: pages.id })
@@ -66,6 +64,19 @@ export async function PATCH(
 
     if (!existing)
       return NextResponse.json({ error: "Pagina nao encontrada" }, { status: 404 });
+
+    // If only draftSections is being saved (from PageBuilder)
+    if (body.draftSections !== undefined && Object.keys(body).length === 1) {
+      const [updated] = await db
+        .update(pages)
+        .set({ draftSections: body.draftSections, updatedAt: new Date().toISOString() })
+        .where(eq(pages.id, pageId))
+        .returning();
+      return NextResponse.json(updated);
+    }
+
+    const parsed = parseBody(updatePageSchema, body);
+    if (!parsed.success) return NextResponse.json({ error: parsed.error }, { status: 400 });
 
     const draftData = {
       title: parsed.data.title,

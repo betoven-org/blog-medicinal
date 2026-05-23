@@ -212,6 +212,8 @@ export const pages = pgTable("pages", {
   ogImageUrl: text("og_image_url"),
   content: text("content"),
   draft: jsonb("draft"),
+  sections: jsonb("sections"),
+  draftSections: jsonb("draft_sections"),
   createdAt: timestamp("created_at", { mode: "string" }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { mode: "string" }).defaultNow().notNull(),
 });
