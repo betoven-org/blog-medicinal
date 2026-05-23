@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-23T16:29:38.811Z",
+  "generatedAt": "2026-05-23T16:37:43.936Z",
   "sections": [
     {
       "key": "Banner",
@@ -55,6 +55,34 @@
             "medio",
             "grande"
           ]
+        }
+      }
+    },
+    {
+      "key": "CategoryBar",
+      "title": "Barra de Categorias",
+      "description": "Navegacao rapida por categorias",
+      "group": "Home",
+      "path": "sections/CategoryBar",
+      "props": {
+        "title": {
+          "type": "string",
+          "format": "text",
+          "title": "Titulo",
+          "required": false,
+          "default": "Categorias"
+        },
+        "showAll": {
+          "type": "boolean",
+          "title": "Mostrar todas",
+          "required": false,
+          "default": true
+        },
+        "limit": {
+          "type": "number",
+          "title": "Limite",
+          "required": false,
+          "default": 10
         }
       }
     },
@@ -302,12 +330,6 @@
           "required": false,
           "default": true
         },
-        "showViews": {
-          "type": "boolean",
-          "title": "Mostrar views",
-          "required": false,
-          "default": true
-        },
         "viewAllHref": {
           "type": "string",
           "format": "text",
@@ -391,12 +413,6 @@
           "title": "Mostrar tempo de leitura",
           "required": false,
           "default": true
-        },
-        "showViews": {
-          "type": "boolean",
-          "title": "Mostrar views (trending/popular)",
-          "required": false,
-          "default": false
         },
         "viewAllHref": {
           "type": "string",
@@ -496,17 +512,126 @@
           "required": false,
           "default": 5
         },
-        "sidebarShowViews": {
-          "type": "boolean",
-          "title": "Mostrar views na lista",
-          "required": false,
-          "default": true
-        },
         "gridViewAllHref": {
           "type": "string",
           "format": "text",
           "title": "Link \"Ver todos\" do grid",
           "required": false
+        }
+      }
+    },
+    {
+      "key": "ProductShowcase",
+      "title": "Vitrine de Produtos",
+      "description": "Grade de produtos da farmacia",
+      "group": "Home",
+      "path": "sections/ProductShowcase",
+      "props": {
+        "title": {
+          "type": "string",
+          "format": "text",
+          "title": "Titulo da secao",
+          "required": false,
+          "default": "Nossos Produtos"
+        },
+        "mode": {
+          "type": "string",
+          "format": "select",
+          "title": "Modo",
+          "required": false,
+          "default": "featured",
+          "options": [
+            "all",
+            "featured",
+            "manual"
+          ]
+        },
+        "manualSlugs": {
+          "type": "string",
+          "format": "text",
+          "title": "Slugs manuais",
+          "description": "Slugs dos produtos separados por virgula",
+          "required": false
+        },
+        "limit": {
+          "type": "number",
+          "title": "Limite",
+          "required": false,
+          "default": 4
+        },
+        "columns": {
+          "type": "string",
+          "format": "select",
+          "title": "Colunas",
+          "required": false,
+          "default": "4",
+          "options": [
+            "2",
+            "3",
+            "4"
+          ]
+        },
+        "viewAllHref": {
+          "type": "string",
+          "format": "text",
+          "title": "Link \"Ver todos\"",
+          "required": false,
+          "default": "/produtos"
+        },
+        "showDescription": {
+          "type": "boolean",
+          "title": "Mostrar descricao",
+          "required": false,
+          "default": false
+        }
+      }
+    },
+    {
+      "key": "WhatsAppCTA",
+      "title": "CTA WhatsApp",
+      "description": "Banner de contato com farmaceutico via WhatsApp",
+      "group": "Home",
+      "path": "sections/WhatsAppCTA",
+      "props": {
+        "title": {
+          "type": "string",
+          "format": "text",
+          "title": "Titulo",
+          "required": false,
+          "default": "Fale com um Farmaceutico"
+        },
+        "description": {
+          "type": "string",
+          "format": "text",
+          "title": "Descricao",
+          "required": false,
+          "default": "Tire suas duvidas sobre manipulados, suplementos e tratamentos personalizados com nossa equipe."
+        },
+        "buttonText": {
+          "type": "string",
+          "format": "text",
+          "title": "Texto do botao",
+          "required": false,
+          "default": "Iniciar conversa"
+        },
+        "defaultMessage": {
+          "type": "string",
+          "format": "text",
+          "title": "Mensagem padrao do WhatsApp",
+          "required": false,
+          "default": "Ola! Gostaria de saber mais sobre os produtos manipulados."
+        },
+        "style": {
+          "type": "string",
+          "format": "select",
+          "title": "Estilo",
+          "required": false,
+          "default": "brand",
+          "options": [
+            "light",
+            "dark",
+            "brand"
+          ]
         }
       }
     }

@@ -1,4 +1,4 @@
-# Arquitetura — Blog Medicinal CMS
+que# Arquitetura — Blog Medicinal CMS
 
 ## Estado atual
 
