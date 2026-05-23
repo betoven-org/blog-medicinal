@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-23T16:37:43.936Z",
+  "generatedAt": "2026-05-23T16:46:57.960Z",
   "sections": [
     {
       "key": "Banner",
@@ -543,14 +543,22 @@
           "options": [
             "all",
             "featured",
+            "category",
             "manual"
           ]
+        },
+        "categorySlug": {
+          "type": "string",
+          "format": "text",
+          "title": "Slug da categoria",
+          "description": "Slug da categoria de produto (modo category)",
+          "required": false
         },
         "manualSlugs": {
           "type": "string",
           "format": "text",
           "title": "Slugs manuais",
-          "description": "Slugs dos produtos separados por virgula",
+          "description": "Slugs dos produtos separados por virgula (modo manual)",
           "required": false
         },
         "limit": {

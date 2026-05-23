@@ -1,5 +1,5 @@
 import { db } from "@brasa/core/db";
-import { products, media } from "@brasa/core/schema";
+import { products, media, productCategories } from "@brasa/core/schema";
 import { eq, desc, and, inArray } from "drizzle-orm";
 
 /**
@@ -13,12 +13,16 @@ export interface Props {
   title?: string;
 
   /** @title Modo */
-  /** @options all,featured,manual */
+  /** @options all,featured,category,manual */
   /** @default featured */
-  mode?: "all" | "featured" | "manual";
+  mode?: "all" | "featured" | "category" | "manual";
+
+  /** @title Slug da categoria */
+  /** @description Slug da categoria de produto (modo category) */
+  categorySlug?: string;
 
   /** @title Slugs manuais */
-  /** @description Slugs dos produtos separados por virgula */
+  /** @description Slugs dos produtos separados por virgula (modo manual) */
   manualSlugs?: string;
 
   /** @title Limite */
@@ -63,6 +67,7 @@ async function fetchProducts(
   mode: NonNullable<Props["mode"]>,
   limit: number,
   parsedSlugs: string[] | undefined,
+  categorySlug: string | undefined,
 ): Promise<ProductCard[]> {
   const select = {
     id: products.id,
@@ -90,6 +95,20 @@ async function fetchProducts(
         .where(and(publishedFilter, eq(products.featured, true)))
         .orderBy(desc(products.createdAt))
         .limit(limit);
+
+    case "category": {
+      if (!categorySlug) return [];
+      const [cat] = await db
+        .select({ id: productCategories.id })
+        .from(productCategories)
+        .where(eq(productCategories.slug, categorySlug))
+        .limit(1);
+      if (!cat) return [];
+      return base
+        .where(and(publishedFilter, eq(products.productCategoryId, cat.id)))
+        .orderBy(desc(products.createdAt))
+        .limit(limit);
+    }
 
     case "manual": {
       if (!parsedSlugs?.length) return [];
@@ -158,6 +177,7 @@ function ProductCardItem({ product, showDescription }: ProductCardItemProps) {
 export default async function ProductShowcase({
   title = "Nossos Produtos",
   mode = "featured",
+  categorySlug,
   manualSlugs,
   limit = 4,
   columns = "4",
@@ -169,7 +189,7 @@ export default async function ProductShowcase({
     .map((s) => s.trim())
     .filter(Boolean);
 
-  const items = await fetchProducts(mode, limit, parsedSlugs);
+  const items = await fetchProducts(mode, limit, parsedSlugs, categorySlug);
 
   if (items.length === 0) return null;
 
