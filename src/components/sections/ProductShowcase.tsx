@@ -110,32 +110,33 @@ interface ProductCardItemProps {
 
 function ProductCardItem({ product, showDescription }: ProductCardItemProps) {
   return (
-    <article>
-      <a href={`/${product.slug}/p`} tabIndex={-1} aria-hidden="true">
-        {product.imageUrl ? (
-          <img
-            src={product.imageUrl}
-            alt={product.imageAlt ?? product.name}
-            width={400}
-            height={400}
-            className="aspect-square w-full rounded-lg object-cover bg-gray-100"
-            loading="lazy"
-            decoding="async"
-          />
-        ) : (
-          <div
-            className="aspect-square w-full rounded-lg bg-gray-100"
-            aria-hidden="true"
-          />
-        )}
-      </a>
+    <article className="group rounded-xl border border-gray-200 bg-white p-4 transition-all hover:border-[#0d61ac]/30 hover:shadow-md">
+      <a href={`/${product.slug}/p`} className="block">
+        <div className="flex items-center justify-center rounded-lg bg-gray-50 p-4">
+          {product.imageUrl ? (
+            <img
+              src={product.imageUrl}
+              alt={product.imageAlt ?? product.name}
+              width={200}
+              height={200}
+              className="h-40 w-40 object-contain transition-transform duration-300 group-hover:scale-105"
+              loading="lazy"
+              decoding="async"
+            />
+          ) : (
+            <div className="flex h-40 w-40 items-center justify-center text-gray-300" aria-hidden="true">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+                <line x1="12" y1="22.08" x2="12" y2="12" />
+              </svg>
+            </div>
+          )}
+        </div>
 
-      <div className="flex flex-col">
-        <a href={`/${product.slug}/p`}>
-          <h3 className="mt-3 line-clamp-2 text-sm font-semibold text-gray-900 hover:text-[#0d61ac]">
-            {product.name}
-          </h3>
-        </a>
+        <h3 className="mt-3 line-clamp-2 text-sm font-semibold text-gray-900 transition-colors group-hover:text-[#0d61ac]">
+          {product.name}
+        </h3>
 
         {showDescription && product.description && (
           <p className="mt-1 line-clamp-2 text-xs text-gray-500">
@@ -143,13 +144,13 @@ function ProductCardItem({ product, showDescription }: ProductCardItemProps) {
           </p>
         )}
 
-        <a
-          href={`/${product.slug}/p`}
-          className="mt-2 text-xs font-medium text-[#0d61ac] hover:underline"
-        >
+        <span className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-[#0d61ac]/5 px-3 py-1.5 text-xs font-semibold text-[#0d61ac] transition-colors group-hover:bg-[#0d61ac] group-hover:text-white">
           Conhecer
-        </a>
-      </div>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M5 12h14M12 5l7 7-7 7" />
+          </svg>
+        </span>
+      </a>
     </article>
   );
 }
