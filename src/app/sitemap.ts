@@ -2,9 +2,20 @@ import type { MetadataRoute } from "next";
 import { db } from "@brasa/core/db";
 import { posts, categories, authors, products, productCategories } from "@brasa/core/schema";
 import { and, eq, count } from "drizzle-orm";
-import { getTenantId } from "@/lib/tenant";
-
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+
+/**
+ * Get tenant ID safely — falls back to 1 during build time
+ * when headers() is not available.
+ */
+async function getSafeTenantId(): Promise<number> {
+  try {
+    const { getTenantId } = await import("@/lib/tenant");
+    return await getTenantId();
+  } catch {
+    return 1;
+  }
+}
 const PER_SITEMAP = 5000;
 
 // Sitemap index: Next.js calls generateSitemaps() to get the list,
@@ -12,7 +23,7 @@ const PER_SITEMAP = 5000;
 // IDs: 0 = static + blog posts, 1 = blog categories + authors, 2+ = products (paginated)
 
 export async function generateSitemaps() {
-  const tenantId = await getTenantId();
+  const tenantId = await getSafeTenantId();
   const [productCount] = await db.select({ total: count() }).from(products).where(and(eq(products.status, "published"), eq(products.tenantId, tenantId)));
   const totalProducts = productCount?.total ?? 0;
   const productPages = Math.ceil(totalProducts / PER_SITEMAP);
@@ -32,7 +43,7 @@ export async function generateSitemaps() {
 }
 
 export default async function sitemap({ id }: { id: number }): Promise<MetadataRoute.Sitemap> {
-  const tenantId = await getTenantId();
+  const tenantId = await getSafeTenantId();
   // ── Sitemap 0: Static pages + Blog posts ──────────────────────────────
   if (id === 0) {
     const allPosts = await db
