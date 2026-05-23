@@ -340,27 +340,33 @@ export default function EditPagePage({
                   </div>
                 </div>
 
-                <div>
-                  <div className="mb-2 flex items-center justify-between">
-                    <label className="block text-sm font-medium text-gray-700">Conteudo</label>
-                    <ContentTabs active={contentTab} onSwitch={setContentTab} />
+                {hasContent ? (
+                  <div>
+                    <div className="mb-2 flex items-center justify-between">
+                      <label className="block text-sm font-medium text-gray-700">Conteudo</label>
+                      <ContentTabs active={contentTab} onSwitch={setContentTab} />
+                    </div>
+                    {contentTab === "code" ? (
+                      <textarea
+                        name="content"
+                        value={editState.content ?? ""}
+                        onChange={handleChange}
+                        rows={20}
+                        className="w-full resize-y rounded-md border border-gray-300 bg-gray-50 px-4 py-3 font-mono text-xs leading-relaxed text-gray-800 shadow-sm transition-colors focus:border-[#0d61ac] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#0d61ac]/20"
+                        spellCheck={false}
+                        placeholder={"<h1>Titulo</h1>\n<p>Conteudo...</p>"}
+                      />
+                    ) : editState.content ? (
+                      <div className="prose prose-sm max-w-none rounded-md border border-gray-200 bg-gray-50 px-6 py-5 text-gray-800" dangerouslySetInnerHTML={{ __html: editState.content }} />
+                    ) : (
+                      <div className="flex items-center justify-center rounded-md border border-dashed border-gray-300 bg-gray-50 py-16 text-sm text-gray-400">Nenhum conteudo</div>
+                    )}
                   </div>
-                  {contentTab === "code" ? (
-                    <textarea
-                      name="content"
-                      value={editState.content ?? ""}
-                      onChange={handleChange}
-                      rows={20}
-                      className="w-full resize-y rounded-md border border-gray-300 bg-gray-50 px-4 py-3 font-mono text-xs leading-relaxed text-gray-800 shadow-sm transition-colors focus:border-[#0d61ac] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#0d61ac]/20"
-                      spellCheck={false}
-                      placeholder={"<h1>Titulo</h1>\n<p>Conteudo...</p>"}
-                    />
-                  ) : editState.content ? (
-                    <div className="prose prose-sm max-w-none rounded-md border border-gray-200 bg-gray-50 px-6 py-5 text-gray-800" dangerouslySetInnerHTML={{ __html: editState.content }} />
-                  ) : (
-                    <div className="flex items-center justify-center rounded-md border border-dashed border-gray-300 bg-gray-50 py-16 text-sm text-gray-400">Nenhum conteudo</div>
-                  )}
-                </div>
+                ) : (
+                  <div className="rounded-md border border-gray-200 bg-gray-50 px-4 py-3">
+                    <p className="text-sm text-gray-500">O conteudo desta pagina e gerenciado por componentes. Use o Preview para visualizar.</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
