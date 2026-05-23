@@ -10,9 +10,10 @@ const STORAGE_KEY = "admin-sidebar-collapsed";
 type AdminShellProps = {
   title: string;
   children: React.ReactNode;
+  headerExtra?: React.ReactNode;
 };
 
-function ShellInner({ title, children }: AdminShellProps) {
+function ShellInner({ title, children, headerExtra }: AdminShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
 
@@ -46,6 +47,7 @@ function ShellInner({ title, children }: AdminShellProps) {
         <AdminHeader
           title={title}
           onToggleSidebar={() => setSidebarOpen((prev) => !prev)}
+          extra={headerExtra}
         />
         <main className="p-4 lg:p-6">{children}</main>
       </div>
@@ -53,10 +55,10 @@ function ShellInner({ title, children }: AdminShellProps) {
   );
 }
 
-export default function AdminShell({ title, children }: AdminShellProps) {
+export default function AdminShell({ title, children, headerExtra }: AdminShellProps) {
   return (
     <SessionProvider>
-      <ShellInner title={title}>{children}</ShellInner>
+      <ShellInner title={title} headerExtra={headerExtra}>{children}</ShellInner>
     </SessionProvider>
   );
 }

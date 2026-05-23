@@ -5,158 +5,80 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import {
   FileText,
-  FolderOpen,
-  Users,
-  Image,
-  Mail,
   PanelLeftOpen,
   PanelLeftClose,
   X,
   Package,
-  Tags,
-  Shield,
   PanelBottom,
-  FileCode,
+  ChevronDown,
   Search,
-  Bot,
-  UserPlus,
-  Building2,
-  Phone,
-  Share2,
-  Database,
-  CreditCard,
+  Settings,
+  Plug,
 } from "lucide-react";
 
 type NavItem = {
   href: string;
   label: string;
-  icon: React.ReactNode;
 };
 
 type NavGroup = {
   label: string;
+  icon: React.ReactNode;
   items: NavItem[];
 };
 
 const navGroups: NavGroup[] = [
   {
     label: "Conteudo",
+    icon: <FileText className="size-[18px]" />,
     items: [
-      {
-        href: "/admin/posts",
-        label: "Posts",
-        icon: <FileText className="size-[18px]" />,
-      },
-      {
-        href: "/admin/categorias",
-        label: "Categorias",
-        icon: <FolderOpen className="size-[18px]" />,
-      },
-      {
-        href: "/admin/autores",
-        label: "Autores",
-        icon: <Users className="size-[18px]" />,
-      },
-      {
-        href: "/admin/midias",
-        label: "Midias",
-        icon: <Image className="size-[18px]" />,
-      },
+      { href: "/admin/posts", label: "Posts" },
+      { href: "/admin/categorias", label: "Categorias" },
+      { href: "/admin/autores", label: "Autores" },
+      { href: "/admin/midias", label: "Midias" },
     ],
   },
   {
     label: "Catalogo",
+    icon: <Package className="size-[18px]" />,
     items: [
-      {
-        href: "/admin/produtos",
-        label: "Produtos",
-        icon: <Package className="size-[18px]" />,
-      },
-      {
-        href: "/admin/categorias-produto",
-        label: "Categorias de Produto",
-        icon: <Tags className="size-[18px]" />,
-      },
+      { href: "/admin/produtos", label: "Produtos" },
+      { href: "/admin/categorias-produto", label: "Categorias de Produto" },
     ],
   },
   {
     label: "Storefront",
+    icon: <PanelBottom className="size-[18px]" />,
     items: [
-      {
-        href: "/admin/footer",
-        label: "Footer",
-        icon: <PanelBottom className="size-[18px]" />,
-      },
-      {
-        href: "/admin/newsletter",
-        label: "Newsletter",
-        icon: <Mail className="size-[18px]" />,
-      },
-      {
-        href: "/admin/paginas",
-        label: "Paginas",
-        icon: <FileCode className="size-[18px]" />,
-      },
+      { href: "/admin/footer", label: "Footer" },
+      { href: "/admin/newsletter", label: "Newsletter" },
+      { href: "/admin/paginas", label: "Paginas" },
     ],
   },
   {
     label: "SEO",
+    icon: <Search className="size-[18px]" />,
     items: [
-      {
-        href: "/admin/metatags",
-        label: "Meta Tags",
-        icon: <Search className="size-[18px]" />,
-      },
-      {
-        href: "/admin/robots",
-        label: "Robots",
-        icon: <Bot className="size-[18px]" />,
-      },
+      { href: "/admin/robots", label: "Robots" },
     ],
   },
   {
     label: "Configuracoes",
+    icon: <Settings className="size-[18px]" />,
     items: [
-      {
-        href: "/admin/inscritos",
-        label: "Inscritos",
-        icon: <UserPlus className="size-[18px]" />,
-      },
-      {
-        href: "/admin/identidade",
-        label: "Identidade do Site",
-        icon: <Building2 className="size-[18px]" />,
-      },
-      {
-        href: "/admin/contato",
-        label: "Contato",
-        icon: <Phone className="size-[18px]" />,
-      },
-      {
-        href: "/admin/redes-sociais",
-        label: "Redes Sociais",
-        icon: <Share2 className="size-[18px]" />,
-      },
-      {
-        href: "/admin/usuarios",
-        label: "Usuarios e Permissoes",
-        icon: <Shield className="size-[18px]" />,
-      },
+      { href: "/admin/inscritos", label: "Inscritos" },
+      { href: "/admin/identidade", label: "Identidade do Site" },
+      { href: "/admin/contato", label: "Contato" },
+      { href: "/admin/redes-sociais", label: "Redes Sociais" },
+      { href: "/admin/usuarios", label: "Usuarios e Permissoes" },
     ],
   },
   {
     label: "Integracoes",
+    icon: <Plug className="size-[18px]" />,
     items: [
-      {
-        href: "/admin/supabase",
-        label: "Supabase",
-        icon: <Database className="size-[18px]" />,
-      },
-      {
-        href: "/admin/assinatura",
-        label: "Assinatura",
-        icon: <CreditCard className="size-[18px]" />,
-      },
+      { href: "/admin/supabase", label: "Supabase" },
+      { href: "/admin/assinatura", label: "Assinatura" },
     ],
   },
 ];
@@ -209,8 +131,29 @@ type SidebarProps = {
   onToggleCollapse: () => void;
 };
 
+function findActiveGroup(pathname: string): string | null {
+  for (const group of navGroups) {
+    for (const item of group.items) {
+      if (pathname === item.href || pathname.startsWith(item.href + "/")) {
+        return group.label;
+      }
+    }
+  }
+  return null;
+}
+
 export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }: SidebarProps) {
   const pathname = usePathname();
+  const [openGroup, setOpenGroup] = useState<string | null>(() => findActiveGroup(pathname));
+
+  useEffect(() => {
+    const active = findActiveGroup(pathname);
+    if (active) setOpenGroup(active);
+  }, [pathname]);
+
+  const toggleGroup = (label: string) => {
+    setOpenGroup((prev) => (prev === label ? null : label));
+  };
 
   return (
     <>
@@ -275,55 +218,88 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
 
         {/* Navigation */}
         <nav className={`flex-1 overflow-y-auto py-3 ${collapsed ? "lg:px-2" : "px-3"} px-3`}>
-          {navGroups.map((group) => (
-            <div key={group.label} className="mb-5">
-              <p className={`mb-1.5 px-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400 ${collapsed ? "lg:hidden" : ""}`}>
-                {group.label}
-              </p>
-              {collapsed && <div className="mx-auto mb-2 hidden w-6 border-t border-gray-200 lg:block" />}
-              <ul className="space-y-0.5">
-                {group.items.map((item) => {
-                  const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+          {navGroups.map((group) => {
+            const isGroupOpen = openGroup === group.label;
+            const hasActiveItem = group.items.some(
+              (item) => pathname === item.href || pathname.startsWith(item.href + "/")
+            );
 
-                  const link = (
-                    <Link
-                      href={item.href}
-                      onClick={() => {
-                        if (window.innerWidth < 1024) onClose();
-                      }}
-                      className={[
-                        "flex items-center rounded-md text-[13px] font-medium transition-colors",
-                        collapsed ? "lg:justify-center lg:px-0 lg:py-2.5" : "",
-                        "gap-3 px-3 py-2",
-                        isActive
-                          ? "bg-primary/10 text-primary"
-                          : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
-                      ].join(" ")}
-                      aria-current={isActive ? "page" : undefined}
-                    >
-                      <span className="flex-shrink-0">{item.icon}</span>
-                      <span className={collapsed ? "lg:hidden" : ""}>{item.label}</span>
-                    </Link>
-                  );
+            const groupHeader = (
+              <button
+                type="button"
+                onClick={() => toggleGroup(group.label)}
+                className={[
+                  "flex w-full items-center rounded-md text-[13px] font-semibold transition-colors",
+                  collapsed ? "lg:justify-center lg:px-0 lg:py-2.5" : "gap-3 px-3 py-2",
+                  "gap-3 px-3 py-2",
+                  hasActiveItem
+                    ? "text-primary"
+                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
+                ].join(" ")}
+              >
+                <span className="flex-shrink-0">{group.icon}</span>
+                <span className={`flex-1 text-left ${collapsed ? "lg:hidden" : ""}`}>{group.label}</span>
+                <ChevronDown
+                  className={[
+                    "size-4 text-gray-400 transition-transform duration-200",
+                    isGroupOpen ? "rotate-180" : "",
+                    collapsed ? "lg:hidden" : "",
+                  ].join(" ")}
+                />
+              </button>
+            );
 
-                  return (
-                    <li key={item.href}>
-                      {collapsed ? (
-                        <>
-                          <div className="hidden lg:block">
-                            <Tooltip label={item.label}>{link}</Tooltip>
-                          </div>
-                          <div className="lg:hidden">{link}</div>
-                        </>
-                      ) : (
-                        link
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          ))}
+            return (
+              <div key={group.label} className="mb-1">
+                {collapsed ? (
+                  <>
+                    <div className="hidden lg:block">
+                      <Tooltip label={group.label}>{groupHeader}</Tooltip>
+                    </div>
+                    <div className="lg:hidden">{groupHeader}</div>
+                  </>
+                ) : (
+                  groupHeader
+                )}
+
+                <div
+                  className={[
+                    "overflow-hidden transition-all duration-200",
+                    isGroupOpen && !collapsed ? "max-h-96 opacity-100" : "max-h-0 opacity-0",
+                  ].join(" ")}
+                >
+                  <ul className="mt-0.5 space-y-0.5">
+                    {group.items.map((item) => {
+                      const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+
+                      return (
+                        <li key={item.href}>
+                          <Link
+                            href={item.href}
+                            onClick={() => {
+                              if (window.innerWidth < 1024) onClose();
+                            }}
+                            className={[
+                              "flex items-center rounded-md text-[13px] font-medium transition-colors",
+                              "gap-3 py-2",
+                              collapsed ? "lg:pl-3" : "pl-10 pr-3",
+                              "pl-10 pr-3",
+                              isActive
+                                ? "bg-primary/5 text-primary"
+                                : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
+                            ].join(" ")}
+                            aria-current={isActive ? "page" : undefined}
+                          >
+                            {item.label}
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              </div>
+            );
+          })}
         </nav>
       </aside>
     </>

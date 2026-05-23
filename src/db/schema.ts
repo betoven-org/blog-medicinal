@@ -189,6 +189,25 @@ export const subscribers = pgTable("subscribers", {
   createdAt: timestamp("created_at", { mode: "string" }).defaultNow().notNull(),
 });
 
+// ── Pages ───────────────────────────────────────────────────────────────────────
+
+export const pages = pgTable("pages", {
+  id: serial("id").primaryKey(),
+  slug: varchar("slug", { length: 255 }).notNull().unique(),
+  title: varchar("title", { length: 255 }).notNull(),
+  metaTitle: varchar("meta_title", { length: 255 }),
+  metaDescription: text("meta_description"),
+  ogTitle: varchar("og_title", { length: 255 }),
+  ogDescription: text("og_description"),
+  ogImageUrl: text("og_image_url"),
+  content: text("content"),
+  draft: jsonb("draft"),
+  createdAt: timestamp("created_at", { mode: "string" }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { mode: "string" }).defaultNow().notNull(),
+});
+
+export const pagesRelations = relations(pages, () => ({}));
+
 // ── Site Settings ──────────────────────────────────────────────────────────────
 
 export const siteSettings = pgTable("site_settings", {

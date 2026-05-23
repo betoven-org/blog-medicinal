@@ -7,6 +7,7 @@ import {
   media,
   tags,
   siteSettings,
+  pages,
 } from "@/db/schema";
 import { eq, and, ne, desc, asc, ilike, or, count, sql } from "drizzle-orm";
 
@@ -463,6 +464,19 @@ export const getCategories = unstable_cache(
   },
   ["categories"],
   { revalidate: 3600, tags: ["categories"] },
+);
+
+export const getPageBySlug = unstable_cache(
+  async (slug: string) => {
+    const [page] = await db
+      .select()
+      .from(pages)
+      .where(eq(pages.slug, slug))
+      .limit(1);
+    return page ?? null;
+  },
+  ["page-by-slug"],
+  { revalidate: 3600, tags: ["pages"] },
 );
 
 export const getCategoriesWithCount = unstable_cache(

@@ -1,15 +1,18 @@
 import type { Metadata } from "next";
-import { getSiteSettings } from "@/lib/queries";
+import { getPageBySlug } from "@/lib/queries";
 import { Breadcrumb } from "@/components/Breadcrumb";
 
-export const metadata: Metadata = {
-  title: "Politica de Privacidade",
-  description: "Politica de privacidade e protecao de dados.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const page = await getPageBySlug("politica-de-privacidade");
+  return {
+    title: page?.metaTitle ?? "Politica de Privacidade",
+    description: page?.metaDescription ?? "Politica de privacidade e protecao de dados.",
+  };
+}
 
 export default async function PrivacyPolicyPage() {
-  const settings = await getSiteSettings();
-  const content = (settings as any)?.privacyPolicy || "";
+  const page = await getPageBySlug("politica-de-privacidade");
+  const content = page?.content ?? "";
 
   const breadcrumbItems = [
     { label: "Inicio", href: "/" },

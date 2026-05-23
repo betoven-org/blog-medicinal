@@ -10,6 +10,7 @@ import GlobalSearch from "@/components/admin/GlobalSearch";
 type AdminHeaderProps = {
   title: string;
   onToggleSidebar: () => void;
+  extra?: React.ReactNode;
 };
 
 const breadcrumbMap: Record<string, string> = {
@@ -47,7 +48,7 @@ function getBreadcrumbs(pathname: string) {
   return crumbs;
 }
 
-export default function AdminHeader({ title, onToggleSidebar }: AdminHeaderProps) {
+export default function AdminHeader({ title, onToggleSidebar, extra }: AdminHeaderProps) {
   const pathname = usePathname();
   const { data: session, status } = useSession();
   const crumbs = getBreadcrumbs(pathname);
@@ -68,7 +69,7 @@ export default function AdminHeader({ title, onToggleSidebar }: AdminHeaderProps
   }, [menuOpen]);
 
   return (
-    <header className="sticky top-0 z-30 grid h-14 grid-cols-[1fr_auto_1fr] items-center border-b border-gray-200 bg-white px-4 lg:px-6">
+    <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b border-gray-200 bg-white px-4 lg:px-6">
       <div className="flex items-center">
         {/* Mobile hamburger */}
         <button
@@ -99,11 +100,12 @@ export default function AdminHeader({ title, onToggleSidebar }: AdminHeaderProps
         </nav>
       </div>
 
-      <div className="flex justify-center">
+      <div className="flex flex-1 justify-center">
         <GlobalSearch />
       </div>
 
-      <div className="flex items-center justify-end gap-3">
+      <div className="flex flex-shrink-0 items-center justify-end gap-3">
+        {extra}
 
         {/* User menu */}
         {mounted && status === "authenticated" && session?.user && (

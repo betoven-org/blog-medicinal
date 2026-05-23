@@ -1,49 +1,148 @@
 "use client";
 
+import { useEffect, useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import AdminShell from "@/components/admin/AdminShell";
-import { SettingsContent } from "@/components/admin/SettingsContent";
-import { useSettings } from "@/hooks/useSettings";
+
+type Page = {
+  id: number;
+  slug: string;
+  title: string;
+  draft: unknown;
+  updatedAt: string;
+};
+
+function Spinner() {
+  return (
+    <svg
+      className="h-8 w-8 animate-spin text-[#0d61ac]"
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+    </svg>
+  );
+}
+
+function RowMenu({ pageId, slug }: { pageId: number; slug: string }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    function handleOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    if (open) document.addEventListener("mousedown", handleOutside);
+    return () => document.removeEventListener("mousedown", handleOutside);
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); setOpen((p) => !p); }}
+        className="rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+        aria-label="Acoes"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <circle cx="12" cy="5" r="1.5" />
+          <circle cx="12" cy="12" r="1.5" />
+          <circle cx="12" cy="19" r="1.5" />
+        </svg>
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-full z-10 mt-1 w-44 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
+          <button
+            type="button"
+            onClick={() => { setOpen(false); router.push(`/admin/paginas/${pageId}`); }}
+            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+              <path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84.84-2.872a2 2 0 0 1 .506-.854z" />
+            </svg>
+            Editar
+          </button>
+          <a
+            href={`/${slug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => setOpen(false)}
+            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+              <polyline points="15 3 21 3 21 9" />
+              <line x1="10" y1="14" x2="21" y2="3" />
+            </svg>
+            Ver no site
+          </a>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function PaginasPage() {
-  const {
-    settings,
-    loading,
-    saving,
-    error,
-    success,
-    logoPreview,
-    faviconPreview,
-    handleChange,
-    handleSave,
-    onLogoChange,
-    onFaviconChange,
-  } = useSettings();
+  const [pages, setPages] = useState<Page[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showCreate, setShowCreate] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [newTitle, setNewTitle] = useState("");
+  const [newSlug, setNewSlug] = useState("");
+  const router = useRouter();
+
+  useEffect(() => {
+    fetch("/api/admin/pages")
+      .then((res) => {
+        if (!res.ok) throw new Error("Erro ao carregar paginas");
+        return res.json();
+      })
+      .then((data) => setPages(data.docs ?? []))
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
+  }, []);
+
+  function handleTitleChange(val: string) {
+    setNewTitle(val);
+    setNewSlug(val.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""));
+  }
+
+  async function handleCreate() {
+    if (!newTitle.trim() || !newSlug.trim()) return;
+    setCreating(true);
+    setCreateError(null);
+    try {
+      const res = await fetch("/api/admin/pages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: newTitle.trim(), slug: newSlug.trim() }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Erro ao criar pagina");
+      }
+      const created = await res.json();
+      router.push(`/admin/paginas/${created.id}`);
+    } catch (err) {
+      setCreateError(err instanceof Error ? err.message : "Erro desconhecido");
+    } finally {
+      setCreating(false);
+    }
+  }
 
   if (loading) {
     return (
       <AdminShell title="Paginas">
         <div className="flex items-center justify-center py-12">
-          <svg
-            className="h-8 w-8 animate-spin text-[#0d61ac]"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            />
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-            />
-          </svg>
+          <Spinner />
           <span className="ml-3 text-sm text-gray-500">Carregando...</span>
         </div>
       </AdminShell>
@@ -52,104 +151,129 @@ export default function PaginasPage() {
 
   return (
     <AdminShell title="Paginas">
-      <div className="rounded-lg border border-gray-200 bg-white p-6">
-        <SettingsContent
-          activeSection="paginas"
-          settings={settings}
-          logoPreview={logoPreview}
-          faviconPreview={faviconPreview}
-          onSettingsChange={handleChange}
-          onLogoChange={onLogoChange}
-          onFaviconChange={onFaviconChange}
-          syncing={false}
-          syncProgress={0}
-          syncLabel=""
-          syncResult={null}
-          syncError={null}
-          lastSyncAt={null}
-          clearing={false}
-          clearSuccess={false}
-          onSync={() => {}}
-          onClearContent={() => {}}
-          showClearConfirm={false}
-          onShowClearConfirm={() => {}}
-        />
-
-        <div className="mt-8 flex items-center gap-4 border-t border-gray-100 pt-6">
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={saving}
-            className="inline-flex items-center gap-2 rounded-md bg-[#0d61ac] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-[#0a4f8c] focus:outline-none focus:ring-2 focus:ring-[#0d61ac]/40 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {saving ? (
-              <svg
-                className="h-4 w-4 animate-spin"
-                viewBox="0 0 24 24"
-                fill="none"
-                aria-hidden="true"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                />
-              </svg>
-            ) : (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 256 256"
-                fill="currentColor"
-                aria-hidden="true"
-              >
-                <path d="M219.31,72,184,36.69A15.86,15.86,0,0,0,172.69,32H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V83.31A15.86,15.86,0,0,0,219.31,72ZM168,208H88V152h80Zm40,0H184V152a16,16,0,0,0-16-16H88a16,16,0,0,0-16,16v56H48V48H172.69L208,83.31ZM160,72a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h56A8,8,0,0,1,160,72Z" />
-              </svg>
-            )}
-            {saving ? "Salvando..." : "Salvar"}
-          </button>
-
-          {success && (
-            <div className="flex items-center gap-1.5 text-sm font-medium text-green-600">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 256 256"
-                fill="currentColor"
-                aria-hidden="true"
-              >
-                <path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z" />
-              </svg>
-              Salvo com sucesso!
-            </div>
-          )}
-
-          {error && (
-            <div className="flex items-center gap-1.5 text-sm font-medium text-red-600">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 256 256"
-                fill="currentColor"
-                aria-hidden="true"
-              >
-                <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm-8,56a8,8,0,0,1,16,0v56a8,8,0,0,1-16,0Zm8,104a12,12,0,1,1,12-12A12,12,0,0,1,128,184Z" />
-              </svg>
-              {error}
-            </div>
-          )}
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-lg font-semibold text-gray-900">Paginas</h1>
+          <p className="mt-1 text-sm text-gray-500">Gerencie as paginas estaticas do site.</p>
         </div>
+        <button
+          type="button"
+          onClick={() => { setShowCreate(true); setNewTitle(""); setNewSlug(""); setCreateError(null); }}
+          className="inline-flex items-center gap-1.5 rounded-md bg-[#0d61ac] px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-[#0a4f8c]"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M12 5v14" />
+            <path d="M5 12h14" />
+          </svg>
+          Nova pagina
+        </button>
+      </div>
+
+      {/* Modal criar pagina */}
+      {showCreate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="w-full max-w-md rounded-lg border border-gray-200 bg-white p-6 shadow-xl">
+            <h2 className="text-base font-semibold text-gray-900">Nova pagina</h2>
+            <p className="mt-1 text-sm text-gray-500">Defina o titulo e o slug da pagina.</p>
+
+            <div className="mt-5 space-y-4">
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Titulo</label>
+                <input
+                  type="text"
+                  value={newTitle}
+                  onChange={(e) => handleTitleChange(e.target.value)}
+                  placeholder="Ex: Sobre nos"
+                  className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-[#0d61ac] focus:outline-none focus:ring-2 focus:ring-[#0d61ac]/20"
+                  autoFocus
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Slug</label>
+                <input
+                  type="text"
+                  value={newSlug}
+                  onChange={(e) => setNewSlug(e.target.value)}
+                  placeholder="sobre-nos"
+                  className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 font-mono text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-[#0d61ac] focus:outline-none focus:ring-2 focus:ring-[#0d61ac]/20"
+                />
+                <p className="mt-1 text-xs text-gray-400">URL: /{newSlug || "..."}</p>
+              </div>
+
+              {createError && (
+                <p className="text-sm font-medium text-red-500">{createError}</p>
+              )}
+            </div>
+
+            <div className="mt-6 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setShowCreate(false)}
+                className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleCreate}
+                disabled={creating || !newTitle.trim() || !newSlug.trim()}
+                className="rounded-md bg-[#0d61ac] px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-[#0a4f8c] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {creating ? "Criando..." : "Criar pagina"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="overflow-visible rounded-lg border border-gray-200 bg-white">
+        {error ? (
+          <div className="flex items-center gap-2 p-6 text-sm text-red-600">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true">
+              <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm-8,56a8,8,0,0,1,16,0v56a8,8,0,0,1-16,0Zm8,104a12,12,0,1,1,12-12A12,12,0,0,1,128,184Z" />
+            </svg>
+            {error}
+          </div>
+        ) : pages.length === 0 ? (
+          <p className="p-6 text-sm text-gray-500">Nenhuma pagina encontrada.</p>
+        ) : (
+          <table className="w-full text-left text-sm">
+            <thead className="border-b border-gray-200 bg-gray-50">
+              <tr>
+                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500">Titulo</th>
+                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500">Slug</th>
+                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500">Atualizado</th>
+                <th className="w-10 px-4 py-3" />
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {pages.map((page) => (
+                <tr
+                  key={page.id}
+                  onClick={() => router.push(`/admin/paginas/${page.id}`)}
+                  className="cursor-pointer transition-colors hover:bg-gray-50"
+                >
+                  <td className="px-4 py-3 font-medium text-gray-900">{page.title}</td>
+                  <td className="px-4 py-3 text-gray-500">
+                    <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs">{page.slug}</code>
+                  </td>
+                  <td className="px-4 py-3 text-gray-500">
+                    {new Date(page.updatedAt).toLocaleDateString("pt-BR", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </td>
+                  <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
+                    <RowMenu pageId={page.id} slug={page.slug} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </AdminShell>
   );
