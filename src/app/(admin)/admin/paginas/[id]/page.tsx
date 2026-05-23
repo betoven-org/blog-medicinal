@@ -218,7 +218,7 @@ export default function EditPagePage({
       setSavedSnapshot(JSON.stringify(state));
       setLastSaved(new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }));
       if (iframeRef.current) {
-        iframeRef.current.src = `/api/admin/pages/${id}/preview`;
+        iframeRef.current.src = iframeRef.current.src;
       }
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : "Erro desconhecido");
@@ -283,6 +283,8 @@ export default function EditPagePage({
   }
 
   const hasDraft = page.draft !== null;
+  const hasContent = !!(editState?.content || page.content);
+  const previewUrl = hasContent ? `/api/admin/pages/${id}/preview` : slugToPath(page.slug);
   const isBusy = saving || publishing;
 
   // Draft count: number of fields changed vs published
@@ -378,7 +380,7 @@ export default function EditPagePage({
                 </span>
                 <button
                   type="button"
-                  onClick={() => { if (iframeRef.current) iframeRef.current.src = `/api/admin/pages/${id}/preview`; }}
+                  onClick={() => { if (iframeRef.current) iframeRef.current.src = previewUrl; }}
                   className="rounded p-1 text-gray-400 hover:bg-gray-200 hover:text-gray-600 transition-colors"
                   title="Recarregar"
                 >
@@ -390,7 +392,7 @@ export default function EditPagePage({
               </div>
               <iframe
                 ref={iframeRef}
-                src={`/api/admin/pages/${id}/preview`}
+                src={previewUrl}
                 className="flex-1 w-full border-0"
                 style={{ minHeight: "500px" }}
                 title={`Preview: ${page.title}`}
