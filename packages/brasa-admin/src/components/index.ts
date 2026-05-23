@@ -1,3 +1,5 @@
+"use client";
+
 export { default as AdminShell } from "./AdminShell";
 export { default as Sidebar } from "./Sidebar";
 export { default as AdminHeader } from "./AdminHeader";

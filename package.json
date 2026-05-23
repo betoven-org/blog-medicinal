@@ -5,6 +5,12 @@
   "engines": {
     "node": ">=22"
   },
+  "pnpm": {
+    "overrides": {
+      "react": "$react",
+      "react-dom": "$react-dom"
+    }
+  },
   "scripts": {
     "dev": "tsx scripts/watch-sections.ts & next dev",
     "dev:next": "next dev",
