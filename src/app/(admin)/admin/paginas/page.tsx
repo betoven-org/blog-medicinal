@@ -2,7 +2,14 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
 import AdminShell from "@/components/admin/AdminShell";
+import { createPageSchema } from "@/lib/validations";
+import type { z } from "zod";
+
+type CreatePageForm = z.infer<typeof createPageSchema>;
 
 type Page = {
   id: number;
@@ -97,11 +104,12 @@ export default function PaginasPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
-  const [creating, setCreating] = useState(false);
-  const [createError, setCreateError] = useState<string | null>(null);
-  const [newTitle, setNewTitle] = useState("");
-  const [newSlug, setNewSlug] = useState("");
   const router = useRouter();
+
+  const form = useForm<CreatePageForm>({
+    resolver: zodResolver(createPageSchema),
+    defaultValues: { title: "", slug: "" },
+  });
 
   useEffect(() => {
     fetch("/api/admin/pages")
@@ -115,30 +123,26 @@ export default function PaginasPage() {
   }, []);
 
   function handleTitleChange(val: string) {
-    setNewTitle(val);
-    setNewSlug(val.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""));
+    form.setValue("title", val);
+    form.setValue("slug", val.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""));
   }
 
-  async function handleCreate() {
-    if (!newTitle.trim() || !newSlug.trim()) return;
-    setCreating(true);
-    setCreateError(null);
+  async function handleCreate(data: CreatePageForm) {
     try {
       const res = await fetch("/api/admin/pages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: newTitle.trim(), slug: newSlug.trim() }),
+        body: JSON.stringify({ title: data.title.trim(), slug: data.slug.trim() }),
       });
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || "Erro ao criar pagina");
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || "Erro ao criar pagina");
       }
       const created = await res.json();
+      toast.success(`Pagina "${data.title}" criada`);
       router.push(`/admin/paginas/${created.id}`);
     } catch (err) {
-      setCreateError(err instanceof Error ? err.message : "Erro desconhecido");
-    } finally {
-      setCreating(false);
+      toast.error(err instanceof Error ? err.message : "Erro ao criar pagina");
     }
   }
 
@@ -176,7 +180,7 @@ export default function PaginasPage() {
           )}
           <button
             type="button"
-            onClick={() => { setShowCreate(true); setNewTitle(""); setNewSlug(""); setCreateError(null); }}
+            onClick={() => { setShowCreate(true); form.reset(); }}
             className="inline-flex items-center gap-1.5 rounded-md bg-[#0d61ac] px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-[#0a4f8c]"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -191,7 +195,7 @@ export default function PaginasPage() {
       {/* Modal criar pagina */}
       {showCreate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="w-full max-w-md rounded-lg border border-gray-200 bg-white p-6 shadow-xl">
+          <form onSubmit={form.handleSubmit(handleCreate)} className="w-full max-w-md rounded-lg border border-gray-200 bg-white p-6 shadow-xl">
             <h2 className="text-base font-semibold text-gray-900">Nova pagina</h2>
             <p className="mt-1 text-sm text-gray-500">Defina o titulo e o slug da pagina.</p>
 
@@ -200,28 +204,30 @@ export default function PaginasPage() {
                 <label className="mb-1 block text-sm font-medium text-gray-700">Titulo</label>
                 <input
                   type="text"
-                  value={newTitle}
-                  onChange={(e) => handleTitleChange(e.target.value)}
+                  {...form.register("title", {
+                    onChange: (e) => handleTitleChange(e.target.value),
+                  })}
                   placeholder="Ex: Sobre nos"
                   className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-[#0d61ac] focus:outline-none focus:ring-2 focus:ring-[#0d61ac]/20"
                   autoFocus
                 />
+                {form.formState.errors.title && (
+                  <p className="mt-1 text-xs text-red-500">{form.formState.errors.title.message}</p>
+                )}
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">Slug</label>
                 <input
                   type="text"
-                  value={newSlug}
-                  onChange={(e) => setNewSlug(e.target.value)}
+                  {...form.register("slug")}
                   placeholder="sobre-nos"
                   className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 font-mono text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-[#0d61ac] focus:outline-none focus:ring-2 focus:ring-[#0d61ac]/20"
                 />
-                <p className="mt-1 text-xs text-gray-400">URL: /{newSlug || "..."}</p>
+                <p className="mt-1 text-xs text-gray-400">URL: /{form.watch("slug") || "..."}</p>
+                {form.formState.errors.slug && (
+                  <p className="mt-1 text-xs text-red-500">{form.formState.errors.slug.message}</p>
+                )}
               </div>
-
-              {createError && (
-                <p className="text-sm font-medium text-red-500">{createError}</p>
-              )}
             </div>
 
             <div className="mt-6 flex items-center justify-end gap-2">
@@ -233,15 +239,14 @@ export default function PaginasPage() {
                 Cancelar
               </button>
               <button
-                type="button"
-                onClick={handleCreate}
-                disabled={creating || !newTitle.trim() || !newSlug.trim()}
+                type="submit"
+                disabled={form.formState.isSubmitting}
                 className="rounded-md bg-[#0d61ac] px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-[#0a4f8c] disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {creating ? "Criando..." : "Criar pagina"}
+                {form.formState.isSubmitting ? "Criando..." : "Criar pagina"}
               </button>
             </div>
-          </div>
+          </form>
         </div>
       )}
 

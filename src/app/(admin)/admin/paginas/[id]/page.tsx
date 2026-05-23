@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useRef, useCallback } from "react";
+import { toast } from "sonner";
 import AdminShell from "@/components/admin/AdminShell";
 import FormField from "@/components/admin/FormField";
 import ImageUpload from "@/components/admin/ImageUpload";
@@ -219,7 +220,6 @@ export default function EditPagePage({
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
-  const [saveError, setSaveError] = useState<string | null>(null);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -263,7 +263,6 @@ export default function EditPagePage({
 
   const save = useCallback(async (state: EditState) => {
     setSaving(true);
-    setSaveError(null);
     try {
       const res = await fetch(`/api/admin/pages/${id}`, {
         method: "PATCH",
@@ -279,7 +278,7 @@ export default function EditPagePage({
         iframeRef.current.src = iframeRef.current.src;
       }
     } catch (err) {
-      setSaveError(err instanceof Error ? err.message : "Erro desconhecido");
+      toast.error(err instanceof Error ? err.message : "Erro ao salvar");
     } finally {
       setSaving(false);
     }
@@ -294,7 +293,6 @@ export default function EditPagePage({
       debounceRef.current = setTimeout(() => save(next), 1500);
       return next;
     });
-    setSaveError(null);
   }
 
   async function handlePublish() {
@@ -302,15 +300,15 @@ export default function EditPagePage({
     if (debounceRef.current) clearTimeout(debounceRef.current);
     await save(editState);
     setPublishing(true);
-    setSaveError(null);
     try {
       const res = await fetch(`/api/admin/pages/${id}/publish`, { method: "POST" });
       if (!res.ok) throw new Error("Erro ao publicar");
       const updated: Page = await res.json();
       setPage(updated);
       setSavedSnapshot(JSON.stringify(editState));
+      toast.success("Pagina publicada");
     } catch (err) {
-      setSaveError(err instanceof Error ? err.message : "Erro ao publicar");
+      toast.error(err instanceof Error ? err.message : "Erro ao publicar");
     } finally {
       setPublishing(false);
     }
@@ -352,8 +350,6 @@ export default function EditPagePage({
   const publishButton = (
     <div className="flex items-center gap-2">
       {saving && <span className="flex items-center gap-1.5 text-xs text-gray-400"><Spinner small /></span>}
-      {saveError && <span className="text-xs font-medium text-red-500">{saveError}</span>}
-
       {/* Staging indicator — links to /admin/publicar */}
       <a
         href="/admin/publicar"

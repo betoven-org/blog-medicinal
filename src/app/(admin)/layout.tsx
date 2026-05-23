@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { SessionProvider } from "next-auth/react";
+import { Toaster } from "sonner";
 import { Roboto } from "next/font/google";
 import "../globals.css";
 
@@ -27,6 +28,7 @@ export default function AdminRootLayout({
       <body className="bg-gray-50 font-sans text-gray-900">
         <SessionProvider>
           <Suspense fallback={null}>{children}</Suspense>
+          <Toaster position="bottom-right" richColors closeButton />
         </SessionProvider>
       </body>
     </html>

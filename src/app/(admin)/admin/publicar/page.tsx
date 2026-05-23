@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import AdminShell from "@/components/admin/AdminShell";
 
 type EditState = {
@@ -93,7 +94,6 @@ export default function PublicarPage() {
   const [discarding, setDiscarding] = useState(false);
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
   const [discardingOne, setDiscardingOne] = useState<number | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
   const [description, setDescription] = useState("");
 
   useEffect(() => {
@@ -140,7 +140,6 @@ export default function PublicarPage() {
   async function handlePublish() {
     if (selected.size === 0) return;
     setPublishing(true);
-    setActionError(null);
     try {
       const res = await fetch("/api/admin/pages/publish-batch", {
         method: "POST",
@@ -151,9 +150,10 @@ export default function PublicarPage() {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error || "Erro ao publicar");
       }
+      toast.success(`${selected.size} pagina${selected.size !== 1 ? "s" : ""} publicada${selected.size !== 1 ? "s" : ""}`);
       router.push("/admin/paginas");
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : "Erro desconhecido");
+      toast.error(err instanceof Error ? err.message : "Erro ao publicar");
     } finally {
       setPublishing(false);
     }
@@ -162,7 +162,6 @@ export default function PublicarPage() {
   async function handleDiscardAll() {
     if (selected.size === 0) return;
     setDiscarding(true);
-    setActionError(null);
     setShowDiscardConfirm(false);
     try {
       const res = await fetch("/api/admin/pages/discard-batch", {
@@ -174,11 +173,12 @@ export default function PublicarPage() {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error || "Erro ao descartar");
       }
-      // Remove discarded from local state
+      const count = selected.size;
       setPages((prev) => prev.filter((p) => !selected.has(p.id)));
       setSelected(new Set());
+      toast.success(`${count} rascunho${count !== 1 ? "s" : ""} descartado${count !== 1 ? "s" : ""}`);
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : "Erro desconhecido");
+      toast.error(err instanceof Error ? err.message : "Erro ao descartar");
     } finally {
       setDiscarding(false);
     }
@@ -186,7 +186,6 @@ export default function PublicarPage() {
 
   async function handleDiscardOne(id: number) {
     setDiscardingOne(id);
-    setActionError(null);
     try {
       const res = await fetch("/api/admin/pages/discard-batch", {
         method: "POST",
@@ -197,10 +196,12 @@ export default function PublicarPage() {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error || "Erro ao descartar");
       }
+      const page = pages.find((p) => p.id === id);
       setPages((prev) => prev.filter((p) => p.id !== id));
       setSelected((prev) => { const next = new Set(prev); next.delete(id); return next; });
+      toast.success(`Rascunho de "${page?.title}" descartado`);
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : "Erro desconhecido");
+      toast.error(err instanceof Error ? err.message : "Erro ao descartar");
     } finally {
       setDiscardingOne(null);
     }
@@ -341,9 +342,6 @@ export default function PublicarPage() {
                 </button>
               </div>
 
-              {actionError && (
-                <p className="mt-3 text-xs font-medium text-red-500 text-center">{actionError}</p>
-              )}
             </div>
           </div>
         </div>

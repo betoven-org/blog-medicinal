@@ -1,4 +1,15 @@
 import { z } from "zod";
+import { createInsertSchema, createUpdateSchema } from "drizzle-zod";
+import {
+  posts,
+  products,
+  categories,
+  productCategories,
+  authors,
+  users,
+  pages,
+  siteSettings,
+} from "@/db/schema";
 
 // ── Helpers ─────────────────────────────────────────────────────────────────────
 
@@ -13,62 +24,71 @@ export function parseBody<T>(schema: z.ZodType<T>, data: unknown) {
 
 // ── Posts ────────────────────────────────────────────────────────────────────────
 
-export const createPostSchema = z.object({
+const baseInsertPost = createInsertSchema(posts, {
   title: z.string().min(1, "Titulo e obrigatorio"),
   excerpt: z.string().min(1, "Excerpt e obrigatorio"),
   content: z.unknown().refine((v) => v != null, "Conteudo e obrigatorio"),
-  categoryId: z.number({ error: "Categoria e obrigatoria" }).int(),
-  authorId: z.number({ error: "Autor e obrigatorio" }).int(),
-  heroImageId: z.number().int().nullable().optional(),
-  coverUrl: z.string().nullable().optional(),
-  status: z.enum(["draft", "published"]).optional(),
-  featured: z.boolean().optional(),
-  tags: z.array(z.string()).optional(),
-  metaTitle: z.string().max(500).nullable().optional(),
-  metaDescription: z.string().nullable().optional(),
-  focusKeyword: z.string().max(255).nullable().optional(),
-  secondaryKeywords: z.string().nullable().optional(),
-  ogTitle: z.string().max(500).nullable().optional(),
-  ogDescription: z.string().nullable().optional(),
-  ogImageUrl: z.string().nullable().optional(),
-  schemaType: z.string().max(100).nullable().optional(),
-  canonicalUrl: z.string().nullable().optional(),
-  noindex: z.boolean().optional(),
-  nofollow: z.boolean().optional(),
-  seoScore: z.number().int().nullable().optional(),
-  seoNotes: z.string().nullable().optional(),
 });
 
-export const updatePostSchema = z.object({
-  title: z.string().min(1).optional(),
-  excerpt: z.string().optional(),
-  content: z.unknown().optional(),
-  categoryId: z.number().int().optional(),
-  authorId: z.number().int().optional(),
-  heroImageId: z.number().int().nullable().optional(),
-  coverUrl: z.string().nullable().optional(),
-  status: z.enum(["draft", "published"]).optional(),
-  featured: z.boolean().optional(),
-  tags: z.array(z.string()).optional(),
-  publishedAt: z.string().nullable().optional(),
-  metaTitle: z.string().max(500).nullable().optional(),
-  metaDescription: z.string().nullable().optional(),
-  focusKeyword: z.string().max(255).nullable().optional(),
-  secondaryKeywords: z.string().nullable().optional(),
-  ogTitle: z.string().max(500).nullable().optional(),
-  ogDescription: z.string().nullable().optional(),
-  ogImageUrl: z.string().nullable().optional(),
-  schemaType: z.string().max(100).nullable().optional(),
-  canonicalUrl: z.string().nullable().optional(),
-  noindex: z.boolean().optional(),
-  nofollow: z.boolean().optional(),
-  wordCount: z.number().int().nullable().optional(),
-  readingTimeMinutes: z.number().int().nullable().optional(),
-  seoScore: z.number().int().nullable().optional(),
-  seoNotes: z.string().nullable().optional(),
-  lastSeoReviewAt: z.string().nullable().optional(),
-  approvedAt: z.string().nullable().optional(),
-});
+export const createPostSchema = baseInsertPost
+  .pick({
+    title: true,
+    excerpt: true,
+    content: true,
+    categoryId: true,
+    authorId: true,
+    heroImageId: true,
+    coverUrl: true,
+    status: true,
+    featured: true,
+    metaTitle: true,
+    metaDescription: true,
+    focusKeyword: true,
+    secondaryKeywords: true,
+    ogTitle: true,
+    ogDescription: true,
+    ogImageUrl: true,
+    schemaType: true,
+    canonicalUrl: true,
+    noindex: true,
+    nofollow: true,
+    seoScore: true,
+    seoNotes: true,
+  })
+  .required({ title: true, excerpt: true, content: true, categoryId: true, authorId: true })
+  .extend({ tags: z.array(z.string()).optional() });
+
+export const updatePostSchema = createUpdateSchema(posts)
+  .pick({
+    title: true,
+    excerpt: true,
+    content: true,
+    categoryId: true,
+    authorId: true,
+    heroImageId: true,
+    coverUrl: true,
+    status: true,
+    featured: true,
+    publishedAt: true,
+    metaTitle: true,
+    metaDescription: true,
+    focusKeyword: true,
+    secondaryKeywords: true,
+    ogTitle: true,
+    ogDescription: true,
+    ogImageUrl: true,
+    schemaType: true,
+    canonicalUrl: true,
+    noindex: true,
+    nofollow: true,
+    wordCount: true,
+    readingTimeMinutes: true,
+    seoScore: true,
+    seoNotes: true,
+    lastSeoReviewAt: true,
+    approvedAt: true,
+  })
+  .extend({ tags: z.array(z.string()).optional() });
 
 // ── Bulk actions ────────────────────────────────────────────────────────────────
 
@@ -84,130 +104,92 @@ export const bulkDeleteSchema = z.object({
 
 // ── Products ────────────────────────────────────────────────────────────────────
 
-export const createProductSchema = z.object({
+const baseInsertProduct = createInsertSchema(products, {
   name: z.string().min(1, "Nome e obrigatorio"),
-  description: z.string().nullable().optional(),
-  content: z.unknown().optional(),
-  composition: z.string().nullable().optional(),
-  usageInstructions: z.string().nullable().optional(),
-  whoCanUse: z.string().nullable().optional(),
-  benefits: z.unknown().optional(),
-  differentials: z.unknown().optional(),
-  productCategoryId: z.number().int().nullable().optional(),
-  imageId: z.number().int().nullable().optional(),
-  galleryImages: z.unknown().optional(),
-  seoTitle: z.string().max(500).nullable().optional(),
-  seoDescription: z.string().nullable().optional(),
-  brand: z.string().max(255).nullable().optional(),
-  isKit: z.boolean().optional(),
-  showOnSite: z.boolean().optional(),
-  noindex: z.boolean().optional(),
-  status: z.enum(["draft", "published"]).optional(),
-  featured: z.boolean().optional(),
 });
+
+export const createProductSchema = baseInsertProduct
+  .pick({
+    name: true,
+    description: true,
+    content: true,
+    composition: true,
+    usageInstructions: true,
+    whoCanUse: true,
+    benefits: true,
+    differentials: true,
+    productCategoryId: true,
+    imageId: true,
+    galleryImages: true,
+    seoTitle: true,
+    seoDescription: true,
+    brand: true,
+    isKit: true,
+    showOnSite: true,
+    noindex: true,
+    status: true,
+    featured: true,
+  })
+  .required({ name: true });
 
 export const updateProductSchema = createProductSchema.partial();
 
 // ── Categories ──────────────────────────────────────────────────────────────────
 
-export const createCategorySchema = z.object({
+export const createCategorySchema = createInsertSchema(categories, {
   name: z.string().min(1, "Nome e obrigatorio"),
-  description: z.string().nullable().optional(),
-});
+}).pick({ name: true, description: true });
 
-export const updateCategorySchema = z.object({
-  name: z.string().min(1).optional(),
-  description: z.string().nullable().optional(),
-});
+export const updateCategorySchema = createCategorySchema.partial();
 
 // ── Product Categories ──────────────────────────────────────────────────────────
 
-export const createProductCategorySchema = z.object({
+export const createProductCategorySchema = createInsertSchema(productCategories, {
   name: z.string().min(1, "Nome e obrigatorio"),
-  description: z.string().nullable().optional(),
-  imageId: z.number().int().nullable().optional(),
-  sortOrder: z.number().int().optional(),
-});
+}).pick({ name: true, description: true, imageId: true, sortOrder: true });
 
-export const updateProductCategorySchema = z.object({
-  name: z.string().min(1).optional(),
-  description: z.string().nullable().optional(),
-  imageId: z.number().int().nullable().optional(),
-  sortOrder: z.number().int().optional(),
-});
+export const updateProductCategorySchema = createProductCategorySchema.partial();
 
 // ── Authors ─────────────────────────────────────────────────────────────────────
 
-export const createAuthorSchema = z.object({
+export const createAuthorSchema = createInsertSchema(authors, {
   name: z.string().min(1, "Nome e obrigatorio"),
-  bio: z.string().nullable().optional(),
-  avatarId: z.number().int().nullable().optional(),
-});
+}).pick({ name: true, bio: true, avatarId: true });
 
-export const updateAuthorSchema = z.object({
-  name: z.string().min(1).optional(),
-  bio: z.string().nullable().optional(),
-  avatarId: z.number().int().nullable().optional(),
-});
+export const updateAuthorSchema = createAuthorSchema.partial();
 
 // ── Users ───────────────────────────────────────────────────────────────────────
 
-const userRoles = ["admin", "editor", "author", "viewer"] as const;
-
-export const createUserSchema = z.object({
+export const createUserSchema = createInsertSchema(users, {
   name: z.string().min(1, "Nome e obrigatorio"),
   email: z.string().email("Email invalido"),
-  password: z.string().min(6, "Senha deve ter no minimo 6 caracteres"),
-  role: z.enum(userRoles).optional(),
-});
+})
+  .pick({ name: true, email: true, role: true })
+  .extend({ password: z.string().min(6, "Senha deve ter no minimo 6 caracteres") });
 
-export const updateUserSchema = z.object({
-  name: z.string().min(1).optional(),
-  email: z.string().email("Email invalido").optional(),
-  password: z.string().min(6, "Senha deve ter no minimo 6 caracteres").optional(),
-  role: z.enum(userRoles).optional(),
-});
+export const updateUserSchema = createUserSchema.partial();
 
 // ── Pages ───────────────────────────────────────────────────────────────────────
 
-export const createPageSchema = z.object({
+export const createPageSchema = createInsertSchema(pages, {
   title: z.string().min(1, "Titulo e obrigatorio"),
   slug: z.string().min(1, "Slug e obrigatorio"),
-});
+}).pick({ title: true, slug: true });
 
-export const updatePageSchema = z.object({
-  title: z.string().min(1).optional(),
-  content: z.string().nullable().optional(),
-  metaTitle: z.string().max(255).nullable().optional(),
-  metaDescription: z.string().nullable().optional(),
-  ogTitle: z.string().max(255).nullable().optional(),
-  ogDescription: z.string().nullable().optional(),
-  ogImageUrl: z.string().nullable().optional(),
+export const updatePageSchema = createUpdateSchema(pages).pick({
+  title: true,
+  content: true,
+  metaTitle: true,
+  metaDescription: true,
+  ogTitle: true,
+  ogDescription: true,
+  ogImageUrl: true,
 });
 
 // ── Settings ────────────────────────────────────────────────────────────────────
 
-export const updateSettingsSchema = z.object({
-  siteName: z.string().max(255).optional(),
-  siteDescription: z.string().nullable().optional(),
-  logoId: z.number().int().nullable().optional(),
-  faviconId: z.number().int().nullable().optional(),
-  whatsapp: z.string().max(20).nullable().optional(),
-  facebook: z.string().nullable().optional(),
-  instagram: z.string().nullable().optional(),
-  youtube: z.string().nullable().optional(),
-  footerText: z.string().nullable().optional(),
-  copyrightText: z.string().nullable().optional(),
-  newsletterTitle: z.string().max(255).nullable().optional(),
-  newsletterDescription: z.string().nullable().optional(),
-  newsletterConsent: z.string().nullable().optional(),
-  seoTitle: z.string().max(255).nullable().optional(),
-  seoDescription: z.string().nullable().optional(),
-  seoKeywords: z.string().nullable().optional(),
-  privacyPolicy: z.string().nullable().optional(),
-  robotsTxt: z.string().nullable().optional(),
-  supabaseUrl: z.string().nullable().optional(),
-  supabaseAnonKey: z.string().nullable().optional(),
-  supabaseServiceRoleKey: z.string().nullable().optional(),
-  supabaseSyncEnabled: z.boolean().optional(),
+export const updateSettingsSchema = createUpdateSchema(siteSettings).omit({
+  id: true,
+  lastSyncAt: true,
+  updatedAt: true,
 });
