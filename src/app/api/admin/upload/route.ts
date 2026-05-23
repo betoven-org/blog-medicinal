@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { media } from "@/db/schema";
 import { put } from "@vercel/blob";
 import sharp from "sharp";
+import { encode } from "blurhash";
 
 interface ProcessedImage {
   suffix: string;
@@ -82,6 +83,19 @@ export async function POST(request: NextRequest) {
       console.error("Sharp processing failed, using original only:", sharpError);
     }
 
+    // Generate blurhash from a small version of the image
+    let blurhash: string | null = null;
+    try {
+      const { data: pixels, info } = await sharp(buffer)
+        .resize(32, 32, { fit: "cover" })
+        .ensureAlpha()
+        .raw()
+        .toBuffer({ resolveWithObject: true });
+      blurhash = encode(new Uint8ClampedArray(pixels), info.width, info.height, 4, 3);
+    } catch (blurhashError) {
+      console.error("Blurhash generation failed:", blurhashError);
+    }
+
     const [record] = await db
       .insert(media)
       .values({
@@ -93,6 +107,7 @@ export async function POST(request: NextRequest) {
         heroUrl,
         mimeType: file.type,
         size: file.size,
+        blurhash,
       })
       .returning();
 

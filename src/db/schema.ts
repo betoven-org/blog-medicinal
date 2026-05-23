@@ -9,7 +9,14 @@ import {
   jsonb,
   pgEnum,
   uuid,
+  customType,
 } from "drizzle-orm/pg-core";
+
+const tsvector = customType<{ data: string }>({
+  dataType() {
+    return "tsvector";
+  },
+});
 import { relations } from "drizzle-orm";
 
 // ── Enums ──────────────────────────────────────────────────────────────────────
@@ -59,6 +66,7 @@ export const media = pgTable("media", {
   heroUrl: text("hero_url"),
   mimeType: varchar("mime_type", { length: 100 }),
   size: integer("size"),
+  blurhash: varchar("blurhash", { length: 100 }),
   createdAt: timestamp("created_at", { mode: "string" }).defaultNow().notNull(),
 });
 
@@ -114,6 +122,7 @@ export const posts = pgTable("posts", {
   publishedAt: timestamp("published_at", { mode: "string" }),
   createdAt: timestamp("created_at", { mode: "string" }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { mode: "string" }).defaultNow().notNull(),
+  searchVector: tsvector("search_vector"),
 });
 
 // ── Product Categories ──────────────────────────────────────────────────────────
@@ -167,6 +176,7 @@ export const products = pgTable("products", {
   publishedAt: timestamp("published_at", { mode: "string" }),
   createdAt: timestamp("created_at", { mode: "string" }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { mode: "string" }).defaultNow().notNull(),
+  searchVector: tsvector("search_vector"),
 });
 
 // ── Tags ───────────────────────────────────────────────────────────────────────
@@ -237,6 +247,8 @@ export const siteSettings = pgTable("site_settings", {
   supabaseUrl: text("supabase_url"),
   supabaseAnonKey: text("supabase_anon_key"),
   supabaseServiceRoleKey: text("supabase_service_role_key"),
+  umamiWebsiteId: varchar("umami_website_id", { length: 100 }),
+  umamiUrl: text("umami_url"),
   supabaseSyncEnabled: boolean("supabase_sync_enabled").default(false),
   lastSyncAt: timestamp("last_sync_at", { mode: "string" }),
   updatedAt: timestamp("updated_at", { mode: "string" }).defaultNow().notNull(),
@@ -339,3 +351,20 @@ export const siteSettingsRelations = relations(siteSettings, ({ one }) => ({
 }));
 
 export const subscriptionsRelations = relations(subscriptions, () => ({}));
+
+// ── Request Metrics ──────────────────────────────────────────────────────────
+
+export const requestMetrics = pgTable("request_metrics", {
+  id: serial("id").primaryKey(),
+  path: varchar("path", { length: 500 }).notNull(),
+  method: varchar("method", { length: 10 }).notNull(),
+  statusCode: integer("status_code").notNull(),
+  latencyMs: integer("latency_ms").notNull(),
+  country: varchar("country", { length: 2 }),
+  city: varchar("city", { length: 100 }),
+  userAgent: text("user_agent"),
+  referer: text("referer"),
+  isBot: boolean("is_bot").default(false).notNull(),
+  contentLength: integer("content_length"),
+  createdAt: timestamp("created_at", { mode: "string" }).defaultNow().notNull(),
+});
