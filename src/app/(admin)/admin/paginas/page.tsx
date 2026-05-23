@@ -27,6 +27,10 @@ function Spinner() {
   );
 }
 
+function slugToPath(slug: string) {
+  return slug === "home" ? "/" : `/${slug}`;
+}
+
 function RowMenu({ pageId, slug }: { pageId: number; slug: string }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -69,7 +73,7 @@ function RowMenu({ pageId, slug }: { pageId: number; slug: string }) {
             Editar
           </button>
           <a
-            href={`/${slug}`}
+            href={slugToPath(slug)}
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => setOpen(false)}

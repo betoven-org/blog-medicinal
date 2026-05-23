@@ -32,6 +32,10 @@ type Page = {
 
 type ColumnKey = "properties" | "preview" | "seo";
 
+function slugToPath(slug: string) {
+  return slug === "home" ? "/" : `/${slug}`;
+}
+
 function Spinner({ small }: { small?: boolean }) {
   return (
     <svg
@@ -330,7 +334,7 @@ export default function EditPagePage({
                       <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
                       <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
                     </svg>
-                    /{page.slug}
+                    {slugToPath(page.slug)}
                   </div>
                 </div>
 
@@ -370,7 +374,7 @@ export default function EditPagePage({
                 <span className="h-2 w-2 rounded-full bg-yellow-400" />
                 <span className="h-2 w-2 rounded-full bg-green-400" />
                 <span className="ml-2 flex-1 rounded bg-white px-2 py-0.5 text-[11px] text-gray-400 font-mono border border-gray-200">
-                  {typeof window !== "undefined" ? window.location.origin : ""}/api/admin/pages/{id}/preview
+                  {typeof window !== "undefined" ? window.location.origin : ""}{slugToPath(page.slug)}
                 </span>
                 <button
                   type="button"
@@ -408,7 +412,7 @@ export default function EditPagePage({
                     {editState.metaTitle || editState.title || "Titulo"}
                   </p>
                   <p className="mt-0.5 text-[11px] text-green-700 font-mono truncate">
-                    {typeof window !== "undefined" ? window.location.origin : ""}/{page.slug}
+                    {typeof window !== "undefined" ? window.location.origin : ""}{slugToPath(page.slug)}
                   </p>
                   <p className="mt-1 text-[11px] text-gray-500 line-clamp-2">
                     {editState.metaDescription || "Sem descricao"}
