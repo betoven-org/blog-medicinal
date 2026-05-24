@@ -1,17 +1,17 @@
 /**
  * Brasa CMS — Project Init
  *
- * Roda no repo forkado do cliente. Faz:
- * 1. Cria tenant no banco compartilhado
- * 2. Cria projeto na Vercel com env vars
- * 3. Vincula ao repo forkado
- * 4. Faz primeiro deploy
+ * Roda no repo forkado do cliente. Faz tudo em um comando:
+ * 1. Pergunta DATABASE_URI e dados do tenant
+ * 2. Cria tenant no banco compartilhado
+ * 3. Gera secrets e escreve .env.local completo
+ * 4. Cria projeto na Vercel com env vars
+ * 5. Faz primeiro deploy
  *
  * Pre-requisitos:
  *   - Repo ja forkado no GitHub
  *   - gh CLI autenticado (gh auth login)
  *   - Vercel CLI autenticado (vercel login)
- *   - DATABASE_URI no .env.local apontando pro banco compartilhado
  *
  * Uso: pnpm init:project
  */
@@ -21,6 +21,7 @@ import { execSync } from "child_process";
 import * as readline from "readline";
 import * as fs from "fs";
 import * as path from "path";
+import * as crypto from "crypto";
 
 const CYAN = "\x1b[36m";
 const GREEN = "\x1b[32m";
@@ -57,21 +58,18 @@ async function main() {
 
   // ── Pre-checks ──────────────────────────────────────────────────────
 
-  // Check gh CLI
   const ghVersion = runSilent("gh --version");
   if (!ghVersion) {
     console.error(`${RED}gh CLI nao encontrado. Instale: https://cli.github.com${RESET}`);
     process.exit(1);
   }
 
-  // Check vercel CLI
   const vercelVersion = runSilent("vercel --version");
   if (!vercelVersion) {
     console.error(`${RED}Vercel CLI nao encontrado. Instale: npm i -g vercel${RESET}`);
     process.exit(1);
   }
 
-  // Check git remote
   const repoUrl = runSilent("gh repo view --json url -q .url");
   if (!repoUrl) {
     console.error(`${RED}Nao foi possivel detectar o repo. Rode 'gh auth login' primeiro.${RESET}`);
@@ -79,24 +77,25 @@ async function main() {
   }
   const repoName = repoUrl.replace("https://github.com/", "");
   console.log(`  ${DIM}Repo: ${repoName}${RESET}`);
-
-  // Check DATABASE_URI
-  const envPath = path.resolve(process.cwd(), ".env.local");
-  if (!fs.existsSync(envPath)) {
-    console.error(`${RED}.env.local nao encontrado. Crie com DATABASE_URI do banco compartilhado.${RESET}`);
-    process.exit(1);
-  }
-  const envContent = fs.readFileSync(envPath, "utf-8");
-  const dbMatch = envContent.match(/DATABASE_URI="([^"]+)"/);
-  if (!dbMatch) {
-    console.error(`${RED}DATABASE_URI nao encontrado no .env.local${RESET}`);
-    process.exit(1);
-  }
-
-  console.log(`  ${DIM}Banco: conectado${RESET}`);
   console.log("");
 
   // ── Coletar dados ───────────────────────────────────────────────────
+
+  const databaseUri = await ask(`${CYAN}DATABASE_URI (Neon PostgreSQL):${RESET} `);
+  if (!databaseUri) {
+    console.error(`\n${RED}DATABASE_URI e obrigatorio.${RESET}`);
+    process.exit(1);
+  }
+
+  // Testar conexao
+  try {
+    const testSql = neon(databaseUri);
+    await testSql`SELECT 1`;
+    console.log(`  ${GREEN}Banco: conectado${RESET}\n`);
+  } catch {
+    console.error(`\n${RED}Nao foi possivel conectar ao banco. Verifique a URI.${RESET}`);
+    process.exit(1);
+  }
 
   const siteName = await ask(`${CYAN}Nome do site:${RESET} `);
   const slug = await ask(`${CYAN}Slug do tenant (ex: farmacia-x):${RESET} `);
@@ -106,6 +105,14 @@ async function main() {
   const adminPassword = await ask(`${CYAN}Senha do admin:${RESET} `);
   const whatsapp = await ask(`${CYAN}WhatsApp (ex: 5511999999999):${RESET} `);
   const vercelTeam = await ask(`${CYAN}Vercel team/scope (deixe vazio pra pessoal):${RESET} `);
+
+  console.log("");
+  console.log(`${DIM}  Opcionais (deixe vazio pra pular):${RESET}`);
+  const supabaseUrl = await ask(`${CYAN}SUPABASE_URL:${RESET} `);
+  const supabaseKey = await ask(`${CYAN}SUPABASE_SERVICE_ROLE_KEY:${RESET} `);
+  const stripeSecret = await ask(`${CYAN}STRIPE_SECRET_KEY:${RESET} `);
+  const stripeWebhook = await ask(`${CYAN}STRIPE_WEBHOOK_SECRET:${RESET} `);
+  const stripePub = await ask(`${CYAN}NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:${RESET} `);
 
   if (!siteName || !slug || !adminEmail || !adminPassword) {
     console.error(`\n${RED}Nome, slug, email e senha sao obrigatorios.${RESET}`);
@@ -122,9 +129,9 @@ async function main() {
 
   // ── 1. Criar tenant no banco ────────────────────────────────────────
 
-  console.log(`${CYAN}[1/5]${RESET} Criando tenant no banco...`);
+  console.log(`${CYAN}[1/6]${RESET} Criando tenant no banco...`);
 
-  const sql = neon(dbMatch[1]);
+  const sql = neon(databaseUri);
 
   const bcryptjs = await import("bcryptjs");
   const passwordHash = await bcryptjs.hash(adminPassword, 12);
@@ -137,19 +144,16 @@ async function main() {
     `;
     const tenantId = tenant.id;
 
-    // Usuario admin
     await sql`
       INSERT INTO users (tenant_id, name, email, password_hash, role)
       VALUES (${tenantId}, ${adminName || "Admin"}, ${adminEmail}, ${passwordHash}, 'admin')
     `;
 
-    // Site settings
     await sql`
       INSERT INTO site_settings (tenant_id, site_name, whatsapp)
       VALUES (${tenantId}, ${siteName}, ${whatsapp || null})
     `;
 
-    // Paginas default
     const defaultSections = JSON.stringify([
       { id: "hero-1", component: "HeroPost", props: { mode: "featured", showCategory: true, showAuthor: true, showReadingTime: true, sideCount: "4" } },
       { id: "categories", component: "CategoryBar", props: { showAll: true, limit: 10 } },
@@ -163,14 +167,12 @@ async function main() {
       (${tenantId}, 'blog', 'Blog', null)
     `;
 
-    // Subscription
     const nextDue = new Date(Date.now() + 30 * 86400000).toISOString();
     await sql`
       INSERT INTO subscriptions (tenant_id, status, next_due_date)
       VALUES (${tenantId}, 'active', ${nextDue})
     `;
 
-    // Guias
     await sql`
       INSERT INTO cms_guides (tenant_id, slug, title, sort_order, content)
       SELECT ${tenantId}, slug, title, sort_order, content
@@ -180,19 +182,82 @@ async function main() {
     console.log(`  ${GREEN}Tenant criado (id: ${tenantId})${RESET}`);
     console.log(`  ${GREEN}Admin: ${adminEmail}${RESET}`);
 
-    // ── 2. Gerar NEXTAUTH_SECRET ────────────────────────────────────
+    // ── 2. Gerar secrets ──────────────────────────────────────────────
 
-    console.log(`${CYAN}[2/5]${RESET} Gerando secrets...`);
+    console.log(`${CYAN}[2/6]${RESET} Gerando secrets...`);
 
-    const crypto = await import("crypto");
+    const authSecret = crypto.randomBytes(32).toString("hex");
     const nextAuthSecret = crypto.randomBytes(32).toString("hex");
     const metricsSecret = crypto.randomBytes(16).toString("hex");
+    const revalidateSecret = crypto.randomBytes(16).toString("hex");
+    const supabaseWebhookSecret = crypto.randomBytes(16).toString("hex");
+    const cronSecret = crypto.randomBytes(16).toString("hex");
 
-    console.log(`  ${GREEN}Secrets gerados${RESET}`);
+    console.log(`  ${GREEN}6 secrets gerados${RESET}`);
 
-    // ── 3. Criar projeto Vercel ─────────────────────────────────────
+    // ── 3. Escrever .env.local ────────────────────────────────────────
 
-    console.log(`${CYAN}[3/5]${RESET} Criando projeto na Vercel...`);
+    console.log(`${CYAN}[3/6]${RESET} Escrevendo .env.local...`);
+
+    const siteUrl = domain ? `https://${domain}` : `https://${slug}.vercel.app`;
+
+    const envLines = [
+      `# Brasa CMS — .env.local`,
+      `# Gerado por: pnpm init:project`,
+      `# Projeto: ${siteName} (${slug})`,
+      ``,
+      `# Banco de dados (Neon PostgreSQL)`,
+      `DATABASE_URI="${databaseUri}"`,
+      ``,
+      `# NextAuth`,
+      `AUTH_SECRET="${authSecret}"`,
+      `NEXTAUTH_SECRET="${nextAuthSecret}"`,
+      `NEXTAUTH_URL="${siteUrl}"`,
+      ``,
+      `# URL publica do site`,
+      `NEXT_PUBLIC_SITE_URL="${siteUrl}"`,
+      ``,
+      `# Tenant`,
+      `BRASA_TENANT_SLUG="${slug}"`,
+      ``,
+      `# Metricas`,
+      `METRICS_INGEST_SECRET="${metricsSecret}"`,
+      ``,
+      `# Revalidacao de cache`,
+      `REVALIDATE_SECRET="${revalidateSecret}"`,
+      ``,
+      `# Cron jobs`,
+      `CRON_SECRET="${cronSecret}"`,
+      ``,
+      `# Supabase (sync de midia)`,
+      supabaseUrl ? `SUPABASE_URL="${supabaseUrl}"` : `# SUPABASE_URL=""`,
+      supabaseKey ? `SUPABASE_SERVICE_ROLE_KEY="${supabaseKey}"` : `# SUPABASE_SERVICE_ROLE_KEY=""`,
+      `SUPABASE_WEBHOOK_SECRET="${supabaseWebhookSecret}"`,
+      ``,
+      `# Stripe (assinaturas)`,
+      stripeSecret ? `STRIPE_SECRET_KEY="${stripeSecret}"` : `# STRIPE_SECRET_KEY=""`,
+      stripeWebhook ? `STRIPE_WEBHOOK_SECRET="${stripeWebhook}"` : `# STRIPE_WEBHOOK_SECRET=""`,
+      stripePub ? `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="${stripePub}"` : `# NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=""`,
+      ``,
+      `# Vercel (admin: dominios e env vars)`,
+      `# VERCEL_TOKEN=""`,
+      `# VERCEL_PROJECT_ID=""`,
+      ``,
+      `# Analytics (dashboard admin)`,
+      `# ANALYTICS_TOKEN=""`,
+      `# ANALYTICS_PROJECT_ID=""`,
+      `# ANALYTICS_TEAM_ID=""`,
+      ``,
+    ];
+
+    const envPath = path.resolve(process.cwd(), ".env.local");
+    fs.writeFileSync(envPath, envLines.join("\n"), "utf-8");
+
+    console.log(`  ${GREEN}.env.local criado com todas as variaveis${RESET}`);
+
+    // ── 4. Criar projeto Vercel ───────────────────────────────────────
+
+    console.log(`${CYAN}[4/6]${RESET} Criando projeto na Vercel...`);
 
     const projectName = slug;
     const scopeFlag = vercelTeam ? `--scope ${vercelTeam}` : "";
@@ -200,20 +265,30 @@ async function main() {
     run(`vercel link --yes --project ${projectName} ${scopeFlag}`, true);
     console.log(`  ${GREEN}Projeto ${projectName} vinculado${RESET}`);
 
-    // ── 4. Configurar env vars ──────────────────────────────────────
+    // ── 5. Configurar env vars na Vercel ──────────────────────────────
 
-    console.log(`${CYAN}[4/5]${RESET} Configurando variaveis de ambiente...`);
+    console.log(`${CYAN}[5/6]${RESET} Configurando variaveis de ambiente na Vercel...`);
 
-    const envVars: Record<string, string> = {
-      DATABASE_URI: dbMatch[1],
+    const vercelEnvVars: Record<string, string> = {
+      DATABASE_URI: databaseUri,
+      AUTH_SECRET: authSecret,
       NEXTAUTH_SECRET: nextAuthSecret,
-      NEXTAUTH_URL: domain ? `https://${domain}` : `https://${projectName}.vercel.app`,
-      NEXT_PUBLIC_SITE_URL: domain ? `https://${domain}` : `https://${projectName}.vercel.app`,
+      NEXTAUTH_URL: siteUrl,
+      NEXT_PUBLIC_SITE_URL: siteUrl,
       METRICS_INGEST_SECRET: metricsSecret,
+      REVALIDATE_SECRET: revalidateSecret,
+      CRON_SECRET: cronSecret,
       BRASA_TENANT_SLUG: slug,
+      SUPABASE_WEBHOOK_SECRET: supabaseWebhookSecret,
     };
 
-    for (const [key, value] of Object.entries(envVars)) {
+    if (supabaseUrl) vercelEnvVars.SUPABASE_URL = supabaseUrl;
+    if (supabaseKey) vercelEnvVars.SUPABASE_SERVICE_ROLE_KEY = supabaseKey;
+    if (stripeSecret) vercelEnvVars.STRIPE_SECRET_KEY = stripeSecret;
+    if (stripeWebhook) vercelEnvVars.STRIPE_WEBHOOK_SECRET = stripeWebhook;
+    if (stripePub) vercelEnvVars.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = stripePub;
+
+    for (const [key, value] of Object.entries(vercelEnvVars)) {
       try {
         execSync(`echo "${value}" | vercel env add ${key} production ${scopeFlag} --force`, {
           stdio: "pipe",
@@ -224,13 +299,15 @@ async function main() {
       }
     }
 
-    console.log(`  ${GREEN}${Object.keys(envVars).length} env vars configuradas${RESET}`);
+    console.log(`  ${GREEN}${Object.keys(vercelEnvVars).length} env vars configuradas${RESET}`);
 
-    // ── 5. Deploy ───────────────────────────────────────────────────
+    // ── 6. Deploy ─────────────────────────────────────────────────────
 
-    console.log(`${CYAN}[5/5]${RESET} Fazendo deploy...`);
+    console.log(`${CYAN}[6/6]${RESET} Fazendo deploy...`);
 
     const deployUrl = runSilent(`vercel deploy --prod ${scopeFlag}`);
+
+    // ── Resumo ────────────────────────────────────────────────────────
 
     console.log(`\n${GREEN}${BOLD}Projeto "${siteName}" criado com sucesso!${RESET}\n`);
     console.log(`${DIM}Resumo:${RESET}`);
@@ -239,6 +316,7 @@ async function main() {
     console.log(`  Deploy: ${deployUrl || "(verificar na Vercel)"}`);
     console.log(`  Admin: ${adminEmail}`);
     console.log(`  Dominio: ${domain || `${projectName}.vercel.app`}`);
+    console.log(`  .env.local: criado`);
     console.log("");
     console.log(`${DIM}Proximos passos:${RESET}`);
     if (domain) {

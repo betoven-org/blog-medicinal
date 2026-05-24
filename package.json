@@ -20,6 +20,7 @@
     "lint": "eslint",
     "manifest": "tsx scripts/extract-sections.ts",
     "tenant:create": "tsx scripts/create-tenant.ts",
+    "init:env": "tsx scripts/init-env.ts",
     "init:project": "tsx scripts/init-project.ts",
     "prebuild": "tsx scripts/extract-sections.ts",
     "db:generate": "drizzle-kit generate",
