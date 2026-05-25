@@ -1,13 +1,8 @@
-import { auth } from "@brasa/core/auth";
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-const INGEST_SECRET = process.env.METRICS_INGEST_SECRET || "metrics-internal-key";
 const TENANT_HEADER = "x-tenant-id";
 
-// Paths to skip metrics collection
-const SKIP_METRICS = /^\/((_next|favicon|logo|apple-touch|manifest|robots|sitemap|feed|api\/metrics|api\/tenant))/;
-
-// Bots maliciosos
 const BLOCK_BOTS = /semrush|ahref|mj12bot|dotbot|petalbot|bytespider|gptbot|ccbot|claudebot|anthropic|dataprovider|barkrowler|seekport|zoominfobot|censys|netcraft|masscan|nmap|zgrab|httpx|nuclei|nikto|sqlmap|dirbuster|gobuster|wpscan|acunetix|nessus|openvas/i;
 
 // In-memory tenant cache (hostname -> tenantId, TTL 5min)
@@ -17,7 +12,6 @@ const CACHE_TTL = 5 * 60 * 1000;
 async function resolveTenantId(host: string, origin: string): Promise<number> {
   const hostname = host.split(":")[0];
 
-  // Check cache
   const cached = tenantCache.get(hostname);
   if (cached && Date.now() - cached.ts < CACHE_TTL) {
     return cached.id;
@@ -38,146 +32,35 @@ async function resolveTenantId(host: string, origin: string): Promise<number> {
   return 1;
 }
 
-export default auth(async (req) => {
-  const start = Date.now();
+export default async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const ua = req.headers.get("user-agent") || "";
 
-  // Bloquear bots maliciosos
+  // Block malicious bots
   if (BLOCK_BOTS.test(ua)) {
     return new Response("Forbidden", { status: 403 });
   }
 
-  // Bloquear requests sem user-agent (quase sempre bots)
+  // Block requests without user-agent (almost always bots)
   if (!ua && !pathname.startsWith("/api/")) {
     return new Response("Forbidden", { status: 403 });
   }
 
-  // Skip tenant resolution for internal APIs
+  // Skip tenant resolution for tenant API itself
   if (pathname === "/api/tenant") {
     return NextResponse.next();
   }
 
-  // Resolve tenant
+  // Resolve tenant and inject header
   const host = req.headers.get("host") || "localhost";
   const tenantId = await resolveTenantId(host, req.nextUrl.origin);
 
-  const isLoginPage = pathname === "/admin/login";
-  const isPaymentPage = pathname === "/admin/pagamento-pendente";
-  const isAdminRoute = pathname.startsWith("/admin");
-  const isAdminApi = pathname.startsWith("/api/admin");
-  const isAuthenticated = !!req.auth;
-
-  // Rotas publicas — nunca bloquear
-  if (
-    isLoginPage ||
-    isPaymentPage ||
-    pathname.startsWith("/api/webhooks") ||
-    pathname.startsWith("/api/cron") ||
-    pathname.startsWith("/api/subscription-status")
-  ) {
-    return trackAndReturn(injectTenant(tenantId, req), req, start, tenantId);
-  }
-
-  // Admin nao autenticado — redirecionar para login
-  if (isAdminRoute && !isAuthenticated) {
-    return trackAndReturn(
-      Response.redirect(new URL("/admin/login", req.nextUrl.origin)),
-      req,
-      start,
-      tenantId,
-    );
-  }
-
-  // Login autenticado — redirecionar para admin
-  if (isLoginPage && isAuthenticated) {
-    return trackAndReturn(
-      Response.redirect(new URL("/admin", req.nextUrl.origin)),
-      req,
-      start,
-      tenantId,
-    );
-  }
-
-  // Rotas admin autenticadas — verificar assinatura
-  if ((isAdminRoute || isAdminApi) && isAuthenticated) {
-    try {
-      const statusRes = await fetch(
-        new URL("/api/subscription-status", req.nextUrl.origin),
-      );
-      if (statusRes.ok) {
-        const data = await statusRes.json();
-        if (data.status === "suspended") {
-          return trackAndReturn(
-            Response.redirect(
-              new URL("/admin/pagamento-pendente", req.nextUrl.origin),
-            ),
-            req,
-            start,
-            tenantId,
-          );
-        }
-      }
-    } catch {
-      // Fail open
-    }
-  }
-
-  return trackAndReturn(injectTenant(tenantId, req), req, start, tenantId);
-});
-
-function injectTenant(tenantId: number, req: { headers: Headers }): NextResponse {
-  // Clone request headers and add tenant ID
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set(TENANT_HEADER, String(tenantId));
-  const res = NextResponse.next({
-    request: { headers: requestHeaders },
-  });
+
+  const res = NextResponse.next({ request: { headers: requestHeaders } });
   res.headers.set(TENANT_HEADER, String(tenantId));
   return res;
-}
-
-function trackAndReturn(
-  response: Response,
-  req: Parameters<Parameters<typeof auth>[0]>[0],
-  start: number,
-  tenantId: number,
-) {
-  const { pathname } = req.nextUrl;
-
-  if (SKIP_METRICS.test(pathname)) return response;
-
-  const latencyMs = Date.now() - start;
-  const statusCode = response.status || 200;
-
-  try {
-    const origin = req.nextUrl.origin;
-    fetch(`${origin}/api/metrics/ingest`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-metrics-secret": INGEST_SECRET,
-      },
-      body: JSON.stringify({
-        path: pathname,
-        method: req.method,
-        statusCode,
-        latencyMs,
-        tenantId,
-        country: req.headers.get("x-vercel-ip-country") || req.headers.get("cf-ipcountry") || null,
-        city: req.headers.get("x-vercel-ip-city") || null,
-        userAgent: req.headers.get("user-agent") || "",
-        referer: req.headers.get("referer") || null,
-        contentLength: response.headers.get("content-length")
-          ? parseInt(response.headers.get("content-length")!, 10)
-          : null,
-      }),
-    }).catch(() => {});
-  } catch {
-    // Never block
-  }
-
-  return response;
 }
 
 export const config = {
