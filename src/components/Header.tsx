@@ -102,7 +102,7 @@ export async function Header() {
           {/* Botoes de acao — ocultos em mobile */}
           <div className="hidden items-center gap-2 md:flex">
             <a
-              href="https://store-front-brasa-admin.vercel.app/admin/login"
+              href="https://cms.brasa.tech"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1.5 rounded-md border border-[#0d61ac] px-3 py-1.5 text-sm font-medium text-[#0d61ac] transition-colors hover:bg-[#0d61ac]/5"
