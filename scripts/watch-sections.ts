@@ -38,7 +38,7 @@ async function syncManifestToCms() {
 
   try {
     const manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, "utf-8"));
-    const res = await fetch(`${CMS_URL}/api/v1/manifest`, {
+    const res = await fetch(`${CMS_URL}/api/v1/manifest?env=dev`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

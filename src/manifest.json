@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-23T18:05:22.179Z",
+  "generatedAt": "2026-05-25T00:55:07.113Z",
   "sections": [
     {
       "key": "Banner",
@@ -144,6 +144,33 @@
               }
             }
           }
+        }
+      }
+    },
+    {
+      "key": "Footer",
+      "title": "Footer",
+      "description": "Rodape global com newsletter, redes sociais e copyright",
+      "group": "Global",
+      "path": "sections/Footer",
+      "props": {
+        "showNewsletter": {
+          "type": "boolean",
+          "title": "Mostrar newsletter",
+          "required": false,
+          "default": true
+        },
+        "showSocial": {
+          "type": "boolean",
+          "title": "Mostrar redes sociais",
+          "required": false,
+          "default": true
+        },
+        "showPrivacy": {
+          "type": "boolean",
+          "title": "Mostrar politica de privacidade",
+          "required": false,
+          "default": true
         }
       }
     },

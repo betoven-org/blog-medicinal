@@ -54,16 +54,16 @@ async function main() {
   const manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, "utf-8"));
   const sectionCount = manifest.sections?.length || 0;
 
-  // 2. Sync manifest pro CMS
+  // 2. Sync manifest pro CMS (env=dev — NAO afeta producao)
   try {
-    const res = await fetch(`${CMS_URL}/api/v1/manifest`, {
+    const res = await fetch(`${CMS_URL}/api/v1/manifest?env=dev`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-api-key": CMS_API_KEY },
       body: JSON.stringify(manifest),
     });
 
     if (res.ok) {
-      console.log(`${GREEN}  ✓ Manifest sincronizado${RESET} ${DIM}(${sectionCount} sections)${RESET}`);
+      console.log(`${GREEN}  ✓ Manifest sincronizado (dev)${RESET} ${DIM}(${sectionCount} sections)${RESET}`);
     } else {
       console.log(`${YELLOW}  ⚠ Sync manifest falhou: ${res.status}${RESET}`);
     }

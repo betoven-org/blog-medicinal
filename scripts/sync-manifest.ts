@@ -28,7 +28,8 @@ async function main() {
   const manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, "utf-8"));
   console.log(`→ Enviando manifest (${manifest.sections?.length || 0} sections) para ${CMS_URL}...`);
 
-  const res = await fetch(`${CMS_URL}/api/v1/manifest`, {
+  // env=prod — promove manifest pra producao (roda no deploy via postbuild)
+  const res = await fetch(`${CMS_URL}/api/v1/manifest?env=prod`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -39,7 +40,7 @@ async function main() {
 
   if (res.ok) {
     const data = await res.json();
-    console.log(`✓ Manifest sincronizado com CMS (${data.sections} sections)`);
+    console.log(`✓ Manifest promovido para producao (${data.sections} sections)`);
   } else {
     const text = await res.text();
     console.error(`✗ Erro ${res.status}: ${text}`);
