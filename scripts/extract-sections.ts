@@ -12,7 +12,33 @@ import { Project, SyntaxKind, type InterfaceDeclaration, type TypeAliasDeclarati
 import * as path from "path";
 import * as fs from "fs";
 
-import type { FieldSchema, FieldType, FieldFormat, SectionSchema, BrasaManifest } from "../packages/brasa-core/src/manifest";
+// Types inlined from @brasa/core/manifest (package was removed)
+type FieldType = "string" | "number" | "boolean" | "object" | "array" | "union";
+type FieldFormat = "text" | "textarea" | "rich-text" | "image" | "color" | "url" | "date" | "email" | "code" | "select" | "hidden";
+type FieldSchema = {
+  type: FieldType;
+  title?: string;
+  description?: string;
+  format?: FieldFormat;
+  required?: boolean;
+  default?: unknown;
+  group?: string;
+  properties?: Record<string, FieldSchema>;
+  items?: FieldSchema;
+  options?: string[];
+};
+type SectionSchema = {
+  key: string;
+  title: string;
+  description?: string;
+  group?: string;
+  path: string;
+  props: Record<string, FieldSchema>;
+};
+type BrasaManifest = {
+  generatedAt: string;
+  sections: SectionSchema[];
+};
 
 const SECTIONS_DIR = path.resolve(__dirname, "../src/components/sections");
 const OUTPUT_PATH = path.resolve(__dirname, "../src/manifest.json");
