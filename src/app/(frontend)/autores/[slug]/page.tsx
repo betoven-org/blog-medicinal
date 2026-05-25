@@ -7,6 +7,8 @@ import { Breadcrumb } from "@/components/Breadcrumb";
 import { getAuthorBySlug, getPostsByAuthor } from "@/lib/queries";
 import { resolveRelation } from "@/lib/utils";
 
+export const revalidate = 600;
+
 type Props = {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ page?: string }>;

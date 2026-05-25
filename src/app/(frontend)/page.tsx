@@ -110,16 +110,11 @@ function SectionHeader({ title, href }: { title: string; href: string }) {
   );
 }
 
-export default async function HomePage({
-  searchParams,
-}: {
-  searchParams: Promise<{ preview?: string; pageId?: string }>;
-}) {
-  const params = await searchParams;
-  const isPreview = params.preview === "draft" && params.pageId;
+export const revalidate = 300;
 
+export default async function HomePage() {
   // Check if home page has CMS sections configured
-  const homePage = await cms.pages.get("home", { draft: !!isPreview });
+  const homePage = await cms.pages.get("home");
 
   // Use sections from CMS page
   const sectionBlocks: SectionBlock[] = homePage?.sections ?? [];

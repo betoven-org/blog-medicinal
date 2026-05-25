@@ -1,4 +1,5 @@
 import { getFeaturedPost, getPostsByMode } from "@/lib/loaders";
+import Image from "next/image";
 
 /**
  * @title Post Destaque
@@ -144,11 +145,12 @@ export default async function HeroPost({
                         className="flex gap-3 py-3 group"
                       >
                         {sideImageUrl ? (
-                          <img
+                          <Image
                             src={sideImageUrl}
                             alt={post.title}
                             width={80}
                             height={80}
+                            sizes="80px"
                             loading="lazy"
                             className="w-20 h-20 rounded-lg object-cover flex-shrink-0"
                           />

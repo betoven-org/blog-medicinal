@@ -7,6 +7,8 @@ import { Breadcrumb } from "@/components/Breadcrumb";
 import { Package, ChevronLeft, ChevronRight } from "lucide-react";
 import { getSiteSettings } from "@/lib/queries";
 
+export const revalidate = 300;
+
 const PAGE_SIZE = 20;
 
 type PageProps = {

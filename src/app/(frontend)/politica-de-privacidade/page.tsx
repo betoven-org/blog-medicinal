@@ -5,6 +5,8 @@ import { cms } from "@/lib/cms";
 import { SectionRenderer } from "@/components/SectionRenderer";
 import type { SectionBlock } from "@/lib/cms";
 
+export const revalidate = 3600;
+
 export async function generateMetadata(): Promise<Metadata> {
   const page = await getPageBySlug("politica-de-privacidade");
   return {

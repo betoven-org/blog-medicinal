@@ -47,6 +47,8 @@ export async function generateMetadata({ params }: Props) {
   };
 }
 
+export const revalidate = 600;
+
 export async function generateStaticParams() {
   const { cms } = await import("@/lib/cms");
   const result = await cms.posts.list({ limit: 1000 });
