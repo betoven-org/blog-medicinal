@@ -12,10 +12,9 @@
     }
   },
   "scripts": {
-    "predev": "tsx scripts/dev-banner.ts",
-    "dev": "concurrently -n admin,front,watch -c blue,green,yellow \"pnpm dev:admin\" \"next dev -p 3001\" \"tsx scripts/watch-sections.ts\"",
+    "predev": "tsx scripts/dev-connect.ts",
+    "dev": "concurrently -n front,watch -c green,yellow \"next dev -p 3001\" \"tsx scripts/watch-sections.ts\"",
     "dev:front": "next dev -p 3001",
-    "dev:admin": "cd ${CMS_DIR:-../Projetos/store-front} && pnpm dev",
     "dev:watch": "tsx scripts/watch-sections.ts",
     "build": "next build",
     "start": "next start",
