@@ -22,10 +22,6 @@ export default function FrontendLayout({
   return (
     <html lang="pt-BR" className={`${roboto.variable} antialiased`}>
       <head>
-        <link rel="preconnect" href="https://framerusercontent.com" />
-        <link rel="dns-prefetch" href="https://framerusercontent.com" />
-        <link rel="preconnect" href="https://medicinalnaweb.vteximg.com.br" />
-        <link rel="dns-prefetch" href="https://medicinalnaweb.vteximg.com.br" />
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />

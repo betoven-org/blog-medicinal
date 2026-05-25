@@ -68,13 +68,13 @@ export default async function HeroPost({
               className="block group"
             >
               {featuredImageUrl ? (
-                <img
+                <Image
                   src={featuredImageUrl}
                   alt={featured.title}
                   width={864}
                   height={540}
-                  loading="eager"
-                  fetchPriority="high"
+                  sizes="(max-width: 1024px) 100vw, 66vw"
+                  priority
                   className="w-full aspect-[16/10] object-cover rounded-lg group-hover:opacity-95 transition-opacity duration-200"
                 />
               ) : (
