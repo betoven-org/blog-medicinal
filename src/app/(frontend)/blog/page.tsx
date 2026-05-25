@@ -96,7 +96,7 @@ export default async function BlogPage({ searchParams }: Props) {
           })}
         </div>
       ) : (
-        <p className="text-gray-400">Nenhum artigo publicado ainda.</p>
+        <p className="text-gray-500">Nenhum artigo publicado ainda.</p>
       )}
 
       {/* Pagination */}

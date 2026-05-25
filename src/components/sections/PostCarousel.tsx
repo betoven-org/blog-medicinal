@@ -131,7 +131,7 @@ export default async function PostList({
                     {post.title}
                   </h3>
                   {post.readingTimeMinutes != null && (
-                    <p className="text-xs text-gray-400 mt-1.5">
+                    <p className="text-xs text-gray-500 mt-1.5">
                       {post.readingTimeMinutes} min
                     </p>
                   )}

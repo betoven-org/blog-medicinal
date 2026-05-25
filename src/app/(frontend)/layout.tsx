@@ -37,7 +37,9 @@ export default function FrontendLayout({
           <NavigationProgress />
         </Suspense>
         <Header />
-        {children}
+        <main id="main-content" className="flex-1">
+          {children}
+        </main>
         <Footer />
         <Suspense fallback={null}>
           <UmamiScript />

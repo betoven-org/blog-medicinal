@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { getPostsByMode } from "@/lib/loaders";
 import type { PostMode, PostCard } from "@/lib/loaders";
 
@@ -133,7 +134,7 @@ export default async function PostGridWithSidebar({
                         {post.title}
                       </h3>
                       {post.readingTimeMinutes != null && (
-                        <p className="mt-1 text-xs text-gray-400">
+                        <p className="mt-1 text-xs text-gray-500">
                           {post.readingTimeMinutes} min
                         </p>
                       )}
@@ -158,14 +159,14 @@ function GridCard({ post, showCategory }: { post: PostCard; showCategory: boolea
     <article>
       <a href={`/posts/${post.slug}`} className="group block">
         {imageUrl ? (
-          <img
+          <Image
             src={imageUrl}
             alt={post.title}
             width={640}
             height={400}
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 380px"
             className="aspect-[16/10] w-full rounded-lg object-cover"
             loading="lazy"
-            decoding="async"
           />
         ) : (
           <div className="aspect-[16/10] w-full rounded-lg bg-gray-100" />
@@ -178,7 +179,7 @@ function GridCard({ post, showCategory }: { post: PostCard; showCategory: boolea
         <h3 className="mt-1 text-base font-semibold text-gray-900 line-clamp-2 transition-colors group-hover:text-[#0d61ac]">
           {post.title}
         </h3>
-        <p className="mt-1.5 text-xs text-gray-400">
+        <p className="mt-1.5 text-xs text-gray-500">
           {[
             post.authorName,
             post.readingTimeMinutes ? `${post.readingTimeMinutes} min` : null,

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { cms } from "@/lib/cms";
 
 /**
@@ -137,14 +138,14 @@ function ProductCardItem({ product, showDescription }: ProductCardItemProps) {
       <a href={`/${product.slug}/p`} className="block">
         <div className="flex items-center justify-center rounded-lg bg-[#f8f9fa] p-4">
           {product.imageUrl ? (
-            <img
+            <Image
               src={product.imageUrl}
               alt={product.imageAlt ?? product.name}
-              width={200}
-              height={200}
+              width={160}
+              height={160}
+              sizes="160px"
               className="h-40 w-40 object-contain mix-blend-multiply transition-transform duration-300 group-hover:scale-105"
               loading="lazy"
-              decoding="async"
             />
           ) : (
             <div className="flex h-40 w-40 items-center justify-center text-gray-300" aria-hidden="true">

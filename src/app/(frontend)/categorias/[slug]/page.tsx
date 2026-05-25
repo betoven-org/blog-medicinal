@@ -112,7 +112,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
           })}
         </div>
       ) : (
-        <p className="text-gray-400">Nenhum artigo nesta categoria ainda.</p>
+        <p className="text-gray-500">Nenhum artigo nesta categoria ainda.</p>
       )}
 
       {/* Pagination */}

@@ -84,7 +84,7 @@ export async function Header() {
       <div className="border-b">
         <div className="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4">
           {/* Logo */}
-          <Link href="/" className="flex shrink-0 items-center">
+          <Link href="/" className="flex shrink-0 items-center" aria-label={`${siteName} — Ir para a página inicial`}>
             <Image src={logoUrl} alt={siteName} width={160} height={32} priority />
           </Link>
 

@@ -162,11 +162,11 @@ export function SearchBar() {
       {showDropdown && (
         <div className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl">
           {loading && (
-            <div className="px-4 py-5 text-center text-sm text-gray-400">Buscando...</div>
+            <div className="px-4 py-5 text-center text-sm text-gray-500">Buscando...</div>
           )}
 
           {!loading && totalResults === 0 && (
-            <div className="px-4 py-5 text-center text-sm text-gray-400">
+            <div className="px-4 py-5 text-center text-sm text-gray-500">
               Nenhum resultado para &ldquo;{query}&rdquo;
             </div>
           )}
@@ -177,8 +177,8 @@ export function SearchBar() {
               {products.length > 0 && (
                 <div>
                   <div className="flex items-center justify-between px-4 py-2 bg-gray-50">
-                    <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">Produtos</span>
-                    <span className="text-xs text-gray-400">{products.length} resultados</span>
+                    <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">Produtos</span>
+                    <span className="text-xs text-gray-500">{products.length} resultados</span>
                   </div>
                   {products.map((product) => {
                     const idx = flatIdx++;
@@ -219,8 +219,8 @@ export function SearchBar() {
               {posts.length > 0 && (
                 <div>
                   <div className="flex items-center justify-between px-4 py-2 bg-gray-50">
-                    <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">Artigos</span>
-                    <span className="text-xs text-gray-400">{posts.length} resultados</span>
+                    <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">Artigos</span>
+                    <span className="text-xs text-gray-500">{posts.length} resultados</span>
                   </div>
                   {posts.map((post) => {
                     const idx = flatIdx++;
@@ -236,7 +236,7 @@ export function SearchBar() {
                         }`}
                       >
                         <div className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-gray-100 bg-gray-50">
-                          <FileText size={16} className="text-gray-400" aria-hidden="true" />
+                          <FileText size={16} className="text-gray-500" aria-hidden="true" />
                         </div>
                         <span className={`text-sm leading-snug line-clamp-2 ${isActive ? "text-[#0d61ac] font-medium" : "text-gray-700"}`}>
                           {post.title}

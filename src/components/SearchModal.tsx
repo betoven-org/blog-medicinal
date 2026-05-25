@@ -91,7 +91,7 @@ export function SearchModal({ isOpen, onClose }: Props) {
             height="20"
             viewBox="0 0 256 256"
             fill="currentColor"
-            className="shrink-0 text-gray-400"
+            className="shrink-0 text-gray-500"
             aria-hidden="true"
           >
             <path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z" />
@@ -109,7 +109,7 @@ export function SearchModal({ isOpen, onClose }: Props) {
             type="button"
             onClick={onClose}
             aria-label="Fechar busca"
-            className="shrink-0 p-1 text-gray-400 hover:text-gray-600"
+            className="shrink-0 p-1 text-gray-500 hover:text-gray-600"
           >
             <svg width="18" height="18" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true">
               <path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z" />
@@ -120,11 +120,11 @@ export function SearchModal({ isOpen, onClose }: Props) {
         {/* Results */}
         <div className="max-h-[60vh] overflow-y-auto">
           {loading && (
-            <p className="px-4 py-6 text-center text-sm text-gray-400">Buscando...</p>
+            <p className="px-4 py-6 text-center text-sm text-gray-500">Buscando...</p>
           )}
 
           {!loading && query.length >= 2 && results.length === 0 && (
-            <p className="px-4 py-6 text-center text-sm text-gray-400">
+            <p className="px-4 py-6 text-center text-sm text-gray-500">
               Nenhum resultado encontrado
             </p>
           )}
@@ -160,7 +160,7 @@ export function SearchModal({ isOpen, onClose }: Props) {
           )}
 
           {!loading && query.length < 2 && (
-            <p className="px-4 py-6 text-center text-sm text-gray-400">
+            <p className="px-4 py-6 text-center text-sm text-gray-500">
               Digite ao menos 2 caracteres para buscar
             </p>
           )}

@@ -58,7 +58,7 @@ export default async function SearchPage({ searchParams }: Props) {
         <div className="flex gap-3">
           <div className="relative flex-1">
             <svg
-              className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400"
+              className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500"
               viewBox="0 0 256 256"
               fill="currentColor"
               aria-hidden="true"
@@ -170,10 +170,10 @@ export default async function SearchPage({ searchParams }: Props) {
 
       {query && docs.length === 0 && (
         <div className="py-16 text-center">
-          <p className="text-gray-400">
+          <p className="text-gray-500">
             Nenhum artigo encontrado para &ldquo;{query}&rdquo;.
           </p>
-          <p className="mt-2 text-sm text-gray-400">
+          <p className="mt-2 text-sm text-gray-500">
             Tente usar termos diferentes ou remova os filtros.
           </p>
         </div>

@@ -96,7 +96,7 @@ export default async function AuthorPage({ params, searchParams }: Props) {
           })}
         </div>
       ) : (
-        <p className="text-gray-400">Nenhum artigo publicado por este autor.</p>
+        <p className="text-gray-500">Nenhum artigo publicado por este autor.</p>
       )}
 
       {/* Pagination */}

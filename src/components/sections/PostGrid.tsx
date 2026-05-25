@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { getPostsByMode } from "@/lib/loaders";
 import type { PostMode, PostCard } from "@/lib/loaders";
 import { formatDate } from "@/lib/formatDate";
@@ -72,14 +73,14 @@ function PostCardItem({
     <article>
       <a href={`/posts/${post.slug}`} tabIndex={-1} aria-hidden="true">
         {imageUrl && (
-          <img
+          <Image
             src={imageUrl}
             alt={post.title}
             width={640}
             height={400}
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 380px"
             className="aspect-[16/10] w-full rounded-lg object-cover"
             loading="lazy"
-            decoding="async"
           />
         )}
       </a>
@@ -97,7 +98,7 @@ function PostCardItem({
           </h3>
         </a>
 
-        <footer className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-400">
+        <footer className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
           {showAuthor && post.authorName && (
             <span className="flex items-center gap-1">
               <svg

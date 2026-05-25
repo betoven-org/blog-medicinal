@@ -56,7 +56,7 @@ export default async function CategoriesPage() {
             >
               <span
                 aria-hidden="true"
-                className="flex shrink-0 text-gray-400 transition-colors group-hover:text-[#0d61ac]"
+                className="flex shrink-0 text-gray-500 transition-colors group-hover:text-[#0d61ac]"
               >
                 {categoryIcons[slug] ?? categoryIcons.saude}
               </span>

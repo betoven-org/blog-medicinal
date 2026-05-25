@@ -54,7 +54,7 @@ export default async function ProductCategoryPage({ params, searchParams }: Page
   ];
 
   return (
-    <main className="mx-auto max-w-7xl w-full flex-1 px-4 py-8">
+    <div className="mx-auto max-w-7xl w-full px-4 py-8">
       <Breadcrumb items={breadcrumbItems} />
 
       <header>
@@ -67,7 +67,7 @@ export default async function ProductCategoryPage({ params, searchParams }: Page
       {rows.length === 0 ? (
         <div className="mt-20 mb-12 flex flex-col items-center gap-5 text-center">
           <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gray-100">
-            <Package size={36} strokeWidth={1.5} className="text-gray-400" aria-hidden="true" />
+            <Package size={36} strokeWidth={1.5} className="text-gray-500" aria-hidden="true" />
           </div>
           <div className="space-y-2">
             <p className="text-lg font-semibold text-gray-700">Nenhum produto encontrado</p>
@@ -195,6 +195,6 @@ export default async function ProductCategoryPage({ params, searchParams }: Page
           )}
         </>
       )}
-    </main>
+    </div>
   );
 }

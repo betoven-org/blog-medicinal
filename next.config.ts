@@ -1,6 +1,23 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  experimental: {
+    optimizePackageImports: ["lucide-react"],
+  },
+  webpack(config, { isServer }) {
+    if (!isServer) {
+      // Browserslist targets (Chrome 109+, Safari 16+) already support these APIs natively.
+      // Replace Next.js built-in polyfills with empty module to save ~11.6 KiB.
+      const webpack = require("webpack");
+      config.plugins.push(
+        new webpack.NormalModuleReplacementPlugin(
+          /next[\\/]dist[\\/]build[\\/]polyfills[\\/]polyfill-module\.js$/,
+          require.resolve("./src/lib/empty.js")
+        )
+      );
+    }
+    return config;
+  },
   typescript: {
     // TODO: fix type mismatches between SDK and component props
     ignoreBuildErrors: true,

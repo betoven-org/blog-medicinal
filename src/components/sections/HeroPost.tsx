@@ -106,7 +106,7 @@ export default async function HeroPost({
             )}
 
             {hasMetaBottom && (
-              <p className="text-sm text-gray-400 mt-3 flex items-center gap-2">
+              <p className="text-sm text-gray-500 mt-3 flex items-center gap-2">
                 {showAuthor && featured.authorName && (
                   <span>{featured.authorName}</span>
                 )}
@@ -126,7 +126,7 @@ export default async function HeroPost({
               aria-label="Mais noticias"
               className="lg:col-span-1 mt-8 lg:mt-0"
             >
-              <p className="text-sm font-semibold uppercase tracking-wide text-gray-400 mb-3 border-b-2 border-[#0d61ac] pb-2">
+              <p className="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-3 border-b-2 border-[#0d61ac] pb-2">
                 Mais Noticias
               </p>
 
