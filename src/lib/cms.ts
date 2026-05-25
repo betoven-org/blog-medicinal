@@ -29,6 +29,8 @@ export type Post = {
   metaTitle: string | null;
   metaDescription: string | null;
   focusKeyword: string | null;
+  secondaryKeywords: string | null;
+  seoScore: number | null;
   ogTitle: string | null;
   ogDescription: string | null;
   ogImageUrl: string | null;
@@ -48,12 +50,12 @@ export type Post = {
     avatar: { url: string } | null;
   } | null;
   heroImage: {
-    url: string;
+    url: string | null;
     alt: string | null;
-    sizes: {
-      thumbnail: { url: string | null };
-      card: { url: string | null };
-      hero: { url: string | null };
+    sizes?: {
+      thumbnail?: { url: string | null };
+      card?: { url: string | null };
+      hero?: { url: string | null };
     };
   } | null;
   tags: { tag: string }[];
@@ -155,7 +157,9 @@ export type CmsPage = {
   id: number;
   slug: string;
   title: string;
+  content: string | null;
   sections: SectionBlock[] | null;
+  draftSections: SectionBlock[] | null;
   metaTitle: string | null;
   metaDescription: string | null;
   ogTitle: string | null;
@@ -277,7 +281,7 @@ function createClient() {
         limit?: number;
         page?: number;
         category?: string;
-        author?: number;
+        author?: number | string;
         featured?: boolean;
         search?: string;
         draft?: boolean;

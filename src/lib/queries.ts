@@ -129,7 +129,9 @@ export async function getPostsByAuthor(
 }
 
 export async function getAuthorBySlug(slug: string) {
-  return cms.authors.getBySlug(slug);
+  const result = await cms.authors.getBySlug(slug);
+  if (!result) return null;
+  return result.author;
 }
 
 export async function getCategories() {
