@@ -284,7 +284,7 @@ export default async function ProductPage({ params }: PageProps) {
         whoCanUse) && (
         <section
           aria-label="Detalhes do produto"
-          className="mt-12 grid gap-8 lg:grid-cols-[1fr_380px]"
+          className="mt-12 grid gap-8 "
         >
           {/* Coluna esquerda: conteudo + diferenciais */}
           <div className="min-w-0">
@@ -321,42 +321,6 @@ export default async function ProductPage({ params }: PageProps) {
                     </li>
                   ))}
                 </ul>
-              </div>
-            )}
-          </div>
-
-          {/* Coluna direita: cards tecnicos */}
-          <div className="flex flex-col gap-4 lg:sticky lg:top-24 lg:self-start">
-            {composition && (
-              <div className="rounded-lg border border-border bg-card p-5">
-                <h3 className="mb-2 text-sm font-semibold text-gray-900">
-                  Composicao
-                </h3>
-                <p className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
-                  {composition}
-                </p>
-              </div>
-            )}
-
-            {usageInstructions && (
-              <div className="rounded-lg border border-border bg-card p-5">
-                <h3 className="mb-2 text-sm font-semibold text-gray-900">
-                  Sugestao de uso
-                </h3>
-                <p className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
-                  {usageInstructions}
-                </p>
-              </div>
-            )}
-
-            {whoCanUse && (
-              <div className="rounded-lg border border-border bg-card p-5">
-                <h3 className="mb-2 text-sm font-semibold text-gray-900">
-                  Quem pode usar?
-                </h3>
-                <p className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
-                  {whoCanUse}
-                </p>
               </div>
             )}
           </div>
