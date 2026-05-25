@@ -12,8 +12,10 @@
     }
   },
   "scripts": {
-    "dev": "tsx scripts/watch-sections.ts & next dev",
-    "dev:next": "next dev",
+    "predev": "tsx scripts/dev-banner.ts",
+    "dev": "concurrently -n admin,front,watch -c blue,green,yellow \"pnpm dev:admin\" \"next dev -p 3001\" \"tsx scripts/watch-sections.ts\"",
+    "dev:front": "next dev -p 3001",
+    "dev:admin": "cd ${CMS_DIR:-../Projetos/store-front} && pnpm dev",
     "dev:watch": "tsx scripts/watch-sections.ts",
     "build": "next build",
     "start": "next start",
@@ -83,6 +85,7 @@
     "@types/node": "^20",
     "@types/react": "^19.2.15",
     "@types/react-dom": "^19.2.3",
+    "concurrently": "^9.2.1",
     "drizzle-kit": "^0.31.10",
     "eslint": "^9",
     "eslint-config-next": "15.4",
