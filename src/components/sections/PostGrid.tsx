@@ -79,6 +79,7 @@ function PostCardItem({
             width={640}
             height={400}
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 320px, 380px"
+            quality={60}
             className="aspect-[16/10] w-full rounded-lg object-cover"
             loading="lazy"
           />
