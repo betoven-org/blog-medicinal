@@ -75,6 +75,8 @@ export default async function HeroPost({
                   height={540}
                   sizes="(max-width: 1024px) 100vw, 66vw"
                   priority
+                  fetchPriority="high"
+                  loading="eager"
                   className="w-full aspect-[16/10] object-cover rounded-lg group-hover:opacity-95 transition-opacity duration-200"
                 />
               ) : (
