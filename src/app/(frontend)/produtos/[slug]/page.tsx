@@ -54,7 +54,7 @@ export default async function ProductCategoryPage({ params, searchParams }: Page
   ];
 
   return (
-    <main className="mx-auto max-w-7xl w-full px-4 py-8">
+    <main className="mx-auto max-w-7xl w-full flex-1 px-4 py-8">
       <Breadcrumb items={breadcrumbItems} />
 
       <header>
@@ -65,9 +65,23 @@ export default async function ProductCategoryPage({ params, searchParams }: Page
       </header>
 
       {rows.length === 0 ? (
-        <div className="mt-16 flex flex-col items-center gap-3 text-muted-foreground">
-          <Package size={48} strokeWidth={1.5} aria-hidden="true" />
-          <p className="text-sm">Nenhum produto encontrado nesta categoria.</p>
+        <div className="mt-20 mb-12 flex flex-col items-center gap-5 text-center">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gray-100">
+            <Package size={36} strokeWidth={1.5} className="text-gray-400" aria-hidden="true" />
+          </div>
+          <div className="space-y-2">
+            <p className="text-lg font-semibold text-gray-700">Nenhum produto encontrado</p>
+            <p className="text-sm text-gray-500 max-w-sm">
+              Esta categoria ainda nao possui produtos cadastrados. Volte em breve para novidades.
+            </p>
+          </div>
+          <Link
+            href="/produtos"
+            className="mt-2 inline-flex items-center gap-2 rounded-lg border border-[#0d61ac] px-5 py-2.5 text-sm font-semibold text-[#0d61ac] transition-colors hover:bg-[#0d61ac] hover:text-white"
+          >
+            <ChevronLeft size={16} aria-hidden="true" />
+            Ver todos os produtos
+          </Link>
         </div>
       ) : (
         <>
