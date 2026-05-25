@@ -1,5 +1,5 @@
 /**
- * @title Map
+ * @title Mapa
  * @description Mapa do Google Maps incorporado com endereço
  * @group Institucional
  */

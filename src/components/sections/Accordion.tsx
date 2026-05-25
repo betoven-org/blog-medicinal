@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * @title Accordion
+ * @title Acordeao
  * @description Acordeao generico com conteudo rich-text
  * @group Conteudo
  */

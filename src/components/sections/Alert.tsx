@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * @title Alert
+ * @title Alerta
  * @description Banner de alerta/aviso com cores por tipo e opção de dispensar
  * @group Layout
  */

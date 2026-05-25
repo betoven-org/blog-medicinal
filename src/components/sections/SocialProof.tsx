@@ -1,5 +1,5 @@
 /**
- * @title Social Proof
+ * @title Prova Social
  * @description Badges de prova social com avaliações de plataformas externas
  * @group Marketing
  */

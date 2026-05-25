@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-25T03:30:24.403Z",
+  "generatedAt": "2026-05-25T03:34:47.936Z",
   "sections": [
     {
       "key": "Accordion",
@@ -133,7 +133,7 @@
     },
     {
       "key": "CTA",
-      "title": "CTA",
+      "title": "Chamada para Acao",
       "description": "Banner de chamada para acao com titulo, descricao e botao",
       "group": "Marketing",
       "path": "sections/CTA",
@@ -273,7 +273,7 @@
     },
     {
       "key": "Divider",
-      "title": "Divider",
+      "title": "Separador",
       "description": "Separador visual entre seções — linha, espaço ou pontos decorativos",
       "group": "Layout",
       "path": "sections/Divider",
@@ -300,7 +300,7 @@
     },
     {
       "key": "FAQ",
-      "title": "FAQ",
+      "title": "Perguntas Frequentes",
       "description": "Perguntas frequentes em formato accordion",
       "group": "Institucional",
       "path": "sections/FAQ",
@@ -642,7 +642,7 @@
     },
     {
       "key": "ImageText",
-      "title": "ImageText",
+      "title": "Imagem e Texto",
       "description": "Imagem de um lado e texto do outro, responsivo",
       "group": "Conteudo",
       "path": "sections/ImageText",
@@ -745,7 +745,7 @@
     },
     {
       "key": "Map",
-      "title": "Map",
+      "title": "Mapa",
       "description": "Mapa do Google Maps incorporado com endereço",
       "group": "Institucional",
       "path": "sections/Map",
@@ -1204,7 +1204,7 @@
     },
     {
       "key": "RichContent",
-      "title": "RichContent",
+      "title": "Conteudo Rico",
       "description": "Bloco de conteudo rich-text centralizado com largura configuravel",
       "group": "Conteudo",
       "path": "sections/RichContent",
@@ -1537,7 +1537,7 @@
     },
     {
       "key": "VideoEmbed",
-      "title": "VideoEmbed",
+      "title": "Video",
       "description": "Embed responsivo de video do YouTube ou Vimeo",
       "group": "Conteudo",
       "path": "sections/VideoEmbed",

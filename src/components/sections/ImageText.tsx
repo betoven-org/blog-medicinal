@@ -1,5 +1,5 @@
 /**
- * @title ImageText
+ * @title Imagem e Texto
  * @description Imagem de um lado e texto do outro, responsivo
  * @group Conteudo
  */

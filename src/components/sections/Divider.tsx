@@ -1,5 +1,5 @@
 /**
- * @title Divider
+ * @title Separador
  * @description Separador visual entre seções — linha, espaço ou pontos decorativos
  * @group Layout
  */

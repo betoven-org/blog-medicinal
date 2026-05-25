@@ -1,5 +1,5 @@
 /**
- * @title Logos
+ * @title Logos de Parceiros
  * @description Linha de logos de parceiros com grayscale opcional
  * @group Marketing
  */

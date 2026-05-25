@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 /**
- * @title FAQ
+ * @title Perguntas Frequentes
  * @description Perguntas frequentes em formato accordion
  * @group Institucional
  */

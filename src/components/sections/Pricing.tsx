@@ -1,5 +1,5 @@
 /**
- * @title Pricing
+ * @title Planos e Precos
  * @description Grade de planos com destaque para plano principal
  * @group Institucional
  */

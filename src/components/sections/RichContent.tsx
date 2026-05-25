@@ -1,5 +1,5 @@
 /**
- * @title RichContent
+ * @title Conteudo Rico
  * @description Bloco de conteudo rich-text centralizado com largura configuravel
  * @group Conteudo
  */

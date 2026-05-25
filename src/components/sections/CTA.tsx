@@ -1,5 +1,5 @@
 /**
- * @title CTA
+ * @title Chamada para Acao
  * @description Banner de chamada para acao com titulo, descricao e botao
  * @group Marketing
  */

@@ -1,5 +1,5 @@
 /**
- * @title Gallery
+ * @title Galeria
  * @description Galeria de imagens em grid responsivo com legendas opcionais
  * @group Conteudo
  */

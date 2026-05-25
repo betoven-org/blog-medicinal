@@ -1,5 +1,5 @@
 /**
- * @title VideoEmbed
+ * @title Video
  * @description Embed responsivo de video do YouTube ou Vimeo
  * @group Conteudo
  */
