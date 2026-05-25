@@ -28,9 +28,8 @@ export interface Props {
   limit?: number;
 
   /** @title Colunas */
-  /** @options 2,3,4 */
   /** @default 4 */
-  columns?: "2" | "3" | "4";
+  columns?: number;
 
   /** @title Link "Ver todos" */
   /** @default /produtos */
@@ -50,10 +49,10 @@ type ProductCard = {
   imageAlt: string | null;
 };
 
-const COLUMNS_CLASS: Record<string, string> = {
-  "2": "sm:grid-cols-2",
-  "3": "sm:grid-cols-2 lg:grid-cols-3",
-  "4": "sm:grid-cols-2 lg:grid-cols-4",
+const COLUMNS_CLASS: Record<number, string> = {
+  2: "sm:grid-cols-2",
+  3: "sm:grid-cols-2 lg:grid-cols-3",
+  4: "sm:grid-cols-2 lg:grid-cols-4",
 };
 
 async function fetchProducts(
@@ -185,7 +184,7 @@ export default async function ProductShowcase({
   categorySlug,
   manualSlugs,
   limit = 4,
-  columns = "4",
+  columns = 4,
   viewAllHref = "/produtos",
   showDescription = false,
 }: Props) {
@@ -198,7 +197,7 @@ export default async function ProductShowcase({
 
   if (items.length === 0) return null;
 
-  const columnsClass = COLUMNS_CLASS[columns] ?? COLUMNS_CLASS["4"];
+  const columnsClass = COLUMNS_CLASS[columns] ?? COLUMNS_CLASS[4];
 
   return (
     <section

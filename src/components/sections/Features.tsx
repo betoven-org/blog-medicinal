@@ -14,9 +14,8 @@ export interface Props {
   subtitle?: string;
 
   /** @title Colunas */
-  /** @options 2,3,4 */
   /** @default 3 */
-  columns?: "2" | "3" | "4";
+  columns?: number;
 
   /** @title Itens */
   items: {
@@ -30,8 +29,8 @@ export interface Props {
   }[];
 }
 
-export default function Features({ title, subtitle, columns = "3", items }: Props) {
-  const gridCols = columns === "2" ? "lg:grid-cols-2" : columns === "4" ? "lg:grid-cols-4" : "lg:grid-cols-3";
+export default function Features({ title, subtitle, columns = 3, items }: Props) {
+  const gridCols = columns === 2 ? "lg:grid-cols-2" : columns === 4 ? "lg:grid-cols-4" : "lg:grid-cols-3";
 
   return (
     <section className="px-6 py-16">

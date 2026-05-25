@@ -28,9 +28,8 @@ export interface Props {
   limit?: number;
 
   /** @title Colunas */
-  /** @options 2,3,4 */
   /** @default 3 */
-  columns?: "2" | "3" | "4";
+  columns?: number;
 
   /** @title Mostrar categoria */
   /** @default true */
@@ -48,10 +47,10 @@ export interface Props {
   viewAllHref?: string;
 }
 
-const COLUMNS_CLASS: Record<string, string> = {
-  "2": "sm:grid-cols-2",
-  "3": "sm:grid-cols-2 lg:grid-cols-3",
-  "4": "sm:grid-cols-2 lg:grid-cols-4",
+const COLUMNS_CLASS: Record<number, string> = {
+  2: "sm:grid-cols-2",
+  3: "sm:grid-cols-2 lg:grid-cols-3",
+  4: "sm:grid-cols-2 lg:grid-cols-4",
 };
 
 interface PostCardProps {
@@ -158,7 +157,7 @@ export default async function PostGrid({
   mode = "recent",
   manualSlugs,
   limit = 6,
-  columns = "3",
+  columns = 3,
   showCategory = true,
   showAuthor = false,
   showReadingTime = true,
@@ -173,7 +172,7 @@ export default async function PostGrid({
 
   if (posts.length === 0) return null;
 
-  const columnsClass = COLUMNS_CLASS[columns] ?? COLUMNS_CLASS["3"];
+  const columnsClass = COLUMNS_CLASS[columns] ?? COLUMNS_CLASS[3];
 
   return (
     <section aria-labelledby="post-grid-heading" className="border-t border-gray-200">

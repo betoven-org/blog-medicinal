@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-25T03:14:11.455Z",
+  "generatedAt": "2026-05-25T03:18:40.448Z",
   "sections": [
     {
       "key": "Banner",
@@ -106,16 +106,10 @@
           "required": false
         },
         "columns": {
-          "type": "string",
-          "format": "select",
+          "type": "number",
           "title": "Colunas",
           "required": false,
-          "default": "3",
-          "options": [
-            "2",
-            "3",
-            "4"
-          ]
+          "default": 3
         },
         "items": {
           "type": "array",
@@ -331,16 +325,10 @@
           "default": true
         },
         "sideCount": {
-          "type": "string",
-          "format": "select",
+          "type": "number",
           "title": "Posts laterais",
           "required": false,
-          "default": "4",
-          "options": [
-            "3",
-            "4",
-            "5"
-          ]
+          "default": 4
         }
       }
     },
@@ -451,16 +439,10 @@
           "default": 6
         },
         "columns": {
-          "type": "string",
-          "format": "select",
+          "type": "number",
           "title": "Colunas",
           "required": false,
-          "default": "3",
-          "options": [
-            "2",
-            "3",
-            "4"
-          ]
+          "default": 3
         },
         "showCategory": {
           "type": "boolean",
@@ -529,15 +511,10 @@
           "default": 4
         },
         "gridColumns": {
-          "type": "string",
-          "format": "select",
+          "type": "number",
           "title": "Colunas do grid",
           "required": false,
-          "default": "2",
-          "options": [
-            "1",
-            "2"
-          ]
+          "default": 2
         },
         "gridShowCategory": {
           "type": "boolean",
@@ -634,16 +611,10 @@
           "default": 4
         },
         "columns": {
-          "type": "string",
-          "format": "select",
+          "type": "number",
           "title": "Colunas",
           "required": false,
-          "default": "4",
-          "options": [
-            "2",
-            "3",
-            "4"
-          ]
+          "default": 4
         },
         "viewAllHref": {
           "type": "string",

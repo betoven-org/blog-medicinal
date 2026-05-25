@@ -24,9 +24,8 @@ export interface Props {
   gridLimit?: number;
 
   /** @title Colunas do grid */
-  /** @options 1,2 */
   /** @default 2 */
-  gridColumns?: "1" | "2";
+  gridColumns?: number;
 
   /** @title Mostrar categoria no grid */
   /** @default true */
@@ -57,7 +56,7 @@ export default async function PostGridWithSidebar({
   gridMode = "recent",
   gridManualSlugs,
   gridLimit = 4,
-  gridColumns = "2",
+  gridColumns = 2,
   gridShowCategory = true,
   sidebarTitle,
   sidebarMode = "trending",
@@ -75,7 +74,7 @@ export default async function PostGridWithSidebar({
 
   if (gridPosts.length === 0 && sidebarPosts.length === 0) return null;
 
-  const colsClass = gridColumns === "1" ? "" : "sm:grid-cols-2";
+  const colsClass = gridColumns === 1 ? "" : "sm:grid-cols-2";
 
   return (
     <section className="border-t border-gray-200">

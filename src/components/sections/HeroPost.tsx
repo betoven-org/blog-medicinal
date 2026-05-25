@@ -28,9 +28,8 @@ export interface Props {
   showReadingTime?: boolean;
 
   /** @title Posts laterais */
-  /** @options 3,4,5 */
   /** @default 4 */
-  sideCount?: "3" | "4" | "5";
+  sideCount?: number;
 }
 
 export default async function HeroPost({
@@ -39,20 +38,18 @@ export default async function HeroPost({
   showCategory = true,
   showAuthor = true,
   showReadingTime = true,
-  sideCount = "4",
+  sideCount = 4,
 }: Props) {
-  const sideLimit = parseInt(sideCount, 10);
-
   const [featured, recentPosts] = await Promise.all([
     getFeaturedPost(mode, manualSlug),
-    getPostsByMode("recent", sideLimit + 1),
+    getPostsByMode("recent", sideCount + 1),
   ]);
 
   if (!featured) return null;
 
   const sidePosts = recentPosts
     .filter((p) => p.slug !== featured.slug)
-    .slice(0, sideLimit);
+    .slice(0, sideCount);
 
   const featuredImageUrl = featured.coverUrl ?? featured.heroImageUrl;
   const hasMetaBottom = showAuthor || showReadingTime;
