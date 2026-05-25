@@ -10,6 +10,7 @@ import CategoryBar from "@/components/sections/CategoryBar";
 import ProductShowcase from "@/components/sections/ProductShowcase";
 import WhatsAppCTA from "@/components/sections/WhatsAppCTA";
 import Footer from "@/components/sections/Footer";
+import Header from "@/components/sections/Header";
 
 // ── Component map ─────────────────────────────────────────────────────────────
 // Add new section components here as they are created.
@@ -28,6 +29,7 @@ const SECTION_MAP: Record<string, React.ComponentType<any>> = {
   ProductShowcase,
   WhatsAppCTA,
   Footer,
+  Header,
 };
 
 // ── SectionRenderer ───────────────────────────────────────────────────────────

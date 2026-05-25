@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-25T01:18:41.024Z",
+  "generatedAt": "2026-05-25T03:14:11.455Z",
   "sections": [
     {
       "key": "Banner",
@@ -169,6 +169,45 @@
         "showPrivacy": {
           "type": "boolean",
           "title": "Mostrar politica de privacidade",
+          "required": false,
+          "default": true
+        }
+      }
+    },
+    {
+      "key": "Header",
+      "title": "Header",
+      "description": "Cabecalho global com logo, busca, menu de categorias",
+      "group": "Global",
+      "path": "sections/Header",
+      "props": {
+        "showSearch": {
+          "type": "boolean",
+          "title": "Mostrar busca",
+          "required": false,
+          "default": true
+        },
+        "showSocial": {
+          "type": "boolean",
+          "title": "Mostrar redes sociais",
+          "required": false,
+          "default": true
+        },
+        "showWhatsApp": {
+          "type": "boolean",
+          "title": "Mostrar WhatsApp",
+          "required": false,
+          "default": true
+        },
+        "showCategories": {
+          "type": "boolean",
+          "title": "Mostrar categorias",
+          "required": false,
+          "default": true
+        },
+        "showRestrictedArea": {
+          "type": "boolean",
+          "title": "Mostrar Area Restrita",
           "required": false,
           "default": true
         }
