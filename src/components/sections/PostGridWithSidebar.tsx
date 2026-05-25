@@ -78,7 +78,7 @@ export default async function PostGridWithSidebar({
 
   return (
     <section className="border-t border-gray-200">
-      <div className="mx-auto max-w-7xl px-4 py-8">
+      <div className="mx-auto max-w-7xl w-full px-4 py-8">
         <div className="lg:grid lg:grid-cols-3 lg:gap-8">
           {/* ── Grid (2/3) ────────────────────────────────────── */}
           <div className="lg:col-span-2">

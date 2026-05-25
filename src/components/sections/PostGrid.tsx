@@ -176,7 +176,7 @@ export default async function PostGrid({
 
   return (
     <section aria-labelledby="post-grid-heading" className="border-t border-gray-200">
-      <div className="mx-auto max-w-7xl px-4 py-8">
+      <div className="mx-auto max-w-7xl w-full px-4 py-8">
         <div className="mb-6 flex items-center gap-3">
           <div className="h-6 w-1 rounded-full bg-[#0d61ac]" aria-hidden="true" />
           <h2
