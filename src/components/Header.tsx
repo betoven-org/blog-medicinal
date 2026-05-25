@@ -1,9 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { getSiteSettings } from "@/lib/queries";
-import { db } from "@brasa/core/db";
-import { productCategories } from "@brasa/core/schema";
-import { asc, sql } from "drizzle-orm";
+import { cms } from "@/lib/cms";
 import { CategoryMenu } from "./CategoryMenu";
 import { MobileMenu } from "./MobileMenu";
 import { SearchBar } from "./SearchBar";
@@ -59,20 +57,16 @@ function ensureAbsoluteUrl(url: string): string {
 }
 
 export async function Header() {
-  const [settings, categoriesWithProducts] = await Promise.all([
+  const [settings, productCategoriesResult] = await Promise.all([
     getSiteSettings(),
-    db
-      .select({
-        id: productCategories.id,
-        name: productCategories.name,
-        slug: productCategories.slug,
-      })
-      .from(productCategories)
-      .where(
-        sql`${productCategories.parentId} IS NULL AND EXISTS (SELECT 1 FROM products WHERE products.product_category_id = ${productCategories.id} AND products.product_status = 'published')`
-      )
-      .orderBy(asc(productCategories.sortOrder), asc(productCategories.name)),
+    cms.productCategories.list(),
   ]);
+
+  const categoriesWithProducts = productCategoriesResult.docs.map((cat) => ({
+    id: cat.id,
+    name: cat.name,
+    slug: cat.slug,
+  }));
 
   const s = settings as any;
   const logoUrl = s?.logo?.url ?? "/logo.svg";

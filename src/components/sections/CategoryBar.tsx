@@ -1,7 +1,4 @@
-import { db } from "@brasa/core/db";
-import { categories } from "@brasa/core/schema";
-import { asc, eq } from "drizzle-orm";
-import { getTenantId } from "@/lib/tenant";
+import { cms } from "@/lib/cms";
 
 /**
  * @title Barra de Categorias
@@ -26,13 +23,8 @@ export default async function CategoryBar({
   showAll = true,
   limit = 10,
 }: Props) {
-  const tenantId = await getTenantId();
-  const rows = await db
-    .select({ id: categories.id, name: categories.name, slug: categories.slug })
-    .from(categories)
-    .where(eq(categories.tenantId, tenantId))
-    .orderBy(asc(categories.name))
-    .limit(limit);
+  const result = await cms.categories.list();
+  const rows = result.docs.slice(0, limit);
 
   if (rows.length === 0) return null;
 

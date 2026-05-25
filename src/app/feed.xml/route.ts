@@ -1,7 +1,4 @@
-import { db } from "@brasa/core/db";
-import { posts, categories } from "@brasa/core/schema";
-import { and, eq, desc } from "drizzle-orm";
-import { getTenantId } from "@/lib/tenant";
+import { cms } from "@/lib/cms";
 
 function escapeXml(str: string): string {
   return str
@@ -14,35 +11,23 @@ function escapeXml(str: string): string {
 
 export async function GET() {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-  const tenantId = await getTenantId();
 
-  const rows = await db
-    .select({
-      title: posts.title,
-      slug: posts.slug,
-      excerpt: posts.excerpt,
-      publishedAt: posts.publishedAt,
-      createdAt: posts.createdAt,
-      categoryName: categories.name,
-    })
-    .from(posts)
-    .leftJoin(categories, eq(posts.categoryId, categories.id))
-    .where(and(eq(posts.status, "published"), eq(posts.tenantId, tenantId)))
-    .orderBy(desc(posts.publishedAt))
-    .limit(50);
+  const result = await cms.posts.list({ limit: 50 });
 
-  const items = rows
-    .map((row) => {
-      const pubDate = row.publishedAt
-        ? new Date(row.publishedAt).toUTCString()
-        : new Date(row.createdAt).toUTCString();
+  const items = result.docs
+    .map((post) => {
+      const pubDate = post.publishedAt
+        ? new Date(post.publishedAt).toUTCString()
+        : new Date().toUTCString();
+
+      const categoryName = post.category?.name;
 
       return `    <item>
-      <title>${escapeXml(row.title)}</title>
-      <link>${baseUrl}/posts/${row.slug}</link>
-      <guid isPermaLink="true">${baseUrl}/posts/${row.slug}</guid>
+      <title>${escapeXml(post.title)}</title>
+      <link>${baseUrl}/posts/${post.slug}</link>
+      <guid isPermaLink="true">${baseUrl}/posts/${post.slug}</guid>
       <pubDate>${pubDate}</pubDate>
-      <description>${escapeXml(row.excerpt || "")}</description>${row.categoryName ? `\n      <category>${escapeXml(row.categoryName)}</category>` : ""}
+      <description>${escapeXml(post.excerpt || "")}</description>${categoryName ? `\n      <category>${escapeXml(categoryName)}</category>` : ""}
     </item>`;
     })
     .join("\n");

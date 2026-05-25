@@ -1,4 +1,6 @@
-import type { ImageWidget, RichText } from "@brasa/core/manifest";
+/** Manifest-compatible type aliases */
+type ImageWidget = string;
+type RichText = string;
 
 /**
  * @title Hero

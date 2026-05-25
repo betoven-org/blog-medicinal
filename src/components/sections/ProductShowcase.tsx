@@ -1,7 +1,4 @@
-import { db } from "@brasa/core/db";
-import { products, media, productCategories } from "@brasa/core/schema";
-import { eq, desc, and, inArray } from "drizzle-orm";
-import { getTenantId } from "@/lib/tenant";
+import { cms } from "@/lib/cms";
 
 /**
  * @title Vitrine de Produtos
@@ -59,67 +56,70 @@ const COLUMNS_CLASS: Record<string, string> = {
   "4": "sm:grid-cols-2 lg:grid-cols-4",
 };
 
-const publishedWhere = (tenantId: number) =>
-  and(
-    eq(products.status, "published"),
-    eq(products.showOnSite, true),
-    eq(products.tenantId, tenantId),
-  );
-
 async function fetchProducts(
   mode: NonNullable<Props["mode"]>,
   limit: number,
   parsedSlugs: string[] | undefined,
   categorySlug: string | undefined,
 ): Promise<ProductCard[]> {
-  const tenantId = await getTenantId();
-  const publishedFilter = publishedWhere(tenantId);
-  const select = {
-    id: products.id,
-    name: products.name,
-    slug: products.slug,
-    description: products.description,
-    imageUrl: media.url,
-    imageAlt: media.alt,
-  };
-
-  const base = db
-    .select(select)
-    .from(products)
-    .leftJoin(media, eq(products.imageId, media.id));
-
   switch (mode) {
-    case "all":
-      return base
-        .where(publishedFilter)
-        .orderBy(desc(products.createdAt))
-        .limit(limit);
+    case "featured": {
+      const result = await cms.products.list({ limit, featured: true });
+      return result.docs.map((p) => ({
+        id: p.id,
+        name: p.name,
+        slug: p.slug,
+        description: p.description,
+        imageUrl: p.image?.url ?? null,
+        imageAlt: p.image?.alt ?? null,
+      }));
+    }
 
-    case "featured":
-      return base
-        .where(and(publishedFilter, eq(products.featured, true)))
-        .orderBy(desc(products.createdAt))
-        .limit(limit);
+    case "all": {
+      const result = await cms.products.list({ limit });
+      return result.docs.map((p) => ({
+        id: p.id,
+        name: p.name,
+        slug: p.slug,
+        description: p.description,
+        imageUrl: p.image?.url ?? null,
+        imageAlt: p.image?.alt ?? null,
+      }));
+    }
 
     case "category": {
       if (!categorySlug) return [];
-      const [cat] = await db
-        .select({ id: productCategories.id })
-        .from(productCategories)
-        .where(eq(productCategories.slug, categorySlug))
-        .limit(1);
+      // Get category ID first
+      const categories = await cms.productCategories.list();
+      const cat = categories.docs.find((c) => c.slug === categorySlug);
       if (!cat) return [];
-      return base
-        .where(and(publishedFilter, eq(products.productCategoryId, cat.id)))
-        .orderBy(desc(products.createdAt))
-        .limit(limit);
+      const result = await cms.products.list({ limit, category: cat.id });
+      return result.docs.map((p) => ({
+        id: p.id,
+        name: p.name,
+        slug: p.slug,
+        description: p.description,
+        imageUrl: p.image?.url ?? null,
+        imageAlt: p.image?.alt ?? null,
+      }));
     }
 
     case "manual": {
       if (!parsedSlugs?.length) return [];
-      return base
-        .where(and(publishedFilter, inArray(products.slug, parsedSlugs)))
-        .limit(limit);
+      // Fetch all and filter by slugs
+      const result = await cms.products.list({ limit: 50 });
+      const slugSet = new Set(parsedSlugs);
+      return result.docs
+        .filter((p) => slugSet.has(p.slug))
+        .slice(0, limit)
+        .map((p) => ({
+          id: p.id,
+          name: p.name,
+          slug: p.slug,
+          description: p.description,
+          imageUrl: p.image?.url ?? null,
+          imageAlt: p.image?.alt ?? null,
+        }));
     }
 
     default:

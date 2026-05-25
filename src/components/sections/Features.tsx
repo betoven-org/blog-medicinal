@@ -1,4 +1,5 @@
-import type { ImageWidget } from "@brasa/core/manifest";
+/** Manifest-compatible type alias */
+type ImageWidget = string;
 
 /**
  * @title Destaques

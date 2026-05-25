@@ -1,4 +1,6 @@
-import type { ImageWidget, Color } from "@brasa/core/manifest";
+/** Manifest-compatible type aliases */
+type ImageWidget = string;
+type Color = string;
 
 /**
  * @title Banner

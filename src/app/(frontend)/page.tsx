@@ -15,12 +15,9 @@ import {
 } from "@/lib/queries";
 import Link from "next/link";
 import { resolveRelation } from "@/lib/utils";
-import { db } from "@brasa/core/db";
-import { pages } from "@brasa/core/schema";
-import { eq, and } from "drizzle-orm";
-import { getTenantId } from "@/lib/tenant";
+import { cms } from "@/lib/cms";
+import type { SectionBlock } from "@/lib/cms";
 import { SectionRenderer } from "@/components/SectionRenderer";
-import type { SectionBlock } from "@brasa/core/manifest";
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = ((await getSiteSettings()) || {}) as any;
@@ -122,20 +119,10 @@ export default async function HomePage({
   const isPreview = params.preview === "draft" && params.pageId;
 
   // Check if home page has CMS sections configured
-  const tenantId = await getTenantId();
-  const [homePage] = await db
-    .select({
-      sections: pages.sections,
-      draftSections: pages.draftSections,
-    })
-    .from(pages)
-    .where(and(eq(pages.slug, "home"), eq(pages.tenantId, tenantId)))
-    .limit(1);
+  const homePage = await cms.pages.get("home", { draft: !!isPreview });
 
-  // In preview mode, use draftSections; otherwise use published sections
-  const sectionBlocks = isPreview
-    ? ((homePage?.draftSections ?? homePage?.sections) as SectionBlock[] | null) ?? []
-    : ((homePage?.sections) as SectionBlock[] | null) ?? [];
+  // Use sections from CMS page
+  const sectionBlocks: SectionBlock[] = homePage?.sections ?? [];
 
   if (sectionBlocks.length > 0) {
     return <SectionRenderer blocks={sectionBlocks} />;

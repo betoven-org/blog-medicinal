@@ -2,7 +2,6 @@ import type React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { eq, inArray } from "drizzle-orm";
 import { Metadata } from "next";
 import {
   Leaf,
@@ -13,8 +12,7 @@ import {
   Lock,
 } from "lucide-react";
 
-import { db } from "@brasa/core/db";
-import { products, productCategories, media } from "@brasa/core/schema";
+import { cms } from "@/lib/cms";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { TipTapRenderer, markdownToHtml } from "@/components/TipTapRenderer";
 import { ProductGallery } from "@/components/ProductGallery";
@@ -35,25 +33,13 @@ export async function generateMetadata({
 }: PageProps): Promise<Metadata> {
   const { slug } = await params;
 
-  const [product] = await db
-    .select({
-      name: products.name,
-      description: products.description,
-      seoTitle: products.seoTitle,
-      seoDescription: products.seoDescription,
-      imageUrl: media.url,
-      imageAlt: media.alt,
-    })
-    .from(products)
-    .leftJoin(media, eq(products.imageId, media.id))
-    .where(eq(products.slug, slug))
-    .limit(1);
+  const product = await cms.products.getBySlug(slug);
 
   if (!product) return { title: "Produto nao encontrado" };
 
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-  const title = product.seoTitle || product.name;
-  const desc = product.seoDescription || product.description || undefined;
+  const title = product.name;
+  const desc = product.description || undefined;
 
   return {
     title,
@@ -63,8 +49,8 @@ export async function generateMetadata({
       title,
       description: desc,
       type: "website",
-      images: product.imageUrl
-        ? [{ url: product.imageUrl, alt: product.imageAlt || product.name }]
+      images: product.image?.url
+        ? [{ url: product.image.url, alt: product.image.alt || product.name }]
         : [],
     },
     twitter: {
@@ -82,55 +68,32 @@ export default async function ProductPage({ params }: PageProps) {
   const whatsappNumber = (settings as any)?.whatsapp || "5531999999999";
   const { slug } = await params;
 
-  const [product] = await db
-    .select({
-      id: products.id,
-      name: products.name,
-      slug: products.slug,
-      description: products.description,
-      seoTitle: products.seoTitle,
-      seoDescription: products.seoDescription,
-      content: products.content,
-      composition: products.composition,
-      usageInstructions: products.usageInstructions,
-      whoCanUse: products.whoCanUse,
-      benefits: products.benefits,
-      differentials: products.differentials,
-      galleryImages: products.galleryImages,
-      status: products.status,
-      brand: products.brand,
-      isKit: products.isKit,
-      imageUrl: media.url,
-      imageAlt: media.alt,
-      categoryId: productCategories.id,
-      categoryName: productCategories.name,
-      categorySlug: productCategories.slug,
-    })
-    .from(products)
-    .leftJoin(
-      productCategories,
-      eq(products.productCategoryId, productCategories.id)
-    )
-    .leftJoin(media, eq(products.imageId, media.id))
-    .where(eq(products.slug, slug))
-    .limit(1);
+  const product = await cms.products.getBySlug(slug);
 
-  if (!product || product.status !== "published") notFound();
+  if (!product) notFound();
 
-  // Gallery images
-  let galleryMedia: GalleryImage[] = [];
-  const rawGallery = product.galleryImages as number[] | null;
-  if (rawGallery && Array.isArray(rawGallery) && rawGallery.length > 0) {
-    galleryMedia = await db
-      .select({ id: media.id, url: media.url, alt: media.alt })
-      .from(media)
-      .where(inArray(media.id, rawGallery));
-  }
+  // The SDK product type has limited fields — cast to any for extended fields
+  const p = product as any;
 
-  const benefits = (product.benefits as Benefit[] | null) ?? [];
-  const differentials = (product.differentials as string[] | null) ?? [];
-  const productContent = product.content as Record<string, any> | null;
+  const categoryName = product.category?.name ?? null;
+  const categorySlug = product.category?.slug ?? null;
+  const imageUrl = product.image?.url ?? null;
+  const imageAlt = product.image?.alt ?? product.name;
+
+  // Extended fields that may be in the API response
+  const composition = p.composition ?? null;
+  const usageInstructions = p.usageInstructions ?? null;
+  const whoCanUse = p.whoCanUse ?? null;
+  const benefits = (p.benefits as Benefit[] | null) ?? [];
+  const differentials = (p.differentials as string[] | null) ?? [];
+  const productContent = p.content as Record<string, any> | null;
   const contentHtml = productContent?._html as string | undefined;
+  const brand = p.brand ?? null;
+  const isKit = p.isKit ?? false;
+  const galleryImages = p.galleryImages as number[] | null;
+
+  // Gallery images — if the API returns gallery URLs, use them
+  const galleryMedia: GalleryImage[] = (p.gallery as GalleryImage[] | undefined) ?? [];
 
   const benefitIcons = [
     <Leaf key="leaf" className="h-5 w-5 text-primary" aria-hidden="true" />,
@@ -149,8 +112,8 @@ export default async function ProductPage({ params }: PageProps) {
   // Breadcrumb items
   const breadcrumbItems = [
     { label: "Inicio", href: "/" },
-    ...(product.categoryName && product.categorySlug
-      ? [{ label: product.categoryName, href: `/categorias/${product.categorySlug}` }]
+    ...(categoryName && categorySlug
+      ? [{ label: categoryName, href: `/categorias/${categorySlug}` }]
       : []),
     { label: product.name },
   ];
@@ -161,19 +124,19 @@ export default async function ProductPage({ params }: PageProps) {
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.name,
-    description: product.seoDescription || product.description || undefined,
-    image: product.imageUrl ?? undefined,
+    description: product.description || undefined,
+    image: imageUrl ?? undefined,
     url: productUrl,
     brand: {
       "@type": "Brand",
-      name: product.brand || "Medicinal na Web",
+      name: brand || "Medicinal na Web",
     },
-    ...(product.categoryName ? { category: product.categoryName } : {}),
-    ...(product.composition ? {
+    ...(categoryName ? { category: categoryName } : {}),
+    ...(composition ? {
       additionalProperty: {
         "@type": "PropertyValue",
         name: "Composicao",
-        value: product.composition,
+        value: composition,
       },
     } : {}),
     mainEntityOfPage: {
@@ -198,8 +161,8 @@ export default async function ProductPage({ params }: PageProps) {
         <div className="grid gap-8 lg:grid-cols-2">
           {/* Galeria */}
           <ProductGallery
-            mainImage={product.imageUrl ?? null}
-            mainImageAlt={product.imageAlt ?? product.name}
+            mainImage={imageUrl}
+            mainImageAlt={imageAlt}
             gallery={galleryMedia}
             productName={product.name}
           />
@@ -207,13 +170,13 @@ export default async function ProductPage({ params }: PageProps) {
           {/* Info */}
           <div className="flex flex-col">
             {/* Badge da categoria */}
-            {product.categoryName && product.categorySlug && (
+            {categoryName && categorySlug && (
               <Link
-                href={`/categorias/${product.categorySlug}`}
+                href={`/categorias/${categorySlug}`}
                 className="mb-3 inline-flex w-fit"
               >
                 <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium uppercase tracking-wider text-primary">
-                  {product.categoryName}
+                  {categoryName}
                 </span>
               </Link>
             )}
@@ -254,32 +217,32 @@ export default async function ProductPage({ params }: PageProps) {
             </div>
 
             {/* Ficha tecnica */}
-            {(product.categoryName || product.brand || product.isKit || product.composition) && (
+            {(categoryName || brand || isKit || composition) && (
               <div className="mt-6 rounded-lg border border-border bg-card p-5">
                 <h3 className="mb-3 text-sm font-semibold text-gray-900">Ficha do Produto</h3>
                 <dl className="space-y-2.5 text-sm">
-                  {product.categoryName && (
+                  {categoryName && (
                     <div className="flex items-start justify-between gap-2">
                       <dt className="text-muted-foreground">Categoria</dt>
-                      <dd className="text-right font-medium text-gray-800">{product.categoryName}</dd>
+                      <dd className="text-right font-medium text-gray-800">{categoryName}</dd>
                     </div>
                   )}
-                  {product.brand && (
+                  {brand && (
                     <div className="flex items-start justify-between gap-2">
                       <dt className="text-muted-foreground">Marca</dt>
-                      <dd className="text-right font-medium text-gray-800">{product.brand}</dd>
+                      <dd className="text-right font-medium text-gray-800">{brand}</dd>
                     </div>
                   )}
-                  {product.isKit && (
+                  {isKit && (
                     <div className="flex items-start justify-between gap-2">
                       <dt className="text-muted-foreground">Tipo</dt>
                       <dd className="text-right font-medium text-gray-800">Kit</dd>
                     </div>
                   )}
-                  {product.composition && (
+                  {composition && (
                     <div className="border-t border-border pt-2.5">
                       <dt className="mb-1 text-muted-foreground">Composicao</dt>
-                      <dd className="whitespace-pre-line text-xs leading-relaxed text-gray-700 line-clamp-4">{product.composition}</dd>
+                      <dd className="whitespace-pre-line text-xs leading-relaxed text-gray-700 line-clamp-4">{composition}</dd>
                     </div>
                   )}
                 </dl>
@@ -316,9 +279,9 @@ export default async function ProductPage({ params }: PageProps) {
       {/* ── Secao de conteudo ───────────────────────────────────────────────── */}
       {(productContent ||
         differentials.length > 0 ||
-        product.composition ||
-        product.usageInstructions ||
-        product.whoCanUse) && (
+        composition ||
+        usageInstructions ||
+        whoCanUse) && (
         <section
           aria-label="Detalhes do produto"
           className="mt-12 grid gap-8 lg:grid-cols-[1fr_380px]"
@@ -364,35 +327,35 @@ export default async function ProductPage({ params }: PageProps) {
 
           {/* Coluna direita: cards tecnicos */}
           <div className="flex flex-col gap-4 lg:sticky lg:top-24 lg:self-start">
-            {product.composition && (
+            {composition && (
               <div className="rounded-lg border border-border bg-card p-5">
                 <h3 className="mb-2 text-sm font-semibold text-gray-900">
                   Composicao
                 </h3>
                 <p className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
-                  {product.composition}
+                  {composition}
                 </p>
               </div>
             )}
 
-            {product.usageInstructions && (
+            {usageInstructions && (
               <div className="rounded-lg border border-border bg-card p-5">
                 <h3 className="mb-2 text-sm font-semibold text-gray-900">
                   Sugestao de uso
                 </h3>
                 <p className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
-                  {product.usageInstructions}
+                  {usageInstructions}
                 </p>
               </div>
             )}
 
-            {product.whoCanUse && (
+            {whoCanUse && (
               <div className="rounded-lg border border-border bg-card p-5">
                 <h3 className="mb-2 text-sm font-semibold text-gray-900">
                   Quem pode usar?
                 </h3>
                 <p className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
-                  {product.whoCanUse}
+                  {whoCanUse}
                 </p>
               </div>
             )}

@@ -48,14 +48,10 @@ export async function generateMetadata({ params }: Props) {
 }
 
 export async function generateStaticParams() {
-  const { db } = await import("@/db");
-  const { posts } = await import("@/db/schema");
-  const { eq } = await import("drizzle-orm");
-  const rows = await db
-    .select({ slug: posts.slug })
-    .from(posts)
-    .where(eq(posts.status, "published"));
-  return rows.map((row) => ({ slug: row.slug }));
+  const { cms } = await import("@/lib/cms");
+  const result = await cms.posts.list({ limit: 1000 });
+  if (!result) return [];
+  return result.docs.map((post) => ({ slug: post.slug }));
 }
 
 export default async function PostPage({ params }: Props) {

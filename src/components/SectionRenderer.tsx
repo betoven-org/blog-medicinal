@@ -1,4 +1,4 @@
-import type { SectionBlock } from "@brasa/core/manifest";
+import type { SectionBlock } from "@/lib/cms";
 import Hero from "@/components/sections/Hero";
 import Features from "@/components/sections/Features";
 import Banner from "@/components/sections/Banner";

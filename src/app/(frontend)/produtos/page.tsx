@@ -1,9 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { db } from "@brasa/core/db";
-import { products, media } from "@brasa/core/schema";
-import { eq, desc, count } from "drizzle-orm";
+import { cms } from "@/lib/cms";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { Package, ChevronLeft, ChevronRight } from "lucide-react";
 import { getSiteSettings } from "@/lib/queries";
@@ -26,30 +24,12 @@ export default async function AllProductsPage({ searchParams }: PageProps) {
   const page = Math.max(1, parseInt(pageParam ?? "1", 10));
   const offset = (page - 1) * PAGE_SIZE;
 
-  const [{ total }] = await db
-    .select({ total: count() })
-    .from(products)
-    .where(eq(products.status, "published"));
-
-  const totalPages = Math.ceil(total / PAGE_SIZE);
-
-  const rows = await db
-    .select({
-      id: products.id,
-      name: products.name,
-      slug: products.slug,
-      description: products.description,
-      seoDescription: products.seoDescription,
-      featured: products.featured,
-      imageUrl: media.url,
-      imageAlt: media.alt,
-    })
-    .from(products)
-    .leftJoin(media, eq(products.imageId, media.id))
-    .where(eq(products.status, "published"))
-    .orderBy(desc(products.featured), desc(products.createdAt))
-    .limit(PAGE_SIZE)
-    .offset(offset);
+  const result = await cms.products.list({ limit: PAGE_SIZE, offset });
+  const rows = result.docs;
+  // Estimate total from the result (SDK returns all matching)
+  // Since the SDK doesn't return totalDocs for products, we use a heuristic
+  const total = rows.length;
+  const totalPages = rows.length < PAGE_SIZE ? page : page + 1;
 
   const breadcrumbItems = [
     { label: "Inicio", href: "/" },
@@ -79,7 +59,7 @@ export default async function AllProductsPage({ searchParams }: PageProps) {
               );
               const waUrl = `https://wa.me/${whatsappNumber}?text=${waMessage}`;
               const productHref = `/${product.slug}/p`;
-              const metaDesc = product.description ?? product.seoDescription;
+              const metaDesc = product.description;
 
               return (
                 <li
@@ -87,10 +67,10 @@ export default async function AllProductsPage({ searchParams }: PageProps) {
                   className="group flex flex-col rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm transition-all duration-200 hover:shadow-lg hover:border-[#0d61ac]/20 hover:-translate-y-0.5"
                 >
                   <Link href={productHref} className="relative block aspect-square bg-gray-50/50 p-4">
-                    {product.imageUrl ? (
+                    {product.image?.url ? (
                       <Image
-                        src={product.imageUrl}
-                        alt={product.imageAlt ?? product.name}
+                        src={product.image.url}
+                        alt={product.image.alt ?? product.name}
                         fill
                         sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                         className="object-contain p-2 transition-transform duration-300 group-hover:scale-105"
@@ -161,10 +141,10 @@ export default async function AllProductsPage({ searchParams }: PageProps) {
               )}
 
               <span className="text-sm text-muted-foreground">
-                {page} de {totalPages}
+                Pagina {page}
               </span>
 
-              {page < totalPages ? (
+              {rows.length === PAGE_SIZE ? (
                 <Link
                   href={`?page=${page + 1}`}
                   className="inline-flex items-center gap-1.5 rounded-md border px-3 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors"

@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@brasa/core/db";
-import { posts, categories, authors } from "@brasa/core/schema";
-import { eq, and, or, ilike, desc } from "drizzle-orm";
-import { getTenantId } from "@/lib/tenant";
+import { cms } from "@/lib/cms";
 
 export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams.get("q")?.trim();
@@ -10,26 +7,14 @@ export async function GET(req: NextRequest) {
     return NextResponse.json([]);
   }
 
-  const tenantId = await getTenantId();
-  const pattern = `%${q}%`;
+  const result = await cms.posts.list({ search: q, limit: 8 });
 
-  const results = await db
-    .select({
-      id: posts.id,
-      title: posts.title,
-      slug: posts.slug,
-      excerpt: posts.excerpt,
-    })
-    .from(posts)
-    .where(
-      and(
-        eq(posts.tenantId, tenantId),
-        eq(posts.status, "published"),
-        or(ilike(posts.title, pattern), ilike(posts.excerpt, pattern))
-      )
-    )
-    .orderBy(desc(posts.publishedAt))
-    .limit(8);
+  const results = result.docs.map((post) => ({
+    id: post.id,
+    title: post.title,
+    slug: post.slug,
+    excerpt: post.excerpt,
+  }));
 
   return NextResponse.json(results);
 }
