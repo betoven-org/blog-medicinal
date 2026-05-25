@@ -1,6 +1,74 @@
 {
-  "generatedAt": "2026-05-25T03:18:40.448Z",
+  "generatedAt": "2026-05-25T03:23:11.424Z",
   "sections": [
+    {
+      "key": "Accordion",
+      "title": "Accordion",
+      "path": "sections/Accordion",
+      "props": {
+        "title": {
+          "type": "string",
+          "format": "text",
+          "required": false
+        },
+        "items": {
+          "type": "array",
+          "required": true,
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string",
+                "format": "text",
+                "required": true
+              },
+              "content": {
+                "type": "string",
+                "format": "rich-text",
+                "required": true
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "key": "Alert",
+      "title": "Alert",
+      "path": "sections/Alert",
+      "props": {
+        "text": {
+          "type": "string",
+          "format": "text",
+          "description": "Texto do alerta",
+          "required": true
+        },
+        "type": {
+          "type": "string",
+          "format": "select",
+          "required": false,
+          "default": "info",
+          "options": [
+            "info",
+            "success",
+            "warning",
+            "error"
+          ]
+        },
+        "dismissible": {
+          "type": "boolean",
+          "description": "Permite fechar o alerta",
+          "required": false,
+          "default": false
+        },
+        "icon": {
+          "type": "boolean",
+          "description": "Exibir ícone",
+          "required": false,
+          "default": true
+        }
+      }
+    },
     {
       "key": "Banner",
       "title": "Banner",
@@ -59,6 +127,57 @@
       }
     },
     {
+      "key": "CTA",
+      "title": "CTA",
+      "description": "Banner de chamada para acao com titulo, descricao e botao",
+      "group": "Marketing",
+      "path": "sections/CTA",
+      "props": {
+        "title": {
+          "type": "string",
+          "format": "text",
+          "required": true
+        },
+        "description": {
+          "type": "string",
+          "format": "text",
+          "description": "Descricao opcional do CTA",
+          "required": false
+        },
+        "buttonText": {
+          "type": "string",
+          "format": "text",
+          "required": false,
+          "default": "Saiba mais"
+        },
+        "buttonHref": {
+          "type": "string",
+          "format": "text",
+          "required": true
+        },
+        "buttonNewTab": {
+          "type": "boolean",
+          "required": false,
+          "default": false
+        },
+        "backgroundImage": {
+          "type": "string",
+          "format": "image",
+          "required": false
+        },
+        "style": {
+          "type": "string",
+          "format": "select",
+          "required": false,
+          "options": [
+            "light",
+            "dark",
+            "brand"
+          ]
+        }
+      }
+    },
+    {
       "key": "CategoryBar",
       "title": "Barra de Categorias",
       "description": "Navegacao rapida por categorias",
@@ -83,6 +202,129 @@
           "title": "Limite",
           "required": false,
           "default": 10
+        }
+      }
+    },
+    {
+      "key": "ContactForm",
+      "title": "Formulario de Contato",
+      "description": "Formulario com nome, email, telefone, assunto e mensagem",
+      "group": "Institucional",
+      "path": "sections/ContactForm",
+      "props": {
+        "title": {
+          "type": "string",
+          "format": "text",
+          "title": "Titulo",
+          "required": false,
+          "default": "Entre em Contato"
+        },
+        "subtitle": {
+          "type": "string",
+          "format": "text",
+          "title": "Subtitulo",
+          "required": false
+        },
+        "email": {
+          "type": "string",
+          "format": "text",
+          "title": "Email destino",
+          "required": true
+        },
+        "showPhone": {
+          "type": "boolean",
+          "title": "Mostrar campo telefone",
+          "required": false,
+          "default": true
+        },
+        "showSubject": {
+          "type": "boolean",
+          "title": "Mostrar campo assunto",
+          "required": false,
+          "default": true
+        },
+        "buttonText": {
+          "type": "string",
+          "format": "text",
+          "title": "Texto do botao",
+          "required": false,
+          "default": "Enviar"
+        },
+        "successMessage": {
+          "type": "string",
+          "format": "text",
+          "title": "Mensagem de sucesso",
+          "required": false,
+          "default": "Mensagem enviada com sucesso!"
+        }
+      }
+    },
+    {
+      "key": "Divider",
+      "title": "Divider",
+      "description": "Separador visual entre seções — linha, espaço ou pontos decorativos",
+      "group": "Layout",
+      "path": "sections/Divider",
+      "props": {
+        "style": {
+          "type": "string",
+          "format": "select",
+          "required": false,
+          "default": "line",
+          "options": [
+            "line",
+            "space",
+            "dots"
+          ]
+        },
+        "spacing": {
+          "type": "number",
+          "description": "Espaçamento em rem",
+          "required": false,
+          "default": 4
+        }
+      }
+    },
+    {
+      "key": "FAQ",
+      "title": "FAQ",
+      "description": "Perguntas frequentes em formato accordion",
+      "group": "Institucional",
+      "path": "sections/FAQ",
+      "props": {
+        "title": {
+          "type": "string",
+          "format": "text",
+          "title": "Titulo",
+          "required": true
+        },
+        "subtitle": {
+          "type": "string",
+          "format": "text",
+          "title": "Subtitulo",
+          "required": false
+        },
+        "items": {
+          "type": "array",
+          "title": "Perguntas",
+          "required": true,
+          "items": {
+            "type": "object",
+            "properties": {
+              "question": {
+                "type": "string",
+                "format": "text",
+                "title": "Pergunta",
+                "required": true
+              },
+              "answer": {
+                "type": "string",
+                "format": "textarea",
+                "title": "Resposta",
+                "required": true
+              }
+            }
+          }
         }
       }
     },
@@ -165,6 +407,58 @@
           "title": "Mostrar politica de privacidade",
           "required": false,
           "default": true
+        }
+      }
+    },
+    {
+      "key": "Gallery",
+      "title": "Gallery",
+      "path": "sections/Gallery",
+      "props": {
+        "title": {
+          "type": "string",
+          "format": "text",
+          "description": "Título opcional",
+          "required": false
+        },
+        "items": {
+          "type": "array",
+          "description": "Itens da galeria",
+          "required": true,
+          "items": {
+            "type": "object",
+            "properties": {
+              "image": {
+                "type": "string",
+                "format": "image",
+                "required": true
+              },
+              "alt": {
+                "type": "string",
+                "format": "text",
+                "description": "Texto alternativo",
+                "required": true
+              },
+              "caption": {
+                "type": "string",
+                "format": "text",
+                "description": "Legenda opcional",
+                "required": false
+              }
+            }
+          }
+        },
+        "columns": {
+          "type": "number",
+          "description": "Número de colunas",
+          "required": false,
+          "default": 3
+        },
+        "gap": {
+          "type": "number",
+          "description": "Espaçamento entre itens (em unidades Tailwind)",
+          "required": false,
+          "default": 2
         }
       }
     },
@@ -329,6 +623,173 @@
           "title": "Posts laterais",
           "required": false,
           "default": 4
+        }
+      }
+    },
+    {
+      "key": "ImageText",
+      "title": "ImageText",
+      "description": "Imagem de um lado e texto do outro, responsivo",
+      "group": "Conteudo",
+      "path": "sections/ImageText",
+      "props": {
+        "title": {
+          "type": "string",
+          "format": "text",
+          "required": true
+        },
+        "text": {
+          "type": "string",
+          "format": "rich-text",
+          "required": true
+        },
+        "image": {
+          "type": "string",
+          "format": "image",
+          "required": true
+        },
+        "imageAlt": {
+          "type": "string",
+          "format": "text",
+          "required": true
+        },
+        "imagePosition": {
+          "type": "string",
+          "format": "select",
+          "required": false,
+          "default": "esquerda",
+          "options": [
+            "esquerda",
+            "direita"
+          ]
+        },
+        "style": {
+          "type": "string",
+          "format": "select",
+          "required": false,
+          "options": [
+            "light",
+            "dark"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Logos",
+      "title": "Logos",
+      "path": "sections/Logos",
+      "props": {
+        "title": {
+          "type": "string",
+          "format": "text",
+          "required": false,
+          "default": "Parceiros"
+        },
+        "items": {
+          "type": "array",
+          "required": true,
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "format": "text",
+                "required": true
+              },
+              "logo": {
+                "type": "string",
+                "format": "image",
+                "required": true
+              },
+              "url": {
+                "type": "string",
+                "format": "text",
+                "required": false
+              }
+            }
+          }
+        },
+        "grayscale": {
+          "type": "boolean",
+          "required": false,
+          "default": true
+        }
+      }
+    },
+    {
+      "key": "Map",
+      "title": "Map",
+      "description": "Mapa do Google Maps incorporado com endereço",
+      "group": "Institucional",
+      "path": "sections/Map",
+      "props": {
+        "title": {
+          "type": "string",
+          "format": "text",
+          "description": "Título opcional acima do mapa",
+          "required": false
+        },
+        "address": {
+          "type": "string",
+          "format": "text",
+          "description": "Endereço exibido como texto",
+          "required": true
+        },
+        "mapUrl": {
+          "type": "string",
+          "format": "text",
+          "description": "URL de embed do Google Maps",
+          "required": true
+        },
+        "height": {
+          "type": "number",
+          "description": "Altura do mapa em pixels",
+          "required": false,
+          "default": 400
+        }
+      }
+    },
+    {
+      "key": "Newsletter",
+      "title": "Newsletter",
+      "description": "Formulário de inscrição na newsletter com múltiplos estilos visuais",
+      "group": "Marketing",
+      "path": "sections/Newsletter",
+      "props": {
+        "title": {
+          "type": "string",
+          "format": "text",
+          "required": false,
+          "default": "Assine nossa newsletter"
+        },
+        "description": {
+          "type": "string",
+          "format": "text",
+          "description": "Descrição opcional abaixo do título",
+          "required": false
+        },
+        "buttonText": {
+          "type": "string",
+          "format": "text",
+          "required": false,
+          "default": "Inscrever"
+        },
+        "style": {
+          "type": "string",
+          "format": "select",
+          "required": false,
+          "default": "card",
+          "options": [
+            "inline",
+            "card",
+            "fullwidth"
+          ]
+        },
+        "backgroundColor": {
+          "type": "string",
+          "format": "color",
+          "description": "Cor de fundo customizada",
+          "required": false
         }
       }
     },
@@ -564,6 +1025,75 @@
       }
     },
     {
+      "key": "Pricing",
+      "title": "Pricing",
+      "path": "sections/Pricing",
+      "props": {
+        "title": {
+          "type": "string",
+          "format": "text",
+          "required": false,
+          "default": "Planos"
+        },
+        "subtitle": {
+          "type": "string",
+          "format": "text",
+          "required": false
+        },
+        "plans": {
+          "type": "array",
+          "required": true,
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "format": "text",
+                "required": true
+              },
+              "price": {
+                "type": "string",
+                "format": "text",
+                "required": true
+              },
+              "period": {
+                "type": "string",
+                "format": "text",
+                "required": false,
+                "default": "mes"
+              },
+              "description": {
+                "type": "string",
+                "format": "text",
+                "required": true
+              },
+              "features": {
+                "type": "string",
+                "format": "text",
+                "description": "Lista de funcionalidades separadas por virgula",
+                "required": true
+              },
+              "highlighted": {
+                "type": "boolean",
+                "required": false,
+                "default": false
+              },
+              "buttonText": {
+                "type": "string",
+                "format": "text",
+                "required": true
+              },
+              "buttonHref": {
+                "type": "string",
+                "format": "text",
+                "required": true
+              }
+            }
+          }
+        }
+      }
+    },
+    {
       "key": "ProductShowcase",
       "title": "Vitrine de Produtos",
       "description": "Grade de produtos da farmacia",
@@ -628,6 +1158,370 @@
           "title": "Mostrar descricao",
           "required": false,
           "default": false
+        }
+      }
+    },
+    {
+      "key": "RichContent",
+      "title": "RichContent",
+      "description": "Bloco de conteudo rich-text centralizado com largura configuravel",
+      "group": "Conteudo",
+      "path": "sections/RichContent",
+      "props": {
+        "title": {
+          "type": "string",
+          "format": "text",
+          "required": false
+        },
+        "content": {
+          "type": "string",
+          "format": "rich-text",
+          "required": true
+        },
+        "maxWidth": {
+          "type": "string",
+          "format": "select",
+          "required": false,
+          "default": "medium",
+          "options": [
+            "narrow",
+            "medium",
+            "wide"
+          ]
+        }
+      }
+    },
+    {
+      "key": "SocialProof",
+      "title": "SocialProof",
+      "path": "sections/SocialProof",
+      "props": {
+        "title": {
+          "type": "string",
+          "format": "text",
+          "description": "Título opcional",
+          "required": false
+        },
+        "items": {
+          "type": "array",
+          "description": "Itens de prova social",
+          "required": true,
+          "items": {
+            "type": "object",
+            "properties": {
+              "platform": {
+                "type": "string",
+                "format": "select",
+                "required": true,
+                "options": [
+                  "google",
+                  "facebook",
+                  "instagram",
+                  "trustpilot"
+                ]
+              },
+              "rating": {
+                "type": "number",
+                "description": "Nota (ex: 4.8)",
+                "required": true
+              },
+              "totalReviews": {
+                "type": "string",
+                "format": "text",
+                "description": "Total de avaliações (ex: \"1.2k\")",
+                "required": true
+              },
+              "url": {
+                "type": "string",
+                "format": "text",
+                "description": "Link para a página de avaliações",
+                "required": false
+              }
+            }
+          }
+        },
+        "style": {
+          "type": "string",
+          "format": "select",
+          "required": false,
+          "default": "compact",
+          "options": [
+            "compact",
+            "detailed"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Stats",
+      "title": "Estatisticas",
+      "description": "Numeros grandes em destaque — \"500+ Clientes\", \"10 Anos\", etc.",
+      "group": "Institucional",
+      "path": "sections/Stats",
+      "props": {
+        "title": {
+          "type": "string",
+          "format": "text",
+          "title": "Titulo",
+          "required": false
+        },
+        "columns": {
+          "type": "number",
+          "title": "Colunas",
+          "required": false,
+          "default": 4
+        },
+        "style": {
+          "type": "string",
+          "format": "select",
+          "title": "Estilo",
+          "required": false,
+          "options": [
+            "light",
+            "dark",
+            "brand"
+          ]
+        },
+        "items": {
+          "type": "array",
+          "title": "Itens",
+          "required": true,
+          "items": {
+            "type": "object",
+            "properties": {
+              "value": {
+                "type": "string",
+                "format": "text",
+                "title": "Valor",
+                "required": true
+              },
+              "label": {
+                "type": "string",
+                "format": "text",
+                "title": "Label",
+                "required": true
+              },
+              "suffix": {
+                "type": "string",
+                "format": "text",
+                "title": "Sufixo",
+                "required": false
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "key": "Team",
+      "title": "Equipe",
+      "description": "Grid de membros da equipe com foto, cargo e bio",
+      "group": "Institucional",
+      "path": "sections/Team",
+      "props": {
+        "title": {
+          "type": "string",
+          "format": "text",
+          "title": "Titulo",
+          "required": true
+        },
+        "subtitle": {
+          "type": "string",
+          "format": "text",
+          "title": "Subtitulo",
+          "required": false
+        },
+        "columns": {
+          "type": "number",
+          "title": "Colunas",
+          "required": false,
+          "default": 3
+        },
+        "members": {
+          "type": "array",
+          "title": "Membros",
+          "required": true,
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "format": "text",
+                "title": "Nome",
+                "required": true
+              },
+              "role": {
+                "type": "string",
+                "format": "text",
+                "title": "Cargo",
+                "required": true
+              },
+              "bio": {
+                "type": "string",
+                "format": "textarea",
+                "title": "Bio",
+                "required": true
+              },
+              "photo": {
+                "type": "string",
+                "format": "image",
+                "title": "Foto",
+                "required": true
+              },
+              "linkedin": {
+                "type": "string",
+                "format": "text",
+                "title": "LinkedIn URL",
+                "required": false
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "key": "Testimonials",
+      "title": "Depoimentos",
+      "description": "Grid de depoimentos com avatar, nome e texto",
+      "group": "Institucional",
+      "path": "sections/Testimonials",
+      "props": {
+        "title": {
+          "type": "string",
+          "format": "text",
+          "title": "Titulo",
+          "required": true
+        },
+        "subtitle": {
+          "type": "string",
+          "format": "text",
+          "title": "Subtitulo",
+          "required": false
+        },
+        "columns": {
+          "type": "number",
+          "title": "Colunas",
+          "required": false,
+          "default": 3
+        },
+        "items": {
+          "type": "array",
+          "title": "Depoimentos",
+          "required": true,
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "format": "text",
+                "title": "Nome",
+                "required": true
+              },
+              "role": {
+                "type": "string",
+                "format": "text",
+                "title": "Cargo",
+                "required": true
+              },
+              "text": {
+                "type": "string",
+                "format": "textarea",
+                "title": "Depoimento",
+                "required": true
+              },
+              "avatar": {
+                "type": "string",
+                "format": "image",
+                "title": "Avatar",
+                "required": false
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "key": "Timeline",
+      "title": "Linha do Tempo",
+      "description": "Timeline vertical com anos, titulos e descricoes",
+      "group": "Institucional",
+      "path": "sections/Timeline",
+      "props": {
+        "title": {
+          "type": "string",
+          "format": "text",
+          "title": "Titulo",
+          "required": true
+        },
+        "subtitle": {
+          "type": "string",
+          "format": "text",
+          "title": "Subtitulo",
+          "required": false
+        },
+        "items": {
+          "type": "array",
+          "title": "Itens",
+          "required": true,
+          "items": {
+            "type": "object",
+            "properties": {
+              "year": {
+                "type": "string",
+                "format": "text",
+                "title": "Ano",
+                "required": true
+              },
+              "title": {
+                "type": "string",
+                "format": "text",
+                "title": "Titulo",
+                "required": true
+              },
+              "description": {
+                "type": "string",
+                "format": "textarea",
+                "title": "Descricao",
+                "required": true
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "key": "VideoEmbed",
+      "title": "VideoEmbed",
+      "description": "Embed responsivo de video do YouTube ou Vimeo",
+      "group": "Conteudo",
+      "path": "sections/VideoEmbed",
+      "props": {
+        "title": {
+          "type": "string",
+          "format": "text",
+          "required": false
+        },
+        "description": {
+          "type": "string",
+          "format": "text",
+          "required": false
+        },
+        "videoUrl": {
+          "type": "string",
+          "format": "text",
+          "description": "URL do YouTube ou Vimeo",
+          "required": true
+        },
+        "aspectRatio": {
+          "type": "string",
+          "format": "select",
+          "required": false,
+          "default": "16:9",
+          "options": [
+            "16:9",
+            "4:3",
+            "1:1"
+          ]
         }
       }
     },
