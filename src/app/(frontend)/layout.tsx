@@ -2,6 +2,8 @@ import { Suspense } from "react";
 import { Roboto } from "next/font/google";
 import { NavigationProgress } from "@/components/NavigationProgress";
 import { UmamiScript } from "@/components/UmamiScript";
+import Header from "@/components/sections/Header";
+import Footer from "@/components/sections/Footer";
 import "../globals.css";
 
 const roboto = Roboto({
@@ -34,7 +36,9 @@ export default function FrontendLayout({
         <Suspense fallback={null}>
           <NavigationProgress />
         </Suspense>
+        <Header />
         {children}
+        <Footer />
         <Suspense fallback={null}>
           <UmamiScript />
         </Suspense>

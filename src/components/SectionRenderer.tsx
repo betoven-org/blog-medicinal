@@ -87,10 +87,13 @@ type SectionRendererProps = {
   blocks: SectionBlock[];
 };
 
+const LAYOUT_SECTIONS = new Set(["Header", "Footer"]);
+
 export function SectionRenderer({ blocks }: SectionRendererProps) {
   return (
     <>
       {blocks.map((block) => {
+        if (LAYOUT_SECTIONS.has(block.component)) return null;
         const Component = SECTION_MAP[block.component];
 
         if (!Component) {
