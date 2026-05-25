@@ -9,22 +9,17 @@
 import { useState } from "react";
 
 export interface Props {
-  /** Texto do alerta */
+  /** @title Texto */
   text: string;
-  /**
-   * @options info,success,warning,error
-   * @default info
-   */
+  /** @title Tipo */
+  /** @options info,success,warning,error */
+  /** @default info */
   type?: "info" | "success" | "warning" | "error";
-  /**
-   * Permite fechar o alerta
-   * @default false
-   */
+  /** @title Dispensavel */
+  /** @default false */
   dismissible?: boolean;
-  /**
-   * Exibir ícone
-   * @default true
-   */
+  /** @title Exibir icone */
+  /** @default true */
   icon?: boolean;
 }
 

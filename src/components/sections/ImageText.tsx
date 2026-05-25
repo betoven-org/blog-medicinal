@@ -5,17 +5,23 @@
  */
 
 export interface Props {
+  /** @title Titulo */
   title: string;
+  /** @title Texto */
   /** @format rich-text */
   text: string;
+  /** @title Imagem */
   /** @format image */
   image: string;
+  /** @title Texto alternativo da imagem */
   imageAlt: string;
-  /** @options esquerda,direita
-   * @default esquerda
-   */
+  /** @title Posicao da imagem */
+  /** @options esquerda,direita */
+  /** @default esquerda */
   imagePosition?: "esquerda" | "direita";
+  /** @title Estilo */
   /** @options light,dark */
+  /** @default light */
   style?: "light" | "dark";
 }
 

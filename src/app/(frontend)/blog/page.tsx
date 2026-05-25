@@ -4,6 +4,9 @@ import { ArticleCard } from "@/components/ArticleCard";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { getLatestPosts, getCategories } from "@/lib/queries";
 import { resolveRelation } from "@/lib/utils";
+import { cms } from "@/lib/cms";
+import { SectionRenderer } from "@/components/SectionRenderer";
+import type { SectionBlock } from "@/lib/cms";
 
 export const metadata: Metadata = {
   title: "Todos os Posts",
@@ -15,6 +18,12 @@ type Props = {
 };
 
 export default async function BlogPage({ searchParams }: Props) {
+  const cmsPage = await cms.pages.get("blog");
+  const sectionBlocks: SectionBlock[] = cmsPage?.sections ?? [];
+  if (sectionBlocks.length > 0) {
+    return <SectionRenderer blocks={sectionBlocks} />;
+  }
+
   const { page: pageParam } = await searchParams;
   const page = Math.max(1, parseInt(pageParam ?? "1", 10) || 1);
 

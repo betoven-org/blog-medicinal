@@ -5,16 +5,23 @@
  */
 
 export interface LogoItem {
+  /** @title Nome */
   name: string;
+  /** @title Logo */
   /** @format image */
   logo: string;
+  /** @title URL */
+  /** @format url */
   url?: string;
 }
 
 export interface Props {
+  /** @title Titulo */
   /** @default Parceiros */
   title?: string;
+  /** @title Itens */
   items: LogoItem[];
+  /** @title Escala de cinza */
   /** @default true */
   grayscale?: boolean;
 }

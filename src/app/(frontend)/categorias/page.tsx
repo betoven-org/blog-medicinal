@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { getCategoriesWithCount } from "@/lib/queries";
+import { cms } from "@/lib/cms";
+import { SectionRenderer } from "@/components/SectionRenderer";
+import type { SectionBlock } from "@/lib/cms";
 
 export const metadata: Metadata = {
   title: "Categorias",
@@ -18,6 +21,12 @@ const categoryIcons: Record<string, React.ReactNode> = {
 };
 
 export default async function CategoriesPage() {
+  const cmsPage = await cms.pages.get("categorias");
+  const sectionBlocks: SectionBlock[] = cmsPage?.sections ?? [];
+  if (sectionBlocks.length > 0) {
+    return <SectionRenderer blocks={sectionBlocks} />;
+  }
+
   const categories = await getCategoriesWithCount();
 
   return (

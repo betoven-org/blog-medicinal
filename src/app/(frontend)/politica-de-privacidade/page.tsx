@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { getPageBySlug } from "@/lib/queries";
 import { Breadcrumb } from "@/components/Breadcrumb";
+import { cms } from "@/lib/cms";
+import { SectionRenderer } from "@/components/SectionRenderer";
+import type { SectionBlock } from "@/lib/cms";
 
 export async function generateMetadata(): Promise<Metadata> {
   const page = await getPageBySlug("politica-de-privacidade");
@@ -11,6 +14,12 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function PrivacyPolicyPage() {
+  const cmsPage = await cms.pages.get("politica-de-privacidade");
+  const sectionBlocks: SectionBlock[] = cmsPage?.sections ?? [];
+  if (sectionBlocks.length > 0) {
+    return <SectionRenderer blocks={sectionBlocks} />;
+  }
+
   const page = await getPageBySlug("politica-de-privacidade");
   const content = page?.content ?? "";
 

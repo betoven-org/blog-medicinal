@@ -5,16 +5,14 @@
  */
 
 export interface Props {
-  /** Título opcional acima do mapa */
+  /** @title Titulo */
   title?: string;
-  /** Endereço exibido como texto */
+  /** @title Endereco */
   address: string;
-  /** URL de embed do Google Maps */
+  /** @title URL do mapa (embed) */
   mapUrl: string;
-  /**
-   * Altura do mapa em pixels
-   * @default 400
-   */
+  /** @title Altura do mapa (px) */
+  /** @default 400 */
   height?: number;
 }
 

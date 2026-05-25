@@ -5,27 +5,26 @@
  */
 
 export interface SocialProofItem {
-  /**
-   * @options google,facebook,instagram,trustpilot
-   */
+  /** @title Plataforma */
+  /** @options google,facebook,instagram,trustpilot */
   platform: "google" | "facebook" | "instagram" | "trustpilot";
-  /** Nota (ex: 4.8) */
+  /** @title Nota */
   rating: number;
-  /** Total de avaliações (ex: "1.2k") */
+  /** @title Total de avaliacoes */
   totalReviews: string;
-  /** Link para a página de avaliações */
+  /** @title URL da pagina */
+  /** @format url */
   url?: string;
 }
 
 export interface Props {
-  /** Título opcional */
+  /** @title Titulo */
   title?: string;
-  /** Itens de prova social */
+  /** @title Itens */
   items: SocialProofItem[];
-  /**
-   * @options compact,detailed
-   * @default compact
-   */
+  /** @title Estilo */
+  /** @options compact,detailed */
+  /** @default compact */
   style?: "compact" | "detailed";
 }
 

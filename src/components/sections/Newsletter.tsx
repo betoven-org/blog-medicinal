@@ -5,25 +5,21 @@
  */
 
 export interface Props {
-  /**
-   * @default Assine nossa newsletter
-   */
+  /** @title Titulo */
+  /** @default Assine nossa newsletter */
   title?: string;
-  /** Descrição opcional abaixo do título */
+  /** @title Descricao */
+  /** @format textarea */
   description?: string;
-  /**
-   * @default Inscrever
-   */
+  /** @title Texto do botao */
+  /** @default Inscrever */
   buttonText?: string;
-  /**
-   * @options inline,card,fullwidth
-   * @default card
-   */
+  /** @title Estilo */
+  /** @options inline,card,fullwidth */
+  /** @default card */
   style?: "inline" | "card" | "fullwidth";
-  /**
-   * Cor de fundo customizada
-   * @format color
-   */
+  /** @title Cor de fundo */
+  /** @format color */
   backgroundColor?: string;
 }
 

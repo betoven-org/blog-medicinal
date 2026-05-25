@@ -5,17 +5,26 @@
  */
 
 export interface Props {
+  /** @title Titulo */
   title: string;
-  /** @description Descricao opcional do CTA */
+  /** @title Descricao */
+  /** @format textarea */
   description?: string;
+  /** @title Texto do botao */
   /** @default Saiba mais */
   buttonText?: string;
+  /** @title Link do botao */
+  /** @format url */
   buttonHref: string;
+  /** @title Abrir em nova aba */
   /** @default false */
   buttonNewTab?: boolean;
+  /** @title Imagem de fundo */
   /** @format image */
   backgroundImage?: string;
+  /** @title Estilo */
   /** @options light,dark,brand */
+  /** @default dark */
   style?: "light" | "dark" | "brand";
 }
 

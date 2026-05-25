@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-25T03:23:11.424Z",
+  "generatedAt": "2026-05-25T03:30:24.403Z",
   "sections": [
     {
       "key": "Accordion",
@@ -9,10 +9,12 @@
         "title": {
           "type": "string",
           "format": "text",
+          "title": "Titulo",
           "required": false
         },
         "items": {
           "type": "array",
+          "title": "Itens",
           "required": true,
           "items": {
             "type": "object",
@@ -20,11 +22,13 @@
               "title": {
                 "type": "string",
                 "format": "text",
+                "title": "Titulo",
                 "required": true
               },
               "content": {
                 "type": "string",
                 "format": "rich-text",
+                "title": "Conteudo",
                 "required": true
               }
             }
@@ -40,12 +44,13 @@
         "text": {
           "type": "string",
           "format": "text",
-          "description": "Texto do alerta",
+          "title": "Texto",
           "required": true
         },
         "type": {
           "type": "string",
           "format": "select",
+          "title": "Tipo",
           "required": false,
           "default": "info",
           "options": [
@@ -57,13 +62,13 @@
         },
         "dismissible": {
           "type": "boolean",
-          "description": "Permite fechar o alerta",
+          "title": "Dispensavel",
           "required": false,
           "default": false
         },
         "icon": {
           "type": "boolean",
-          "description": "Exibir ícone",
+          "title": "Exibir icone",
           "required": false,
           "default": true
         }
@@ -136,39 +141,46 @@
         "title": {
           "type": "string",
           "format": "text",
+          "title": "Titulo",
           "required": true
         },
         "description": {
           "type": "string",
-          "format": "text",
-          "description": "Descricao opcional do CTA",
+          "format": "textarea",
+          "title": "Descricao",
           "required": false
         },
         "buttonText": {
           "type": "string",
           "format": "text",
+          "title": "Texto do botao",
           "required": false,
           "default": "Saiba mais"
         },
         "buttonHref": {
           "type": "string",
-          "format": "text",
+          "format": "url",
+          "title": "Link do botao",
           "required": true
         },
         "buttonNewTab": {
           "type": "boolean",
+          "title": "Abrir em nova aba",
           "required": false,
           "default": false
         },
         "backgroundImage": {
           "type": "string",
           "format": "image",
+          "title": "Imagem de fundo",
           "required": false
         },
         "style": {
           "type": "string",
           "format": "select",
+          "title": "Estilo",
           "required": false,
+          "default": "dark",
           "options": [
             "light",
             "dark",
@@ -269,6 +281,7 @@
         "style": {
           "type": "string",
           "format": "select",
+          "title": "Estilo",
           "required": false,
           "default": "line",
           "options": [
@@ -279,7 +292,7 @@
         },
         "spacing": {
           "type": "number",
-          "description": "Espaçamento em rem",
+          "title": "Espacamento",
           "required": false,
           "default": 4
         }
@@ -418,12 +431,12 @@
         "title": {
           "type": "string",
           "format": "text",
-          "description": "Título opcional",
+          "title": "Titulo",
           "required": false
         },
         "items": {
           "type": "array",
-          "description": "Itens da galeria",
+          "title": "Itens",
           "required": true,
           "items": {
             "type": "object",
@@ -431,18 +444,19 @@
               "image": {
                 "type": "string",
                 "format": "image",
+                "title": "Imagem",
                 "required": true
               },
               "alt": {
                 "type": "string",
                 "format": "text",
-                "description": "Texto alternativo",
+                "title": "Texto alternativo",
                 "required": true
               },
               "caption": {
                 "type": "string",
                 "format": "text",
-                "description": "Legenda opcional",
+                "title": "Legenda",
                 "required": false
               }
             }
@@ -450,13 +464,13 @@
         },
         "columns": {
           "type": "number",
-          "description": "Número de colunas",
+          "title": "Colunas",
           "required": false,
           "default": 3
         },
         "gap": {
           "type": "number",
-          "description": "Espaçamento entre itens (em unidades Tailwind)",
+          "title": "Espacamento",
           "required": false,
           "default": 2
         }
@@ -636,26 +650,31 @@
         "title": {
           "type": "string",
           "format": "text",
+          "title": "Titulo",
           "required": true
         },
         "text": {
           "type": "string",
           "format": "rich-text",
+          "title": "Texto",
           "required": true
         },
         "image": {
           "type": "string",
           "format": "image",
+          "title": "Imagem",
           "required": true
         },
         "imageAlt": {
           "type": "string",
           "format": "text",
+          "title": "Texto alternativo da imagem",
           "required": true
         },
         "imagePosition": {
           "type": "string",
           "format": "select",
+          "title": "Posicao da imagem",
           "required": false,
           "default": "esquerda",
           "options": [
@@ -666,7 +685,9 @@
         "style": {
           "type": "string",
           "format": "select",
+          "title": "Estilo",
           "required": false,
+          "default": "light",
           "options": [
             "light",
             "dark"
@@ -682,11 +703,13 @@
         "title": {
           "type": "string",
           "format": "text",
+          "title": "Titulo",
           "required": false,
           "default": "Parceiros"
         },
         "items": {
           "type": "array",
+          "title": "Itens",
           "required": true,
           "items": {
             "type": "object",
@@ -694,16 +717,19 @@
               "name": {
                 "type": "string",
                 "format": "text",
+                "title": "Nome",
                 "required": true
               },
               "logo": {
                 "type": "string",
                 "format": "image",
+                "title": "Logo",
                 "required": true
               },
               "url": {
                 "type": "string",
-                "format": "text",
+                "format": "url",
+                "title": "URL",
                 "required": false
               }
             }
@@ -711,6 +737,7 @@
         },
         "grayscale": {
           "type": "boolean",
+          "title": "Escala de cinza",
           "required": false,
           "default": true
         }
@@ -726,24 +753,24 @@
         "title": {
           "type": "string",
           "format": "text",
-          "description": "Título opcional acima do mapa",
+          "title": "Titulo",
           "required": false
         },
         "address": {
           "type": "string",
           "format": "text",
-          "description": "Endereço exibido como texto",
+          "title": "Endereco",
           "required": true
         },
         "mapUrl": {
           "type": "string",
           "format": "text",
-          "description": "URL de embed do Google Maps",
+          "title": "URL do mapa (embed)",
           "required": true
         },
         "height": {
           "type": "number",
-          "description": "Altura do mapa em pixels",
+          "title": "Altura do mapa (px)",
           "required": false,
           "default": 400
         }
@@ -759,24 +786,27 @@
         "title": {
           "type": "string",
           "format": "text",
+          "title": "Titulo",
           "required": false,
           "default": "Assine nossa newsletter"
         },
         "description": {
           "type": "string",
-          "format": "text",
-          "description": "Descrição opcional abaixo do título",
+          "format": "textarea",
+          "title": "Descricao",
           "required": false
         },
         "buttonText": {
           "type": "string",
           "format": "text",
+          "title": "Texto do botao",
           "required": false,
           "default": "Inscrever"
         },
         "style": {
           "type": "string",
           "format": "select",
+          "title": "Estilo",
           "required": false,
           "default": "card",
           "options": [
@@ -788,7 +818,7 @@
         "backgroundColor": {
           "type": "string",
           "format": "color",
-          "description": "Cor de fundo customizada",
+          "title": "Cor de fundo",
           "required": false
         }
       }
@@ -1032,16 +1062,19 @@
         "title": {
           "type": "string",
           "format": "text",
+          "title": "Titulo",
           "required": false,
           "default": "Planos"
         },
         "subtitle": {
           "type": "string",
           "format": "text",
+          "title": "Subtitulo",
           "required": false
         },
         "plans": {
           "type": "array",
+          "title": "Planos",
           "required": true,
           "items": {
             "type": "object",
@@ -1049,43 +1082,51 @@
               "name": {
                 "type": "string",
                 "format": "text",
+                "title": "Nome do plano",
                 "required": true
               },
               "price": {
                 "type": "string",
                 "format": "text",
+                "title": "Preco",
                 "required": true
               },
               "period": {
                 "type": "string",
                 "format": "text",
+                "title": "Periodo",
                 "required": false,
                 "default": "mes"
               },
               "description": {
                 "type": "string",
-                "format": "text",
+                "format": "textarea",
+                "title": "Descricao",
                 "required": true
               },
               "features": {
                 "type": "string",
                 "format": "text",
+                "title": "Funcionalidades",
                 "description": "Lista de funcionalidades separadas por virgula",
                 "required": true
               },
               "highlighted": {
                 "type": "boolean",
+                "title": "Destacar plano",
                 "required": false,
                 "default": false
               },
               "buttonText": {
                 "type": "string",
                 "format": "text",
+                "title": "Texto do botao",
                 "required": true
               },
               "buttonHref": {
                 "type": "string",
                 "format": "text",
+                "title": "Link do botao",
                 "required": true
               }
             }
@@ -1171,16 +1212,19 @@
         "title": {
           "type": "string",
           "format": "text",
+          "title": "Titulo",
           "required": false
         },
         "content": {
           "type": "string",
           "format": "rich-text",
+          "title": "Conteudo",
           "required": true
         },
         "maxWidth": {
           "type": "string",
           "format": "select",
+          "title": "Largura maxima",
           "required": false,
           "default": "medium",
           "options": [
@@ -1199,12 +1243,12 @@
         "title": {
           "type": "string",
           "format": "text",
-          "description": "Título opcional",
+          "title": "Titulo",
           "required": false
         },
         "items": {
           "type": "array",
-          "description": "Itens de prova social",
+          "title": "Itens",
           "required": true,
           "items": {
             "type": "object",
@@ -1212,6 +1256,7 @@
               "platform": {
                 "type": "string",
                 "format": "select",
+                "title": "Plataforma",
                 "required": true,
                 "options": [
                   "google",
@@ -1222,19 +1267,19 @@
               },
               "rating": {
                 "type": "number",
-                "description": "Nota (ex: 4.8)",
+                "title": "Nota",
                 "required": true
               },
               "totalReviews": {
                 "type": "string",
                 "format": "text",
-                "description": "Total de avaliações (ex: \"1.2k\")",
+                "title": "Total de avaliacoes",
                 "required": true
               },
               "url": {
                 "type": "string",
-                "format": "text",
-                "description": "Link para a página de avaliações",
+                "format": "url",
+                "title": "URL da pagina",
                 "required": false
               }
             }
@@ -1243,6 +1288,7 @@
         "style": {
           "type": "string",
           "format": "select",
+          "title": "Estilo",
           "required": false,
           "default": "compact",
           "options": [
@@ -1499,22 +1545,25 @@
         "title": {
           "type": "string",
           "format": "text",
+          "title": "Titulo",
           "required": false
         },
         "description": {
           "type": "string",
-          "format": "text",
+          "format": "textarea",
+          "title": "Descricao",
           "required": false
         },
         "videoUrl": {
           "type": "string",
-          "format": "text",
-          "description": "URL do YouTube ou Vimeo",
+          "format": "url",
+          "title": "URL do video",
           "required": true
         },
         "aspectRatio": {
           "type": "string",
           "format": "select",
+          "title": "Proporcao",
           "required": false,
           "default": "16:9",
           "options": [

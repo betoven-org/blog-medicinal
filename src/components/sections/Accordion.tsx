@@ -9,13 +9,17 @@
 import { useState } from "react";
 
 export interface AccordionItem {
+  /** @title Titulo */
   title: string;
+  /** @title Conteudo */
   /** @format rich-text */
   content: string;
 }
 
 export interface Props {
+  /** @title Titulo */
   title?: string;
+  /** @title Itens */
   items: AccordionItem[];
 }
 

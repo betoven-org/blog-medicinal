@@ -2,6 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { cms } from "@/lib/cms";
+import { SectionRenderer } from "@/components/SectionRenderer";
+import type { SectionBlock } from "@/lib/cms";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { Package, ChevronLeft, ChevronRight } from "lucide-react";
 import { getSiteSettings } from "@/lib/queries";
@@ -18,6 +20,12 @@ type PageProps = {
 };
 
 export default async function AllProductsPage({ searchParams }: PageProps) {
+  const cmsPage = await cms.pages.get("produtos");
+  const sectionBlocks: SectionBlock[] = cmsPage?.sections ?? [];
+  if (sectionBlocks.length > 0) {
+    return <SectionRenderer blocks={sectionBlocks} />;
+  }
+
   const settings = await getSiteSettings();
   const whatsappNumber = (settings as any)?.whatsapp || "5531999999999";
   const { page: pageParam } = await searchParams;

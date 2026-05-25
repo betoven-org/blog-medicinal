@@ -5,15 +5,12 @@
  */
 
 export interface Props {
-  /**
-   * @options line,space,dots
-   * @default line
-   */
+  /** @title Estilo */
+  /** @options line,space,dots */
+  /** @default line */
   style?: "line" | "space" | "dots";
-  /**
-   * Espaçamento em rem
-   * @default 4
-   */
+  /** @title Espacamento */
+  /** @default 4 */
   spacing?: number;
 }
 

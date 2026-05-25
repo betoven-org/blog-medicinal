@@ -5,13 +5,17 @@
  */
 
 export interface Props {
+  /** @title Titulo */
   title?: string;
+  /** @title Descricao */
+  /** @format textarea */
   description?: string;
-  /** @description URL do YouTube ou Vimeo */
+  /** @title URL do video */
+  /** @format url */
   videoUrl: string;
-  /** @options 16:9,4:3,1:1
-   * @default 16:9
-   */
+  /** @title Proporcao */
+  /** @options 16:9,4:3,1:1 */
+  /** @default 16:9 */
   aspectRatio?: "16:9" | "4:3" | "1:1";
 }
 

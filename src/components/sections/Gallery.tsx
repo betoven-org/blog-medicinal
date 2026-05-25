@@ -5,30 +5,25 @@
  */
 
 export interface GalleryItem {
-  /**
-   * @format image
-   */
+  /** @title Imagem */
+  /** @format image */
   image: string;
-  /** Texto alternativo */
+  /** @title Texto alternativo */
   alt: string;
-  /** Legenda opcional */
+  /** @title Legenda */
   caption?: string;
 }
 
 export interface Props {
-  /** Título opcional */
+  /** @title Titulo */
   title?: string;
-  /** Itens da galeria */
+  /** @title Itens */
   items: GalleryItem[];
-  /**
-   * Número de colunas
-   * @default 3
-   */
+  /** @title Colunas */
+  /** @default 3 */
   columns?: number;
-  /**
-   * Espaçamento entre itens (em unidades Tailwind)
-   * @default 2
-   */
+  /** @title Espacamento */
+  /** @default 2 */
   gap?: number;
 }
 

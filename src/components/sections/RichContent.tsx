@@ -5,12 +5,14 @@
  */
 
 export interface Props {
+  /** @title Titulo */
   title?: string;
+  /** @title Conteudo */
   /** @format rich-text */
   content: string;
-  /** @options narrow,medium,wide
-   * @default medium
-   */
+  /** @title Largura maxima */
+  /** @options narrow,medium,wide */
+  /** @default medium */
   maxWidth?: "narrow" | "medium" | "wide";
 }
 

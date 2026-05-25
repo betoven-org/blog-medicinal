@@ -5,23 +5,35 @@
  */
 
 export interface PricingPlan {
+  /** @title Nome do plano */
   name: string;
+  /** @title Preco */
   price: string;
+  /** @title Periodo */
   /** @default mes */
   period?: string;
+  /** @title Descricao */
+  /** @format textarea */
   description: string;
+  /** @title Funcionalidades */
   /** @description Lista de funcionalidades separadas por virgula */
   features: string;
+  /** @title Destacar plano */
   /** @default false */
   highlighted?: boolean;
+  /** @title Texto do botao */
   buttonText: string;
+  /** @title Link do botao */
   buttonHref: string;
 }
 
 export interface Props {
+  /** @title Titulo */
   /** @default Planos */
   title?: string;
+  /** @title Subtitulo */
   subtitle?: string;
+  /** @title Planos */
   plans: PricingPlan[];
 }
 
