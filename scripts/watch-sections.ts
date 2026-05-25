@@ -27,6 +27,37 @@ function log(msg: string) {
   console.log(`${DIM}${time}${RESET} ${CYAN}[brasa]${RESET} ${msg}`);
 }
 
+const CMS_URL = process.env.CMS_URL || "https://cms.brasa.tech";
+const CMS_API_KEY = process.env.CMS_API_KEY || "";
+
+async function syncManifestToCms() {
+  if (!CMS_API_KEY) {
+    log(`${DIM}CMS_API_KEY nao configurada — sync pulado${RESET}`);
+    return;
+  }
+
+  try {
+    const manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, "utf-8"));
+    const res = await fetch(`${CMS_URL}/api/v1/manifest`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": CMS_API_KEY,
+      },
+      body: JSON.stringify(manifest),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      log(`${GREEN}Synced com CMS${RESET} ${DIM}(${data.sections} sections)${RESET}`);
+    } else {
+      log(`\x1b[31mErro sync CMS: ${res.status}\x1b[0m`);
+    }
+  } catch (err: any) {
+    log(`\x1b[31mErro sync CMS: ${err.message}\x1b[0m`);
+  }
+}
+
 function regenerate(reason: string) {
   log(`${YELLOW}${reason}${RESET} — regenerando manifest...`);
   try {
@@ -45,6 +76,9 @@ function regenerate(reason: string) {
     } catch {
       log(`${GREEN}manifest.json atualizado${RESET} ${DIM}(${elapsed}ms)${RESET}`);
     }
+
+    // Sync to CMS
+    syncManifestToCms();
   } catch (err: any) {
     console.error(`${CYAN}[brasa]${RESET} \x1b[31mErro ao gerar manifest:\x1b[0m`, err.stderr?.toString() || err.message);
   }

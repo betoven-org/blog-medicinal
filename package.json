@@ -23,6 +23,8 @@
     "init:env": "tsx scripts/init-env.ts",
     "init:project": "tsx scripts/init-project.ts",
     "prebuild": "tsx scripts/extract-sections.ts",
+    "postbuild": "tsx scripts/sync-manifest.ts",
+    "sync:cms": "tsx scripts/sync-manifest.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
