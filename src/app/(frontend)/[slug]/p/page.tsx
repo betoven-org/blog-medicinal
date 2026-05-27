@@ -17,6 +17,7 @@ import { Breadcrumb } from "@/components/Breadcrumb";
 import { TipTapRenderer, markdownToHtml } from "@/components/TipTapRenderer";
 import { ProductGallery } from "@/components/ProductGallery";
 import { getSiteSettings } from "@/lib/queries";
+import ProductFAQ from "@/components/ProductFAQ";
 
 // ── Types ───────────────────────────────────────────────────────────────────────
 
@@ -92,6 +93,7 @@ export default async function ProductPage({ params }: PageProps) {
   const contentHtml = productContent?._html as string | undefined;
   const brand = p.brand ?? null;
   const isKit = p.isKit ?? false;
+  const faq = (p.faq as { pergunta: string; resposta: string }[] | null) ?? [];
   const galleryImages = p.galleryImages as number[] | null;
 
   // Gallery images — if the API returns gallery URLs, use them
@@ -327,6 +329,11 @@ export default async function ProductPage({ params }: PageProps) {
             )}
           </div>
         </section>
+      )}
+
+      {/* ── FAQ ─────────────────────────────────────────────────────────────── */}
+      {faq.length > 0 && (
+        <ProductFAQ items={faq} productName={product.name} />
       )}
 
       {/* ── Trust bar ───────────────────────────────────────────────────────── */}
