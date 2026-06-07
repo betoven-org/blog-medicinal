@@ -41,6 +41,15 @@ import Newsletter from "@/components/sections/Newsletter";
 import Divider from "@/components/sections/Divider";
 import Alert from "@/components/sections/Alert";
 
+// Landing Page
+import LpHero from "@/components/sections/LpHero";
+import LpBenefits from "@/components/sections/LpBenefits";
+import LpTestimonials from "@/components/sections/LpTestimonials";
+import LpFAQLoader from "@/components/sections/LpFAQLoader";
+import LpCTA from "@/components/sections/LpCTA";
+import LpFeatureDetail from "@/components/sections/LpFeatureDetail";
+import LpSocialProof from "@/components/sections/LpSocialProof";
+
 // eslint-disable-next-line
 const SECTION_MAP: Record<string, React.ComponentType<any>> = {
   // Global
@@ -81,6 +90,14 @@ const SECTION_MAP: Record<string, React.ComponentType<any>> = {
   // Layout
   Divider,
   Alert,
+  // Landing Page
+  LpHero,
+  LpBenefits,
+  LpTestimonials,
+  LpFAQLoader,
+  LpCTA,
+  LpFeatureDetail,
+  LpSocialProof,
 };
 
 type SectionRendererProps = {
