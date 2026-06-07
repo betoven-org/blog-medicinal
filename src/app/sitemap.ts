@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { cms } from "@/lib/cms";
 
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/+$/, "");
 
 export async function generateSitemaps() {
   // Simple approach: 1 sitemap for posts, 1 for categories/authors, 1 for products

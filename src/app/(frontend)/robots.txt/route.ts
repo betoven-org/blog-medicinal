@@ -7,7 +7,7 @@ Disallow: /admin
 Disallow: /api`;
 
 export async function GET() {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/+$/, "");
   const settings = await cms.settings.get();
 
   // The SDK returns a structured settings object; robotsTxt is not directly in it.
