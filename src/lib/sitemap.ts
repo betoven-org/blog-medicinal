@@ -4,7 +4,7 @@ const apiKey = process.env.CMS_API_KEY || "";
 export async function fetchSitemapXml(type: string): Promise<Response> {
   const res = await fetch(`${cmsUrl}/api/v1/sitemap?type=${type}`, {
     headers: { "x-api-key": apiKey },
-    next: { revalidate: 3600, tags: ["sitemap"] },
+    next: { revalidate: 60, tags: ["sitemap"] },
   });
 
   const contentType = res.headers.get("content-type") || "";
