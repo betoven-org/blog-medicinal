@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-25T16:34:34.041Z",
+  "generatedAt": "2026-06-07T04:05:31.066Z",
   "sections": [
     {
       "key": "Accordion",
@@ -507,9 +507,24 @@
           "required": false,
           "default": true
         },
-        "showRestrictedArea": {
+        "ctaLabel": {
+          "type": "string",
+          "format": "text",
+          "title": "Texto do botao CTA",
+          "description": "Texto exibido no botao de acao do header",
+          "required": false,
+          "default": "Loja Virtual"
+        },
+        "ctaUrl": {
+          "type": "string",
+          "format": "url",
+          "title": "Link do botao CTA",
+          "required": false,
+          "default": "https://loja.medicinalnaweb.com.br"
+        },
+        "showCta": {
           "type": "boolean",
-          "title": "Mostrar Area Restrita",
+          "title": "Mostrar botao CTA",
           "required": false,
           "default": true
         }
@@ -740,6 +755,480 @@
           "title": "Escala de cinza",
           "required": false,
           "default": true
+        }
+      }
+    },
+    {
+      "key": "LpBenefits",
+      "title": "LP Beneficios",
+      "description": "Grade de beneficios do produto com icones e descricoes",
+      "group": "Landing Page",
+      "path": "sections/LpBenefits",
+      "props": {
+        "productSlug": {
+          "type": "string",
+          "format": "text",
+          "title": "Slug do Produto",
+          "description": "Preencha para puxar beneficios do produto automaticamente",
+          "required": false
+        },
+        "title": {
+          "type": "string",
+          "format": "text",
+          "title": "Titulo da secao",
+          "required": false,
+          "default": "Por que escolher?"
+        },
+        "subtitle": {
+          "type": "string",
+          "format": "textarea",
+          "title": "Subtitulo",
+          "required": false
+        },
+        "items": {
+          "type": "array",
+          "title": "Itens de beneficio",
+          "required": false,
+          "items": {
+            "type": "object",
+            "properties": {
+              "icon": {
+                "type": "string",
+                "format": "select",
+                "title": "Icone",
+                "required": false,
+                "options": [
+                  "leaf",
+                  "shield",
+                  "heart",
+                  "zap",
+                  "star",
+                  "check"
+                ]
+              },
+              "title": {
+                "type": "string",
+                "format": "text",
+                "title": "Titulo",
+                "required": true
+              },
+              "description": {
+                "type": "string",
+                "format": "textarea",
+                "title": "Descricao",
+                "required": true
+              }
+            }
+          }
+        },
+        "columns": {
+          "type": "string",
+          "format": "select",
+          "title": "Colunas",
+          "required": false,
+          "default": "3",
+          "options": [
+            "2",
+            "3",
+            "4"
+          ]
+        },
+        "variant": {
+          "type": "string",
+          "format": "select",
+          "title": "Variante visual",
+          "required": false,
+          "default": "cards",
+          "options": [
+            "cards",
+            "minimal",
+            "icons-only"
+          ]
+        }
+      }
+    },
+    {
+      "key": "LpCTA",
+      "title": "LP CTA",
+      "description": "Secao de chamada para acao focada em conversao",
+      "group": "Landing Page",
+      "path": "sections/LpCTA",
+      "props": {
+        "productSlug": {
+          "type": "string",
+          "format": "text",
+          "title": "Slug do Produto",
+          "description": "Opcional — preenchido automaticamente no futuro",
+          "required": false
+        },
+        "title": {
+          "type": "string",
+          "format": "text",
+          "title": "Titulo",
+          "required": false,
+          "default": "Pronto para experimentar?"
+        },
+        "subtitle": {
+          "type": "string",
+          "format": "textarea",
+          "title": "Subtitulo",
+          "required": false
+        },
+        "ctaText": {
+          "type": "string",
+          "format": "text",
+          "title": "Texto do botao",
+          "required": false,
+          "default": "Falar pelo WhatsApp"
+        },
+        "ctaUrl": {
+          "type": "string",
+          "format": "url",
+          "title": "Link do botao",
+          "required": false
+        },
+        "variant": {
+          "type": "string",
+          "format": "select",
+          "title": "Variante visual",
+          "required": false,
+          "default": "default",
+          "options": [
+            "default",
+            "gradient",
+            "dark"
+          ]
+        },
+        "showWhatsAppIcon": {
+          "type": "boolean",
+          "title": "Exibir icone do WhatsApp",
+          "required": false,
+          "default": true
+        }
+      }
+    },
+    {
+      "key": "LpFAQ",
+      "title": "LP FAQ",
+      "description": "Perguntas frequentes com schema markup FAQPage para SEO",
+      "group": "Landing Page",
+      "path": "sections/LpFAQ",
+      "props": {
+        "productSlug": {
+          "type": "string",
+          "format": "text",
+          "title": "Slug do Produto",
+          "description": "Preencha para puxar FAQ do produto automaticamente quando Items estiver vazio",
+          "required": false
+        },
+        "title": {
+          "type": "string",
+          "format": "text",
+          "title": "Titulo",
+          "required": false,
+          "default": "Perguntas Frequentes"
+        },
+        "subtitle": {
+          "type": "string",
+          "format": "textarea",
+          "title": "Subtitulo",
+          "required": false
+        },
+        "items": {
+          "type": "array",
+          "title": "Perguntas e Respostas",
+          "description": "Se vazio e productSlug preenchido, usa o FAQ do produto",
+          "required": false,
+          "items": {
+            "type": "object",
+            "properties": {
+              "question": {
+                "type": "string",
+                "format": "text",
+                "title": "Pergunta",
+                "required": true
+              },
+              "answer": {
+                "type": "string",
+                "format": "textarea",
+                "title": "Resposta",
+                "required": true
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "key": "LpFeatureDetail",
+      "title": "LP Detalhe de Feature",
+      "description": "Secao com imagem e texto lado a lado, layout alternavel",
+      "group": "Landing Page",
+      "path": "sections/LpFeatureDetail",
+      "props": {
+        "title": {
+          "type": "string",
+          "format": "text",
+          "title": "Titulo",
+          "required": true
+        },
+        "description": {
+          "type": "string",
+          "format": "rich-text",
+          "title": "Descricao",
+          "required": false
+        },
+        "image": {
+          "type": "string",
+          "format": "image",
+          "title": "Imagem",
+          "required": false
+        },
+        "imageAlt": {
+          "type": "string",
+          "format": "text",
+          "title": "Texto alternativo da imagem",
+          "required": false
+        },
+        "layout": {
+          "type": "string",
+          "format": "select",
+          "title": "Layout",
+          "required": false,
+          "default": "image-left",
+          "options": [
+            "image-left",
+            "image-right"
+          ]
+        },
+        "showBadge": {
+          "type": "boolean",
+          "title": "Exibir badge",
+          "required": false,
+          "default": false
+        },
+        "badgeText": {
+          "type": "string",
+          "format": "text",
+          "title": "Texto do badge",
+          "required": false
+        }
+      }
+    },
+    {
+      "key": "LpHero",
+      "title": "LP Hero",
+      "description": "Hero principal da landing page com dados do produto",
+      "group": "Landing Page",
+      "path": "sections/LpHero",
+      "props": {
+        "productSlug": {
+          "type": "string",
+          "format": "text",
+          "title": "Slug do Produto",
+          "description": "Preencha para puxar nome e imagem do produto automaticamente",
+          "required": false
+        },
+        "headline": {
+          "type": "string",
+          "format": "text",
+          "title": "Titulo Principal",
+          "description": "Deixe vazio para usar o nome do produto",
+          "required": false
+        },
+        "subheadline": {
+          "type": "string",
+          "format": "textarea",
+          "title": "Subtitulo",
+          "description": "Deixe vazio para usar a descricao do produto",
+          "required": false
+        },
+        "ctaText": {
+          "type": "string",
+          "format": "text",
+          "title": "Texto do CTA",
+          "required": false,
+          "default": "Fale com o Farmaceutico"
+        },
+        "ctaUrl": {
+          "type": "string",
+          "format": "url",
+          "title": "Link do CTA",
+          "required": false
+        },
+        "backgroundImage": {
+          "type": "string",
+          "format": "image",
+          "title": "Imagem de fundo",
+          "required": false
+        },
+        "showProductImage": {
+          "type": "boolean",
+          "title": "Exibir imagem do produto",
+          "required": false,
+          "default": true
+        },
+        "layout": {
+          "type": "string",
+          "format": "select",
+          "title": "Layout",
+          "required": false,
+          "default": "image-right",
+          "options": [
+            "image-left",
+            "image-right"
+          ]
+        }
+      }
+    },
+    {
+      "key": "LpSocialProof",
+      "title": "LP Prova Social",
+      "description": "Numeros de destaque e logos de parceiros/certificacoes",
+      "group": "Landing Page",
+      "path": "sections/LpSocialProof",
+      "props": {
+        "title": {
+          "type": "string",
+          "format": "text",
+          "title": "Titulo da secao",
+          "required": false,
+          "default": "Numeros que comprovam"
+        },
+        "stats": {
+          "type": "array",
+          "title": "Stats / Numeros",
+          "required": false,
+          "items": {
+            "type": "object",
+            "properties": {
+              "prefix": {
+                "type": "string",
+                "format": "text",
+                "title": "Prefixo (ex: +)",
+                "required": false
+              },
+              "value": {
+                "type": "string",
+                "format": "text",
+                "title": "Valor (ex: 10.000)",
+                "required": true
+              },
+              "suffix": {
+                "type": "string",
+                "format": "text",
+                "title": "Sufixo (ex: %)",
+                "required": false
+              },
+              "label": {
+                "type": "string",
+                "format": "text",
+                "title": "Legenda",
+                "required": true
+              }
+            }
+          }
+        },
+        "showLogos": {
+          "type": "boolean",
+          "title": "Exibir logos",
+          "required": false,
+          "default": false
+        },
+        "logos": {
+          "type": "array",
+          "title": "Logos",
+          "required": false,
+          "items": {
+            "type": "object",
+            "properties": {
+              "image": {
+                "type": "string",
+                "format": "image",
+                "title": "Imagem do logo",
+                "required": true
+              },
+              "alt": {
+                "type": "string",
+                "format": "text",
+                "title": "Texto alternativo",
+                "required": true
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "key": "LpTestimonials",
+      "title": "LP Depoimentos",
+      "description": "Grid de depoimentos de clientes com avaliacao por estrelas",
+      "group": "Landing Page",
+      "path": "sections/LpTestimonials",
+      "props": {
+        "title": {
+          "type": "string",
+          "format": "text",
+          "title": "Titulo",
+          "required": false,
+          "default": "O que nossos clientes dizem"
+        },
+        "subtitle": {
+          "type": "string",
+          "format": "textarea",
+          "title": "Subtitulo",
+          "required": false
+        },
+        "items": {
+          "type": "array",
+          "title": "Depoimentos",
+          "required": true,
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "format": "text",
+                "title": "Nome do cliente",
+                "required": true
+              },
+              "role": {
+                "type": "string",
+                "format": "text",
+                "title": "Cargo ou descricao",
+                "required": false
+              },
+              "text": {
+                "type": "string",
+                "format": "textarea",
+                "title": "Depoimento",
+                "required": true
+              },
+              "rating": {
+                "type": "number",
+                "title": "Nota (1 a 5)",
+                "required": false,
+                "default": 5
+              },
+              "avatar": {
+                "type": "string",
+                "format": "image",
+                "title": "Foto do cliente",
+                "required": false
+              }
+            }
+          }
+        },
+        "variant": {
+          "type": "string",
+          "format": "select",
+          "title": "Variante visual",
+          "required": false,
+          "default": "cards",
+          "options": [
+            "cards",
+            "minimal"
+          ]
         }
       }
     },

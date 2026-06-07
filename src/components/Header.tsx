@@ -6,11 +6,12 @@ import { CategoryMenu } from "./CategoryMenu";
 import { MobileMenu } from "./MobileMenu";
 import { SearchBar } from "./SearchBar";
 
-function IconLock({ size = 16 }: { size?: number }) {
+function IconCart({ size = 16 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
-      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+      <circle cx="8" cy="21" r="1" />
+      <circle cx="19" cy="21" r="1" />
+      <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
     </svg>
   );
 }
@@ -56,7 +57,25 @@ function ensureAbsoluteUrl(url: string): string {
   return `https://${url}`;
 }
 
-export async function Header() {
+type HeaderProps = {
+  showSearch?: boolean;
+  showSocial?: boolean;
+  showWhatsApp?: boolean;
+  showCategories?: boolean;
+  ctaLabel?: string;
+  ctaUrl?: string;
+  showCta?: boolean;
+};
+
+export async function Header({
+  showSearch = true,
+  showSocial = true,
+  showWhatsApp = true,
+  showCategories = true,
+  ctaLabel = "Loja Virtual",
+  ctaUrl = "https://loja.medicinalnaweb.com.br",
+  showCta = true,
+}: HeaderProps = {}) {
   const [settings, productCategoriesResult] = await Promise.all([
     getSiteSettings(),
     cms.productCategories.list(),
@@ -89,34 +108,40 @@ export async function Header() {
           </Link>
 
           {/* Busca global — oculta em mobile */}
-          <div className="hidden min-w-0 flex-1 md:flex">
-            <SearchBar />
-          </div>
+          {showSearch && (
+            <div className="hidden min-w-0 flex-1 md:flex">
+              <SearchBar />
+            </div>
+          )}
 
           {/* Botoes de acao — ocultos em mobile */}
           <div className="hidden items-center gap-2 md:flex">
-            <a
-              href="https://cms.brasa.tech"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 rounded-md border border-[#0d61ac] px-3 py-1.5 text-sm font-medium text-[#0d61ac] transition-colors hover:bg-[#0d61ac]/5"
-            >
-              <IconLock size={14} />
-              Area Restrita
-            </a>
-            <a
-              href={`https://wa.me/${whatsappNumber}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 rounded-md bg-[#0d61ac] px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[#0a4f90]"
-            >
-              <IconWhatsApp size={14} />
-              Fale Conosco
-            </a>
+            {showCta && (
+              <a
+                href={ctaUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 rounded-md border border-[#0d61ac] px-3 py-1.5 text-sm font-medium text-[#0d61ac] transition-colors hover:bg-[#0d61ac]/5"
+              >
+                <IconCart size={14} />
+                {ctaLabel}
+              </a>
+            )}
+            {showWhatsApp && (
+              <a
+                href={`https://wa.me/${whatsappNumber}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 rounded-md bg-[#0d61ac] px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[#0a4f90]"
+              >
+                <IconWhatsApp size={14} />
+                Fale Conosco
+              </a>
+            )}
           </div>
 
           {/* Sociais — ocultos em mobile e tablet */}
-          <div className="hidden items-center gap-1 lg:flex">
+          {showSocial && <div className="hidden items-center gap-1 lg:flex">
             {socials.facebook && (
               <a
                 href={socials.facebook}
@@ -150,7 +175,7 @@ export async function Header() {
                 <IconYoutube size={20} />
               </a>
             )}
-          </div>
+          </div>}
 
           {/* Hamburger — visivel so em mobile */}
           <div className="ml-auto md:hidden">
@@ -163,11 +188,13 @@ export async function Header() {
       </div>
 
       {/* Linha 2: Menu de categorias — oculto em mobile */}
-      <div className="hidden border-b md:block">
-        <div className="mx-auto max-w-7xl px-4">
-          <CategoryMenu categories={categoriesWithProducts} />
+      {showCategories && (
+        <div className="hidden border-b md:block">
+          <div className="mx-auto max-w-7xl px-4">
+            <CategoryMenu categories={categoriesWithProducts} />
+          </div>
         </div>
-      </div>
+      )}
     </header>
   );
 }

@@ -18,11 +18,19 @@ export interface Props {
   /** @title Mostrar categorias */
   /** @default true */
   showCategories?: boolean;
-  /** @title Mostrar Area Restrita */
+  /** @title Texto do botao CTA */
+  /** @description Texto exibido no botao de acao do header */
+  /** @default Loja Virtual */
+  ctaLabel?: string;
+  /** @title Link do botao CTA */
+  /** @format url */
+  /** @default https://loja.medicinalnaweb.com.br */
+  ctaUrl?: string;
+  /** @title Mostrar botao CTA */
   /** @default true */
-  showRestrictedArea?: boolean;
+  showCta?: boolean;
 }
 
-export default async function Header(_props: Props) {
-  return <HeaderComponent />;
+export default async function Header(props: Props) {
+  return <HeaderComponent {...props} />;
 }

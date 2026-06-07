@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { Roboto } from "next/font/google";
 import { NavigationProgress } from "@/components/NavigationProgress";
-import { UmamiScript } from "@/components/UmamiScript";
+import { AnalyticsScripts } from "@/components/AnalyticsScripts";
 import Header from "@/components/sections/Header";
 import Footer from "@/components/sections/Footer";
 import "../globals.css";
@@ -38,7 +38,7 @@ export default function FrontendLayout({
         </main>
         <Footer />
         <Suspense fallback={null}>
-          <UmamiScript />
+          <AnalyticsScripts />
         </Suspense>
       </body>
     </html>
