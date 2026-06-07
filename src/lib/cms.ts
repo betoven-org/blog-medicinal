@@ -251,9 +251,13 @@ function createClient() {
     }
 
     try {
+      const tag = path.split("/")[1] || "cms";
       const res = await fetch(url.toString(), {
         headers,
-        next: { revalidate: draft ? 0 : revalidate },
+        next: {
+          revalidate: draft ? 0 : revalidate,
+          tags: [tag],
+        },
       });
 
       if (!res.ok) {
