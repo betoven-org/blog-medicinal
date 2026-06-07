@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { ArticleCard } from "@/components/ArticleCard";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { searchPosts, getCategories } from "@/lib/queries";
@@ -30,15 +31,24 @@ export default async function SearchPage({ searchParams }: Props) {
   const page = Math.max(1, parseInt(pageParam ?? "1", 10) || 1);
   const query = q.trim();
 
-  const [results, categoriesResult] = await Promise.all([
+  const [results, categoriesResult, productsResult] = await Promise.all([
     query ? searchPosts(query, categoria, 12, page) : null,
     getCategories(),
+    query ? cms.products.list({ limit: 50 }) : null,
   ]);
 
   const docs = results?.docs ?? [];
   const totalDocs = results?.totalDocs ?? 0;
   const totalPages = results?.totalPages ?? 0;
   const categories = categoriesResult.docs;
+
+  const queryLower = query.toLowerCase();
+  const matchedProducts = query && productsResult
+    ? productsResult.docs.filter((p) =>
+        p.name.toLowerCase().includes(queryLower) ||
+        (p.description && p.description.toLowerCase().includes(queryLower))
+      )
+    : [];
 
   function buildUrl(params: Record<string, string | undefined>) {
     const sp = new URLSearchParams();
@@ -125,8 +135,50 @@ export default async function SearchPage({ searchParams }: Props) {
             Resultados para &ldquo;{query}&rdquo;
           </h1>
           <p className="mt-1 text-sm font-semibold text-[#0d61ac]">
-            {totalDocs} {totalDocs === 1 ? "artigo encontrado" : "artigos encontrados"}
+            {matchedProducts.length + totalDocs} {matchedProducts.length + totalDocs === 1 ? "resultado encontrado" : "resultados encontrados"}
           </p>
+        </div>
+      )}
+
+      {/* Produtos */}
+      {query && matchedProducts.length > 0 && (
+        <div className="mb-10">
+          <h2 className="mb-4 text-lg font-bold text-gray-900">Produtos</h2>
+          <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
+            {matchedProducts.map((product) => (
+              <Link
+                key={product.id}
+                href={`/${product.slug}/p`}
+                className="group flex flex-col rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm transition-all hover:shadow-md hover:border-[#0d61ac]/20"
+              >
+                <div className="relative aspect-square bg-gray-50 p-4">
+                  {product.image?.url ? (
+                    <Image
+                      src={product.image.url}
+                      alt={product.image.alt ?? product.name}
+                      fill
+                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                      className="object-contain p-2 transition-transform group-hover:scale-105"
+                    />
+                  ) : (
+                    <span className="absolute inset-0 flex items-center justify-center">
+                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-gray-300" aria-hidden="true">
+                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                      </svg>
+                    </span>
+                  )}
+                </div>
+                <div className="p-3">
+                  <p className="text-sm font-semibold text-gray-800 line-clamp-2 group-hover:text-[#0d61ac] transition-colors">
+                    {product.name}
+                  </p>
+                  {product.description && (
+                    <p className="mt-1 text-xs text-gray-500 line-clamp-2">{product.description}</p>
+                  )}
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
       )}
 
@@ -148,6 +200,10 @@ export default async function SearchPage({ searchParams }: Props) {
 
       {/* Results grid */}
       {query && docs.length > 0 && (
+        <div>
+          {matchedProducts.length > 0 && (
+            <h2 className="mb-4 text-lg font-bold text-gray-900">Artigos</h2>
+          )}
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {docs.map((post) => {
             const cat = resolveRelation(post.category);
@@ -168,12 +224,13 @@ export default async function SearchPage({ searchParams }: Props) {
             );
           })}
         </div>
+        </div>
       )}
 
-      {query && docs.length === 0 && (
+      {query && docs.length === 0 && matchedProducts.length === 0 && (
         <div className="py-16 text-center">
           <p className="text-gray-500">
-            Nenhum artigo encontrado para &ldquo;{query}&rdquo;.
+            Nenhum resultado encontrado para &ldquo;{query}&rdquo;.
           </p>
           <p className="mt-2 text-sm text-gray-500">
             Tente usar termos diferentes ou remova os filtros.
