@@ -48,6 +48,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "hsixbybpwvhvkwxeaxup.supabase.co",
       },
+      {
+        protocol: "https",
+        hostname: "assets.decocache.com",
+      },
     ],
   },
   async headers() {
