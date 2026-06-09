@@ -17,7 +17,15 @@ export default function middleware(req: NextRequest) {
     return new Response("Forbidden", { status: 403 });
   }
 
-  return NextResponse.next();
+  const res = NextResponse.next();
+
+  // Allow CMS iframe embedding for preview pages
+  if (req.nextUrl.searchParams.get("preview") === "draft") {
+    res.headers.delete("X-Frame-Options");
+    res.headers.set("Content-Security-Policy", "frame-ancestors *");
+  }
+
+  return res;
 }
 
 export const config = {
