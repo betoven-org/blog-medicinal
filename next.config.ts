@@ -60,7 +60,6 @@ const nextConfig: NextConfig = {
         source: "/(.*)",
         headers: [
           { key: "X-Content-Type-Options", value: "nosniff" },
-          { key: "Content-Security-Policy", value: "frame-ancestors 'self' https://cms.brasa.tech https://store-front-brasa-admin.vercel.app https://*.vercel.app http://localhost:3000; frame-src 'self' https://www.youtube.com https://youtube.com https://www.google.com https://maps.google.com" },
           { key: "X-XSS-Protection", value: "1; mode=block" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },

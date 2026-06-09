@@ -22,7 +22,7 @@ export default function middleware(req: NextRequest) {
   // Allow CMS iframe embedding for preview pages
   if (pathname.startsWith("/preview/") || req.nextUrl.searchParams.get("preview") === "draft") {
     res.headers.delete("X-Frame-Options");
-    res.headers.set("Content-Security-Policy", "frame-ancestors *; frame-src 'self' https://www.youtube.com https://youtube.com https://www.google.com https://maps.google.com");
+    res.headers.delete("Content-Security-Policy");
   }
 
   return res;
