@@ -35,9 +35,8 @@ export async function GET(req: NextRequest): Promise<Response> {
     return new Response("Invalid path", { status: 400 });
   }
 
-  // Redirect to the page with preview indicator
-  // Use NextResponse.redirect to set headers (remove X-Frame-Options for iframe embedding)
-  const previewPath = path === "/" ? "/?preview=draft" : `${path}?preview=draft`;
+  // Redirect to the /preview/ route (force-dynamic, no cache, fetches draftSections)
+  const previewPath = path === "/" ? "/preview/home" : `/preview${path}`;
   const url = new URL(previewPath, req.url);
   const response = NextResponse.redirect(url);
   response.headers.delete("X-Frame-Options");

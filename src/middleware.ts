@@ -20,7 +20,7 @@ export default function middleware(req: NextRequest) {
   const res = NextResponse.next();
 
   // Allow CMS iframe embedding for preview pages
-  if (req.nextUrl.searchParams.get("preview") === "draft") {
+  if (pathname.startsWith("/preview/") || req.nextUrl.searchParams.get("preview") === "draft") {
     res.headers.delete("X-Frame-Options");
     res.headers.set("Content-Security-Policy", "frame-ancestors *");
   }
