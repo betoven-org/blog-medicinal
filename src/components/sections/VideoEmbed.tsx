@@ -22,7 +22,7 @@ export interface Props {
 function getEmbedUrl(url: string): string {
   // YouTube
   const ytMatch = url.match(
-    /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+    /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
   );
   if (ytMatch) {
     return `https://www.youtube.com/embed/${ytMatch[1]}`;
