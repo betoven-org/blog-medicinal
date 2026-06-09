@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { cms } from "@/lib/cms";
 
 /**
@@ -34,12 +35,12 @@ export default async function CategoryBar({
         <ul className="flex flex-wrap gap-2 list-none m-0 p-0">
           {showAll && (
             <li>
-              <a
+              <Link
                 href="/blog"
                 className="inline-block px-4 py-2 rounded-full text-sm font-medium transition-colors bg-[#0d61ac] text-white"
               >
                 Todos
-              </a>
+              </Link>
             </li>
           )}
           {rows.map((category) => (
