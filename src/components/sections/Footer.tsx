@@ -108,14 +108,22 @@ export default async function Footer({
             &copy; {new Date().getFullYear()}{" "}
             {s.copyrightText || s.siteName || ""}
           </p>
-          {showPrivacy && (
+          <div className="flex items-center gap-4">
             <Link
-              href="/politica-de-privacidade"
+              href="/sobre"
               className="text-xs text-gray-500 transition-colors hover:text-gray-700"
             >
-              Politica de Privacidade
+              Sobre
             </Link>
-          )}
+            {showPrivacy && (
+              <Link
+                href="/politica-de-privacidade"
+                className="text-xs text-gray-500 transition-colors hover:text-gray-700"
+              >
+                Politica de Privacidade
+              </Link>
+            )}
+          </div>
         </div>
       </div>
     </footer>
