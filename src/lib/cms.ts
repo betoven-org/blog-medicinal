@@ -197,14 +197,14 @@ export type ProductCategory = {
 // ---------------------------------------------------------------------------
 
 const REVALIDATE = {
-  POSTS_LIST: 300,
-  POST_SINGLE: 600,
-  CATEGORIES: 3600,
-  SETTINGS: 3600,
-  PAGES: 3600,
+  POSTS_LIST: 60,
+  POST_SINGLE: 60,
+  CATEGORIES: 60,
+  SETTINGS: 300,
+  PAGES: 60,
   PAGES_DRAFT: 0,
-  PRODUCTS: 300,
-  AUTHORS: 600,
+  PRODUCTS: 60,
+  AUTHORS: 60,
 } as const;
 
 // ---------------------------------------------------------------------------
