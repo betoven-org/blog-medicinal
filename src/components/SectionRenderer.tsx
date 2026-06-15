@@ -1,4 +1,5 @@
 import type { SectionBlock } from "@/lib/cms";
+import { DeferredSectionWrapper } from "./DeferredSectionWrapper";
 
 // Existing sections
 import Hero from "@/components/sections/Hero";
@@ -122,7 +123,22 @@ export function SectionRenderer({ blocks }: SectionRendererProps) {
           return null;
         }
 
-        return <Component key={block.id} {...block.props} />;
+        // Deferred sections load on scroll
+        if (block.deferred) {
+          return (
+            <DeferredSectionWrapper
+              key={block.id}
+              block={block}
+              Component={Component}
+            />
+          );
+        }
+
+        return (
+          <section key={block.id} data-section-id={block.id} data-section-type={block.component}>
+            <Component {...block.props} loaderData={block.loaderData} />
+          </section>
+        );
       })}
     </>
   );

@@ -13,6 +13,8 @@ export type SectionBlock = {
   id: string;
   component: string;
   props: Record<string, unknown>;
+  loaderData?: unknown;
+  deferred?: boolean;
 };
 
 export type Post = {

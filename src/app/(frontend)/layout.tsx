@@ -40,6 +40,28 @@ export default function FrontendLayout({
         <Suspense fallback={null}>
           <AnalyticsScripts />
         </Suspense>
+        {process.env.NODE_ENV === "development" && (
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `
+(function(){
+  var active=false,overlay,tooltip;
+  function create(){
+    overlay=document.createElement("div");
+    Object.assign(overlay.style,{position:"fixed",pointerEvents:"none",border:"2px solid #f97316",borderRadius:"4px",backgroundColor:"rgba(249,115,22,0.08)",zIndex:"99999",display:"none",transition:"all 0.15s"});
+    document.body.appendChild(overlay);
+    tooltip=document.createElement("div");
+    Object.assign(tooltip.style,{position:"fixed",zIndex:"100000",display:"none",backgroundColor:"#18181b",color:"#fafafa",fontSize:"11px",fontFamily:"monospace",padding:"4px 8px",borderRadius:"4px",pointerEvents:"none",whiteSpace:"nowrap"});
+    document.body.appendChild(tooltip);
+  }
+  function find(el){while(el){if(el.dataset&&(el.dataset.sectionId||el.dataset.sectionType))return el;el=el.parentElement;}return null;}
+  document.addEventListener("keydown",function(e){if((e.metaKey||e.ctrlKey)&&e.key==="e"){e.preventDefault();active=!active;if(active){if(!overlay)create();document.body.style.cursor="crosshair";console.log("[Inspector] ON");}else{overlay.style.display="none";tooltip.style.display="none";document.body.style.cursor="";}}});
+  document.addEventListener("mousemove",function(e){if(!active||!overlay)return;var t=find(e.target);if(!t){overlay.style.display="none";tooltip.style.display="none";return;}var r=t.getBoundingClientRect();overlay.style.display="block";overlay.style.top=r.top+"px";overlay.style.left=r.left+"px";overlay.style.width=r.width+"px";overlay.style.height=r.height+"px";tooltip.textContent=t.dataset.sectionType||t.dataset.sectionId||"Section";tooltip.style.display="block";tooltip.style.top=Math.max(0,r.top-24)+"px";tooltip.style.left=r.left+"px";});
+})();
+              `,
+            }}
+          />
+        )}
       </body>
     </html>
   );
