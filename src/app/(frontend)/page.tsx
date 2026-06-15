@@ -110,7 +110,7 @@ function SectionHeader({ title, href }: { title: string; href: string }) {
   );
 }
 
-export const revalidate = 300;
+export const revalidate = 60;
 
 export default async function HomePage() {
   // Check if home page has CMS sections configured

@@ -47,7 +47,7 @@ export async function generateMetadata({ params }: Props) {
   };
 }
 
-export const revalidate = 600;
+export const revalidate = 60;
 
 export async function generateStaticParams() {
   const { cms } = await import("@/lib/cms");

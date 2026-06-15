@@ -10,7 +10,7 @@ import { getSiteSettings } from "@/lib/queries";
 
 const PAGE_SIZE = 20;
 
-export const revalidate = 300;
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Todos os Produtos",

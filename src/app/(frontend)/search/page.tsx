@@ -9,7 +9,7 @@ import { cms } from "@/lib/cms";
 import { SectionRenderer } from "@/components/SectionRenderer";
 import type { SectionBlock } from "@/lib/cms";
 
-export const revalidate = 300;
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Buscar Artigos",

@@ -5,7 +5,7 @@ import { Breadcrumb } from "@/components/Breadcrumb";
 import { getPostsByCategory, getCategories } from "@/lib/queries";
 import { resolveRelation } from "@/lib/utils";
 
-export const revalidate = 300;
+export const revalidate = 60;
 
 type Props = {
   params: Promise<{ slug: string }>;
