@@ -5,7 +5,6 @@ import type { SectionBlock } from "@/lib/cms";
 
 type Props = {
   block: SectionBlock;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Component: ComponentType<any>;
 };
 
