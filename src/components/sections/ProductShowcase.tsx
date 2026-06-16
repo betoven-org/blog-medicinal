@@ -141,14 +141,14 @@ function ProductCardItem({ product, showDescription }: ProductCardItemProps) {
             <Image
               src={product.imageUrl}
               alt={product.imageAlt ?? product.name}
-              width={160}
-              height={160}
-              sizes="160px"
-              className="h-40 w-40 object-contain mix-blend-multiply transition-transform duration-300 group-hover:scale-105"
+              width={300}
+              height={300}
+              sizes="300px"
+              className="h-80 w-80 object-contain mix-blend-multiply transition-transform duration-300 group-hover:scale-105"
               loading="lazy"
             />
           ) : (
-            <div className="flex h-40 w-40 items-center justify-center text-gray-300" aria-hidden="true">
+            <div className="flex h-80 w-80 items-center justify-center text-gray-300" aria-hidden="true">
               <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
                 <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
