@@ -42,7 +42,8 @@ export async function generateMetadata({
 
   const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/+$/, "");
   const title = product.name;
-  const desc = product.description || undefined;
+  const p = product as any;
+  const desc = p.seoDescription || product.description || undefined;
 
   return {
     title,
