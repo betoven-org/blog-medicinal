@@ -10,7 +10,7 @@ function escapeXml(str: string): string {
 }
 
 export async function GET() {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/+$/, "");
 
   const result = await cms.posts.list({ limit: 50 });
 

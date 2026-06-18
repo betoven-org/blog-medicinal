@@ -21,7 +21,7 @@ import { SectionRenderer } from "@/components/SectionRenderer";
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = ((await getSiteSettings()) || {}) as any;
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/+$/, "");
   return {
     title:
       settings.seoTitle || "Medicinal na Web | Portal de Saude e Bem-estar",

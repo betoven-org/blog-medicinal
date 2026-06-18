@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
   const post = await getPostBySlug(slug);
   if (!post) return { title: "Post nao encontrado" };
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/+$/, "");
   const heroImage = typeof post.heroImage === "object" ? post.heroImage : null;
   const ogImageUrl = post.ogImageUrl || post.coverUrl || heroImage?.url || null;
   const title = post.metaTitle || post.title;
@@ -61,7 +61,7 @@ export default async function PostPage({ params }: Props) {
   const post = await getPostBySlug(slug);
   if (!post) notFound();
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/+$/, "");
   const postUrl = `${baseUrl}/posts/${post.slug}`;
   const heroImage = resolveRelation(post.heroImage);
   const category = resolveRelation(post.category);

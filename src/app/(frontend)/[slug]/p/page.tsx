@@ -40,7 +40,7 @@ export async function generateMetadata({
 
   if (!product) return { title: "Produto nao encontrado" };
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/+$/, "");
   const title = product.name;
   const desc = product.description || undefined;
 
@@ -123,7 +123,7 @@ export default async function ProductPage({ params }: PageProps) {
   ];
 
   // JSON-LD
-  const productUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/${slug}/p`;
+  const productUrl = `${(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/+$/, "")}/${slug}/p`;
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
