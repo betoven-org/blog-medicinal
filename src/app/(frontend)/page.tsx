@@ -5,6 +5,8 @@ import { ArticleCard } from "@/components/ArticleCard";
 import { ArticleCardSmall } from "@/components/ArticleCardSmall";
 import { ArticleCardCompact } from "@/components/ArticleCardCompact";
 import { TrendCard } from "@/components/TrendCard";
+import ProductShowcase from "@/components/sections/ProductShowcase";
+import { NewsletterForm } from "@/components/NewsletterForm";
 import {
   getFeaturedPost,
   getLatestPosts,
@@ -102,7 +104,7 @@ function SectionHeader({ title, href }: { title: string; href: string }) {
       </h2>
       <Link
         href={href}
-        className="text-xs font-semibold uppercase tracking-wider text-[#0d61ac] transition-colors hover:text-[#0d61ac]"
+        className="text-xs font-semibold uppercase tracking-wider text-[#0d61ac] transition-colors hover:text-[#0d61ac]/80"
       >
         Ver todos
       </Link>
@@ -123,10 +125,10 @@ export default async function HomePage() {
     return <SectionRenderer blocks={sectionBlocks} />;
   }
 
-  // Fallback: hardcoded layout (legacy)
+  // Fallback: hardcoded portal layout
   const [featured, latest, recent, categories] = await Promise.all([
     getFeaturedPost(),
-    getLatestPosts(20),
+    getLatestPosts(30),
     getRecentPosts(5),
     getCategories(),
   ]);
@@ -135,11 +137,13 @@ export default async function HomePage() {
   const posts = latest.docs;
   const editorPicks = posts.slice(0, 3);
   const trendPosts = posts.slice(3, 11);
-  const bannerPost = posts[8] ?? null;
-  const noveltyPosts = posts.slice(11, 19);
+  const bannerPost = posts[11] ?? null;
+  const weekHighlight = posts[12] ?? null;
+  const weekSide = posts.slice(13, 16);
+  const noveltyPosts = posts.slice(16, 24);
   const maisLidas = posts.slice(0, 5);
 
-  // Pick top 3 categories with most posts for dedicated sections
+  // Top 3 categories for dedicated sections
   const topCategorySlugs = allCategories
     .map((c) => c.slug as string)
     .slice(0, 3);
@@ -178,7 +182,34 @@ export default async function HomePage() {
         </div>
       )}
 
-      {/* ── 2. ESCOLHA DO EDITOR ── */}
+      {/* ── 2. FLASH DE NOTICIAS ── */}
+      {posts.length > 0 && (
+        <section className="mb-6 -mx-4 border-y border-[#0d61ac]/20 bg-[#0d61ac]/5 px-4 py-3">
+          <div className="flex items-center gap-4 overflow-x-auto">
+            <span className="shrink-0 rounded bg-[#0d61ac] px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-white">
+              Ultimas
+            </span>
+            <div className="flex items-center gap-3 text-sm">
+              {posts.slice(0, 5).map((post, idx) => (
+                <Link
+                  key={post.id}
+                  href={`/posts/${post.slug}`}
+                  className="flex shrink-0 items-center gap-3 text-gray-700 transition-colors hover:text-[#0d61ac]"
+                >
+                  <span className="line-clamp-1 max-w-[220px] font-medium">
+                    {post.title}
+                  </span>
+                  {idx < 4 && (
+                    <span className="text-gray-300" aria-hidden="true">|</span>
+                  )}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ── 3. ESCOLHA DO EDITOR ── */}
       <section className="mb-8">
         <SectionHeader title="Escolha do Editor" href="/blog" />
         {editorPicks.length > 0 ? (
@@ -214,7 +245,7 @@ export default async function HomePage() {
         )}
       </section>
 
-      {/* ── 3. CATEGORIAS (dinamico do DB) ── */}
+      {/* ── 4. CATEGORIAS ── */}
       {allCategories.length > 0 && (
         <section className="mb-8 -mx-4 bg-gray-50 px-4 py-6">
           <div className="flex gap-3 overflow-x-auto pb-1">
@@ -235,7 +266,17 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* ── 4. TENDENCIAS + POSTS RECENTES ── */}
+      {/* ── 5. VITRINE DE PRODUTOS ── */}
+      {/* @ts-expect-error Async Server Component */}
+      <ProductShowcase
+        title="Nossos Produtos"
+        mode="all"
+        limit={4}
+        columns={4}
+        viewAllHref="/produtos"
+      />
+
+      {/* ── 6. TENDENCIAS + POSTS RECENTES ── */}
       <div className="mb-8 grid gap-8 lg:grid-cols-[1fr_280px]">
         {trendPosts.length > 0 && (
           <section>
@@ -281,7 +322,105 @@ export default async function HomePage() {
         </aside>
       </div>
 
-      {/* ── 5. BANNER DE DESTAQUE ── */}
+      {/* ── 7. DESTAQUE DA SEMANA (portal layout) ── */}
+      {weekHighlight && weekSide.length > 0 && (
+        <section className="mb-8">
+          <SectionHeader title="Destaque da Semana" href="/blog" />
+          <div className="grid gap-6 lg:grid-cols-[3fr_2fr]">
+            {/* Big card left */}
+            {(() => {
+              const heroImage = resolveRelation(weekHighlight.heroImage);
+              const category = resolveRelation(weekHighlight.category);
+              const imageUrl =
+                weekHighlight.coverUrl ||
+                (heroImage as any)?.sizes?.card?.url ||
+                (heroImage as any)?.url ||
+                "/placeholder.svg";
+              return (
+                <Link
+                  href={`/posts/${weekHighlight.slug}`}
+                  className="group block"
+                >
+                  <article className="relative overflow-hidden rounded-xl bg-gray-100">
+                    <div className="relative aspect-[4/3]">
+                      <Image
+                        src={imageUrl}
+                        alt={(heroImage as any)?.alt || weekHighlight.title}
+                        fill
+                        sizes="(max-width: 1024px) 100vw, 60vw"
+                        className="object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                    </div>
+                    <div className="absolute bottom-0 left-0 right-0 p-5">
+                      {category && (
+                        <span className="mb-2 inline-block rounded-full bg-[#0d61ac] px-3 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
+                          {(category as { name: string }).name}
+                        </span>
+                      )}
+                      <h3 className="text-lg font-bold leading-snug text-white transition-colors group-hover:text-blue-200 sm:text-xl">
+                        {weekHighlight.title}
+                      </h3>
+                      {weekHighlight.excerpt && (
+                        <p className="mt-1 line-clamp-2 text-sm text-white/80">
+                          {weekHighlight.excerpt}
+                        </p>
+                      )}
+                    </div>
+                  </article>
+                </Link>
+              );
+            })()}
+
+            {/* 3 stacked cards right */}
+            <div className="flex flex-col gap-4">
+              {weekSide.map((post) => {
+                const heroImage = resolveRelation(post.heroImage);
+                const category = resolveRelation(post.category);
+                const imageUrl =
+                  post.coverUrl ||
+                  (heroImage as any)?.sizes?.card?.url ||
+                  (heroImage as any)?.url ||
+                  "/placeholder.svg";
+                return (
+                  <Link
+                    key={post.id}
+                    href={`/posts/${post.slug}`}
+                    className="group flex gap-4"
+                  >
+                    <div className="relative w-28 shrink-0 overflow-hidden rounded-lg bg-gray-100" style={{ aspectRatio: "4/3" }}>
+                      <Image
+                        src={imageUrl}
+                        alt={(heroImage as any)?.alt || post.title}
+                        fill
+                        sizes="112px"
+                        className="object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                    </div>
+                    <div className="flex flex-col justify-center gap-1">
+                      {category && (
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#0d61ac]">
+                          {(category as { name: string }).name}
+                        </span>
+                      )}
+                      <h3 className="line-clamp-2 text-sm font-semibold text-gray-900 transition-colors group-hover:text-[#0d61ac]">
+                        {post.title}
+                      </h3>
+                      {post.publishedAt && (
+                        <time className="text-xs text-gray-400" dateTime={post.publishedAt}>
+                          {new Date(post.publishedAt).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}
+                        </time>
+                      )}
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ── 8. BANNER DE DESTAQUE ── */}
       {bannerPost &&
         (() => {
           const bannerImage = resolveRelation(bannerPost.heroImage);
@@ -339,7 +478,7 @@ export default async function HomePage() {
           );
         })()}
 
-      {/* ── 6. SECOES POR CATEGORIA (dinamico do DB) ── */}
+      {/* ── 9. SECOES POR CATEGORIA ── */}
       {categorySections.filter((s) => s.docs.length > 0).length > 0 && (
         <section className="mb-8">
           <div className="grid gap-8 md:grid-cols-3">
@@ -372,7 +511,22 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* ── 7. NOVIDADES ── */}
+      {/* ── 10. NEWSLETTER ── */}
+      <section className="mb-8 -mx-4 bg-gradient-to-r from-[#0d61ac] to-[#0a4d8a] px-4 py-8 sm:rounded-xl sm:mx-0 sm:px-8">
+        <div className="mx-auto max-w-2xl text-center">
+          <h2 className="text-lg font-bold text-white sm:text-xl">
+            Receba as melhores dicas de saude
+          </h2>
+          <p className="mt-1 text-sm text-white/70">
+            Cadastre-se e receba conteudos exclusivos sobre bem-estar, suplementos e vida saudavel.
+          </p>
+          <div className="mt-4">
+            <NewsletterForm />
+          </div>
+        </div>
+      </section>
+
+      {/* ── 11. NOVIDADES ── */}
       {noveltyPosts.length > 0 && (
         <section className="mb-8">
           <SectionHeader title="Novidades" href="/blog" />
@@ -395,7 +549,7 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* ── 8. MAIS LIDAS ── */}
+      {/* ── 12. MAIS LIDAS ── */}
       {maisLidas.length > 0 && (
         <section className="mb-4">
           <SectionHeader title="Mais Lidas" href="/blog" />
