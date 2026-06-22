@@ -28,15 +28,16 @@ export interface Props {
   style?: "light" | "dark" | "brand";
 }
 
-export default function CTA({
-  title,
-  description,
-  buttonText = "Saiba mais",
-  buttonHref,
-  buttonNewTab = false,
-  backgroundImage,
-  style = "dark",
-}: Props) {
+export default function CTA(props: Props & { buttonUrl?: string; subtitle?: string; variant?: string }) {
+  const {
+    title,
+    buttonText = "Saiba mais",
+    buttonNewTab = false,
+    backgroundImage,
+  } = props;
+  const description = props.description || props.subtitle;
+  const buttonHref = props.buttonHref || props.buttonUrl || "#";
+  const style = props.style || (props.variant as Props["style"]) || "dark";
   const bgStyles: Record<string, string> = {
     light: "bg-gray-100 text-gray-900",
     dark: "bg-gray-900 text-white",
