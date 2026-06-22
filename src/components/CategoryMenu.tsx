@@ -11,8 +11,14 @@ type Category = {
   slug: string;
 };
 
+type LandingPage = {
+  title: string;
+  slug: string;
+};
+
 type Props = {
   categories: Category[];
+  landingPages?: LandingPage[];
 };
 
 function toTitleCase(str: string) {
@@ -27,7 +33,7 @@ function toTitleCase(str: string) {
     .join(" ");
 }
 
-export function CategoryMenu({ categories }: Props) {
+export function CategoryMenu({ categories, landingPages = [] }: Props) {
   const pathname = usePathname();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -101,6 +107,27 @@ export function CategoryMenu({ categories }: Props) {
             </Link>
           );
         })}
+        {landingPages.length > 0 && (
+          <>
+            <span className="mx-1 h-5 w-px shrink-0 bg-gray-200" aria-hidden="true" />
+            {landingPages.map((lp) => {
+              const isActive = pathname === `/campanhas/${lp.slug}`;
+              return (
+                <Link
+                  key={lp.slug}
+                  href={`/campanhas/${lp.slug}`}
+                  className={`shrink-0 whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                    isActive
+                      ? "bg-emerald-600 text-white"
+                      : "text-emerald-700 bg-emerald-50 hover:bg-emerald-100"
+                  }`}
+                >
+                  {toTitleCase(lp.title)}
+                </Link>
+              );
+            })}
+          </>
+        )}
       </div>
 
       {/* Fade + arrow right */}

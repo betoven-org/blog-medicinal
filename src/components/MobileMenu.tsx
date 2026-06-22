@@ -37,8 +37,14 @@ type Category = {
   slug: string;
 };
 
+type LandingPage = {
+  title: string;
+  slug: string;
+};
+
 type Props = {
   categories: Category[];
+  landingPages?: LandingPage[];
   socials: {
     facebook?: string | null;
     instagram?: string | null;
@@ -46,7 +52,7 @@ type Props = {
   };
 };
 
-export function MobileMenu({ categories, socials }: Props) {
+export function MobileMenu({ categories, landingPages = [], socials }: Props) {
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -133,7 +139,7 @@ export function MobileMenu({ categories, socials }: Props) {
               </form>
             </div>
 
-            {/* Categorias */}
+            {/* Categorias + LPs */}
             <div className="flex-1 overflow-y-auto">
               <ul className="divide-y">
                 {categories.map((cat) => (
@@ -148,6 +154,32 @@ export function MobileMenu({ categories, socials }: Props) {
                   </li>
                 ))}
               </ul>
+              {landingPages.length > 0 && (
+                <>
+                  <div className="px-4 pt-4 pb-1">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                      Campanhas
+                    </span>
+                  </div>
+                  <ul className="divide-y">
+                    {landingPages.map((lp) => (
+                      <li key={lp.slug}>
+                        <Link
+                          href={`/campanhas/${lp.slug}`}
+                          onClick={handleClose}
+                          className="flex items-center gap-2 px-4 py-3.5 text-sm font-medium text-emerald-700 transition-colors hover:bg-emerald-50"
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0">
+                            <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+                            <line x1="4" x2="4" y1="22" y2="15" />
+                          </svg>
+                          {lp.title}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
             </div>
 
             {/* Sociais */}

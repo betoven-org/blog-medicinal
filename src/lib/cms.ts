@@ -487,6 +487,26 @@ function createClient() {
   };
 
   // -------------------------------------------------------------------------
+  // Collections (generic)
+  // -------------------------------------------------------------------------
+
+  const collections = {
+    async list(
+      slug: string,
+      opts?: { limit?: number; offset?: number },
+    ): Promise<{ docs: { id: number; slug: string; status: string; data: Record<string, unknown> }[] }> {
+      const { limit = 50, offset = 0 } = opts ?? {};
+      const result = await request<{
+        docs: { id: number; slug: string; status: string; data: Record<string, unknown> }[];
+      }>(`/collections/${encodeURIComponent(slug)}`, {
+        revalidate: REVALIDATE.CATEGORIES,
+        params: { limit, offset },
+      });
+      return result ?? { docs: [] };
+    },
+  };
+
+  // -------------------------------------------------------------------------
   // Public API
   // -------------------------------------------------------------------------
 
@@ -498,6 +518,7 @@ function createClient() {
     pages,
     products,
     productCategories,
+    collections,
   };
 }
 

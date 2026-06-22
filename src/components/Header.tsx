@@ -76,9 +76,10 @@ export async function Header({
   ctaUrl = "https://loja.medicinalnaweb.com.br",
   showCta = true,
 }: HeaderProps = {}) {
-  const [settings, productCategoriesResult] = await Promise.all([
+  const [settings, productCategoriesResult, campanhasResult] = await Promise.all([
     getSiteSettings(),
     cms.productCategories.list(),
+    cms.collections.list("campanhas"),
   ]);
 
   const categoriesWithProducts = productCategoriesResult.docs.map((cat) => ({
@@ -86,6 +87,13 @@ export async function Header({
     name: cat.name,
     slug: cat.slug,
   }));
+
+  const landingPages = campanhasResult.docs
+    .filter((item) => item.status === "published")
+    .map((item) => ({
+      title: (item.data?.title as string) || item.slug,
+      slug: item.slug,
+    }));
 
   const s = settings as any;
   const logoUrl = s?.logo?.url ?? "/logo.svg";
@@ -181,6 +189,7 @@ export async function Header({
           <div className="ml-auto md:hidden">
             <MobileMenu
               categories={categoriesWithProducts}
+              landingPages={landingPages}
               socials={socials}
             />
           </div>
@@ -191,7 +200,7 @@ export async function Header({
       {showCategories && (
         <div className="hidden border-b md:block">
           <div className="mx-auto max-w-7xl px-4">
-            <CategoryMenu categories={categoriesWithProducts} />
+            <CategoryMenu categories={categoriesWithProducts} landingPages={landingPages} />
           </div>
         </div>
       )}
