@@ -63,22 +63,23 @@ export default function CTA(props: Props & { buttonUrl?: string; subtitle?: stri
         </div>
       )}
 
-      <div className="relative z-10 mx-auto max-w-4xl px-4 text-center">
-        <h2 className="text-3xl font-bold md:text-4xl lg:text-5xl">
+      <div className="relative z-10 mx-auto max-w-7xl px-4 text-center">
+        <h2 className="text-2xl font-bold md:text-3xl">
           {title}
         </h2>
 
         {description && (
-          <p className="mt-4 text-lg opacity-90 md:text-xl">{description}</p>
+          <p className="mt-3 text-base opacity-80">{description}</p>
         )}
 
         <a
           href={buttonHref}
           target={buttonNewTab ? "_blank" : undefined}
           rel={buttonNewTab ? "noopener noreferrer" : undefined}
-          className={`mt-8 inline-block rounded-lg px-8 py-3 font-semibold transition-colors ${buttonStyles[style]}`}
+          className="mt-6 inline-flex items-center gap-2 rounded-md bg-[#0d61ac] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#0a4f90]"
         >
           {buttonText}
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
         </a>
       </div>
     </section>
