@@ -43,8 +43,7 @@ async function main() {
     console.log(`✓ Manifest promovido para producao (${data.sections} sections)`);
   } else {
     const text = await res.text();
-    console.error(`✗ Erro ${res.status}: ${text}`);
-    process.exit(1);
+    console.warn(`⚠ Manifest sync falhou (${res.status}): ${text} — deploy continua`);
   }
 }
 
