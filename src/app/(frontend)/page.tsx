@@ -182,34 +182,7 @@ export default async function HomePage() {
         </div>
       )}
 
-      {/* ── 2. FLASH DE NOTICIAS ── */}
-      {posts.length > 0 && (
-        <section className="mb-6 -mx-4 border-y border-[#0d61ac]/20 bg-[#0d61ac]/5 px-4 py-3">
-          <div className="flex items-center gap-4 overflow-x-auto">
-            <span className="shrink-0 rounded bg-[#0d61ac] px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-white">
-              Ultimas
-            </span>
-            <div className="flex items-center gap-3 text-sm">
-              {posts.slice(0, 5).map((post, idx) => (
-                <Link
-                  key={post.id}
-                  href={`/posts/${post.slug}`}
-                  className="flex shrink-0 items-center gap-3 text-gray-700 transition-colors hover:text-[#0d61ac]"
-                >
-                  <span className="line-clamp-1 max-w-[220px] font-medium">
-                    {post.title}
-                  </span>
-                  {idx < 4 && (
-                    <span className="text-gray-300" aria-hidden="true">|</span>
-                  )}
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ── 3. ESCOLHA DO EDITOR ── */}
+      {/* ── 2. ESCOLHA DO EDITOR ── */}
       <section className="mb-8">
         <SectionHeader title="Escolha do Editor" href="/blog" />
         {editorPicks.length > 0 ? (
