@@ -48,6 +48,10 @@ export async function getLatestPosts(limit = 9, page = 1) {
   return cms.posts.list({ limit, page });
 }
 
+export async function getPostsBySection(section: string, limit = 10) {
+  return cms.posts.list({ homeSection: section, limit });
+}
+
 export async function getRecentPosts(limit = 5) {
   const result = await cms.posts.list({ limit, page: 1 });
   return { docs: result.docs };

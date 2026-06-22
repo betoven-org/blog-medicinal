@@ -12,6 +12,7 @@ import {
   getLatestPosts,
   getRecentPosts,
   getPostsByCategorySlug,
+  getPostsBySection,
   getCategories,
   getSiteSettings,
 } from "@/lib/queries";
@@ -125,23 +126,35 @@ export default async function HomePage() {
     return <SectionRenderer blocks={sectionBlocks} />;
   }
 
-  // Fallback: hardcoded portal layout
-  const [featured, latest, recent, categories] = await Promise.all([
+  // Fallback: hardcoded portal layout — each section fetches by home_section rule
+  const [
+    featured,
+    editorResult,
+    trendingResult,
+    bannerResult,
+    destaqueResult,
+    recent,
+    latest,
+    categories,
+  ] = await Promise.all([
     getFeaturedPost(),
-    getLatestPosts(30),
+    getPostsBySection("editor", 3),
+    getPostsBySection("trending", 8),
+    getPostsBySection("banner", 1),
+    getPostsBySection("destaque", 4),
     getRecentPosts(5),
+    getLatestPosts(20),
     getCategories(),
   ]);
 
   const allCategories = categories.docs;
-  const posts = latest.docs;
-  const editorPicks = posts.slice(0, 3);
-  const trendPosts = posts.slice(3, 11);
-  const bannerPost = posts[11] ?? null;
-  const weekHighlight = posts[12] ?? null;
-  const weekSide = posts.slice(13, 16);
-  const noveltyPosts = posts.slice(16, 24);
-  const maisLidas = posts.slice(0, 5);
+  const editorPicks = editorResult.docs;
+  const trendPosts = trendingResult.docs;
+  const bannerPost = bannerResult.docs[0] ?? null;
+  const weekHighlight = destaqueResult.docs[0] ?? null;
+  const weekSide = destaqueResult.docs.slice(1, 4);
+  const noveltyPosts = latest.docs.slice(0, 8);
+  const maisLidas = latest.docs.slice(0, 5);
 
   // Top 3 categories for dedicated sections
   const topCategorySlugs = allCategories
