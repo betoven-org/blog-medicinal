@@ -449,17 +449,19 @@ function createClient() {
         offset?: number;
         category?: number;
         featured?: boolean;
+        search?: string;
       },
     ): Promise<{ docs: Product[] }> {
-      const { limit = 20, offset = 0, category, featured } = opts ?? {};
+      const { limit = 20, offset = 0, category, featured, search } = opts ?? {};
 
       const result = await request<{ docs: Product[] }>("/products", {
-        revalidate: REVALIDATE.PRODUCTS,
+        revalidate: search ? 0 : REVALIDATE.PRODUCTS,
         params: {
           limit,
           offset,
           category: category !== undefined ? category : undefined,
           featured: featured ? "true" : undefined,
+          search,
         },
       });
 

@@ -34,7 +34,7 @@ export default async function SearchPage({ searchParams }: Props) {
   const [results, categoriesResult, productsResult] = await Promise.all([
     query ? searchPosts(query, categoria, 12, page) : null,
     getCategories(),
-    query ? cms.products.list({ limit: 50 }) : null,
+    query ? cms.products.list({ search: query, limit: 12 }) : null,
   ]);
 
   const docs = results?.docs ?? [];
@@ -42,13 +42,7 @@ export default async function SearchPage({ searchParams }: Props) {
   const totalPages = results?.totalPages ?? 0;
   const categories = categoriesResult.docs;
 
-  const queryLower = query.toLowerCase();
-  const matchedProducts = query && productsResult
-    ? productsResult.docs.filter((p) =>
-        p.name.toLowerCase().includes(queryLower) ||
-        (p.description && p.description.toLowerCase().includes(queryLower))
-      )
-    : [];
+  const matchedProducts = productsResult?.docs ?? [];
 
   function buildUrl(params: Record<string, string | undefined>) {
     const sp = new URLSearchParams();
