@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-24T20:37:07.338Z",
+  "generatedAt": "2026-06-24T20:43:34.386Z",
   "sections": [
     {
       "key": "Accordion",
@@ -1313,6 +1313,12 @@
           "required": false,
           "default": "Inscrever"
         },
+        "showName": {
+          "type": "boolean",
+          "title": "Mostrar campo nome",
+          "required": false,
+          "default": false
+        },
         "style": {
           "type": "string",
           "format": "select",
@@ -1379,7 +1385,7 @@
     {
       "key": "PostCarousel",
       "title": "Lista de Posts",
-      "description": "Lista vertical numerada de posts",
+      "description": "Lista numerada de posts (vertical ou horizontal)",
       "group": "Home",
       "path": "sections/PostCarousel",
       "props": {
@@ -1406,7 +1412,8 @@
             "trending",
             "popular",
             "editor-picks",
-            "manual"
+            "manual",
+            "homeSection"
           ]
         },
         "manualSlugs": {
@@ -1427,6 +1434,17 @@
           "title": "Mostrar categoria",
           "required": false,
           "default": true
+        },
+        "layout": {
+          "type": "string",
+          "format": "select",
+          "title": "Layout",
+          "required": false,
+          "default": "vertical",
+          "options": [
+            "vertical",
+            "horizontal"
+          ]
         },
         "homeSection": {
           "type": "string",
