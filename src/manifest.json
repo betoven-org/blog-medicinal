@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-24T20:43:34.386Z",
+  "generatedAt": "2026-06-24T21:35:11.055Z",
   "sections": [
     {
       "key": "Accordion",
@@ -186,34 +186,6 @@
             "dark",
             "brand"
           ]
-        }
-      }
-    },
-    {
-      "key": "CategoryBar",
-      "title": "Barra de Categorias",
-      "description": "Navegacao rapida por categorias",
-      "group": "Home",
-      "path": "sections/CategoryBar",
-      "props": {
-        "title": {
-          "type": "string",
-          "format": "text",
-          "title": "Titulo",
-          "required": false,
-          "default": "Categorias"
-        },
-        "showAll": {
-          "type": "boolean",
-          "title": "Mostrar todas",
-          "required": false,
-          "default": true
-        },
-        "limit": {
-          "type": "number",
-          "title": "Limite",
-          "required": false,
-          "default": 10
         }
       }
     },
@@ -728,6 +700,28 @@
             "light",
             "dark"
           ]
+        }
+      }
+    },
+    {
+      "key": "LandingPageShowcase",
+      "title": "Vitrine de Landing Pages",
+      "description": "Exibe campanhas/LPs com destaque na marcada como featured e grid nas demais",
+      "group": "Home",
+      "path": "sections/LandingPageShowcase",
+      "props": {
+        "title": {
+          "type": "string",
+          "format": "text",
+          "title": "Titulo da secao",
+          "required": false,
+          "default": "Guias Especiais"
+        },
+        "limit": {
+          "type": "number",
+          "title": "Limite de LPs",
+          "required": false,
+          "default": 10
         }
       }
     },
@@ -1538,6 +1532,12 @@
           "description": "Valor da coluna home_section (trending, destaque, editor, banner)",
           "required": false
         },
+        "showBorder": {
+          "type": "boolean",
+          "title": "Mostrar borda superior",
+          "required": false,
+          "default": true
+        },
         "viewAllHref": {
           "type": "string",
           "format": "text",
@@ -2248,6 +2248,22 @@
             "4:3",
             "1:1"
           ]
+        }
+      }
+    },
+    {
+      "key": "WeatherBar",
+      "title": "Barra de Temperatura",
+      "description": "Mostra a temperatura local do usuario com geolocalizacao",
+      "group": "Global",
+      "path": "sections/WeatherBar",
+      "props": {
+        "buttonText": {
+          "type": "string",
+          "format": "text",
+          "title": "Texto do botao",
+          "required": false,
+          "default": "Ver temperatura local"
         }
       }
     },

@@ -9,7 +9,6 @@ import HeroPost from "@/components/sections/HeroPost";
 import PostGrid from "@/components/sections/PostGrid";
 import PostList from "@/components/sections/PostCarousel";
 import PostGridWithSidebar from "@/components/sections/PostGridWithSidebar";
-import CategoryBar from "@/components/sections/CategoryBar";
 import ProductShowcase from "@/components/sections/ProductShowcase";
 import WhatsAppCTA from "@/components/sections/WhatsAppCTA";
 import PostHighlight from "@/components/sections/PostHighlight";
@@ -45,6 +44,10 @@ import Newsletter from "@/components/sections/Newsletter";
 import Divider from "@/components/sections/Divider";
 import Alert from "@/components/sections/Alert";
 
+// Home
+import LandingPageShowcase from "@/components/sections/LandingPageShowcase";
+import WeatherBar from "@/components/sections/WeatherBar";
+
 // Landing Page
 import LpHero from "@/components/sections/LpHero";
 import LpBenefits from "@/components/sections/LpBenefits";
@@ -68,9 +71,10 @@ const SECTION_MAP: Record<string, React.ComponentType<any>> = {
   PostCarousel: PostList,
   PostList,
   PostGridWithSidebar,
-  CategoryBar,
   ProductShowcase,
   WhatsAppCTA,
+  LandingPageShowcase,
+  WeatherBar,
   PostHighlight,
   PostBanner,
   CategoryPosts,

@@ -22,6 +22,7 @@ import { cms } from "@/lib/cms";
 import type { SectionBlock } from "@/lib/cms";
 import { SectionRenderer } from "@/components/SectionRenderer";
 
+
 export async function generateMetadata(): Promise<Metadata> {
   const settings = ((await getSiteSettings()) || {}) as any;
   const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/+$/, "");
@@ -123,7 +124,21 @@ export default async function HomePage() {
   const sectionBlocks: SectionBlock[] = homePage?.sections ?? [];
 
   if (sectionBlocks.length > 0) {
-    return <SectionRenderer blocks={sectionBlocks} />;
+    // Inject LandingPageShowcase after HeroPost (second fold)
+    const heroIdx = sectionBlocks.findIndex((b) => b.component === "HeroPost");
+    const lpBlock: SectionBlock = {
+      id: "lp-showcase",
+      component: "LandingPageShowcase",
+      props: {},
+    };
+    const blocks = [...sectionBlocks];
+    blocks.splice(heroIdx >= 0 ? heroIdx + 1 : 1, 0, lpBlock);
+    return (
+      <>
+        <h1 className="sr-only">Medicinal na Web — Portal de Saude e Bem-estar</h1>
+        <SectionRenderer blocks={blocks} />
+      </>
+    );
   }
 
   // Fallback: hardcoded portal layout — each section fetches by home_section rule
@@ -175,6 +190,7 @@ export default async function HomePage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6">
+      <h1 className="sr-only">Medicinal na Web — Portal de Saude e Bem-estar</h1>
       {/* ── 1. HERO ── */}
       {featured && (
         <div className="mb-6">
@@ -230,27 +246,6 @@ export default async function HomePage() {
           </p>
         )}
       </section>
-
-      {/* ── 4. CATEGORIAS ── */}
-      {allCategories.length > 0 && (
-        <section className="mb-8 -mx-4 bg-gray-50 px-4 py-6">
-          <div className="flex gap-3 overflow-x-auto pb-1">
-            {allCategories.map((cat) => {
-              const slug = cat.slug as string;
-              return (
-                <Link
-                  key={cat.id}
-                  href={`/categorias/${slug}`}
-                  className="flex items-center gap-2 rounded-full border-2 border-gray-200 px-5 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:border-[#0d61ac] hover:text-[#0d61ac] whitespace-nowrap"
-                >
-                  <CategoryIcon slug={slug} />
-                  {cat.name}
-                </Link>
-              );
-            })}
-          </div>
-        </section>
-      )}
 
       {/* ── 5. VITRINE DE PRODUTOS ── */}
       {/* @ts-expect-error Async Server Component */}
