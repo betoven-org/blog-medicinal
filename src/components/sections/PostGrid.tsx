@@ -44,6 +44,10 @@ export interface Props {
   /** @default true */
   showReadingTime?: boolean;
 
+  /** @title homeSection */
+  /** @description Valor da coluna home_section (trending, destaque, editor, banner) */
+  homeSection?: string;
+
   /** @title Link "Ver todos" */
   viewAllHref?: string;
 }
@@ -163,6 +167,7 @@ export default async function PostGrid({
   showCategory = true,
   showAuthor = false,
   showReadingTime = true,
+  homeSection,
   viewAllHref,
 }: Props) {
   const parsedSlugs = manualSlugs
@@ -170,7 +175,7 @@ export default async function PostGrid({
     .map((s) => s.trim())
     .filter(Boolean);
 
-  const posts = await getPostsByMode(mode as PostMode, limit, parsedSlugs);
+  const posts = await getPostsByMode(mode as PostMode, limit, parsedSlugs, homeSection);
 
   if (posts.length === 0) return null;
 

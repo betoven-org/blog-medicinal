@@ -17,7 +17,7 @@ export type PostCard = {
   views?: number;
 };
 
-export type PostMode = "recent" | "trending" | "popular" | "editor-picks" | "manual";
+export type PostMode = "recent" | "trending" | "popular" | "editor-picks" | "manual" | "homeSection";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -46,6 +46,7 @@ export async function getPostsByMode(
   mode: PostMode,
   limit: number = 6,
   manualSlugs?: string[],
+  homeSection?: string,
 ): Promise<PostCard[]> {
   switch (mode) {
     case "recent": {
@@ -58,10 +59,17 @@ export async function getPostsByMode(
       return result.docs.map(toPostCard);
     }
 
+    case "homeSection": {
+      if (!homeSection) return [];
+      const result = await cms.posts.list({ limit, homeSection });
+      if (process.env.NODE_ENV === "development") {
+        console.log(`[loader] homeSection="${homeSection}" limit=${limit} → ${result.docs.length} posts`);
+      }
+      return result.docs.map(toPostCard);
+    }
+
     case "trending":
     case "popular": {
-      // SDK does not support trending/popular by metrics.
-      // Fallback to recent posts as the API handles ordering server-side.
       const result = await cms.posts.list({ limit });
       return result.docs.map(toPostCard);
     }
@@ -69,12 +77,10 @@ export async function getPostsByMode(
     case "manual": {
       if (!manualSlugs || manualSlugs.length === 0) return [];
 
-      // Fetch enough posts and filter by slugs
       const result = await cms.posts.list({ limit: 50 });
       const slugSet = new Set(manualSlugs);
       const filtered = result.docs.filter((p) => slugSet.has(p.slug));
 
-      // Preserve manual slug order
       return manualSlugs
         .map((slug) => filtered.find((p) => p.slug === slug))
         .filter(Boolean)

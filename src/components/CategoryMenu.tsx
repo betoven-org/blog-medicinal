@@ -71,10 +71,10 @@ export function CategoryMenu({ categories, landingPages = [] }: Props) {
                   className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
                     isActive
                       ? "bg-emerald-600 text-white"
-                      : "text-emerald-700 bg-emerald-50 hover:bg-emerald-100"
+                      : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
                   }`}
                 >
-                  {toTitleCase(lp.title)}
+                  {lp.title}
                 </Link>
               );
             })}

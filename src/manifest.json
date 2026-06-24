@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-22T23:12:16.169Z",
+  "generatedAt": "2026-06-24T20:37:07.338Z",
   "sections": [
     {
       "key": "Accordion",
@@ -214,6 +214,27 @@
           "title": "Limite",
           "required": false,
           "default": 10
+        }
+      }
+    },
+    {
+      "key": "CategoryPosts",
+      "title": "Posts por Categoria",
+      "description": "Colunas com posts agrupados por categoria",
+      "group": "Home",
+      "path": "sections/CategoryPosts",
+      "props": {
+        "categoryCount": {
+          "type": "number",
+          "title": "Numero de categorias",
+          "required": false,
+          "default": 3
+        },
+        "postsPerCategory": {
+          "type": "number",
+          "title": "Posts por categoria",
+          "required": false,
+          "default": 3
         }
       }
     },
@@ -1313,6 +1334,49 @@
       }
     },
     {
+      "key": "PostBanner",
+      "title": "Banner de Post",
+      "description": "Post em destaque com imagem a esquerda e texto a direita",
+      "group": "Home",
+      "path": "sections/PostBanner",
+      "props": {
+        "mode": {
+          "type": "string",
+          "format": "select",
+          "title": "Modo",
+          "required": false,
+          "default": "recent",
+          "options": [
+            "recent",
+            "trending",
+            "popular",
+            "editor-picks",
+            "manual"
+          ]
+        },
+        "manualSlug": {
+          "type": "string",
+          "format": "text",
+          "title": "Slug do post (modo manual)",
+          "required": false
+        },
+        "homeSection": {
+          "type": "string",
+          "format": "text",
+          "title": "homeSection",
+          "description": "Valor da coluna home_section (banner, destaque, trending)",
+          "required": false
+        },
+        "offset": {
+          "type": "number",
+          "title": "Posicao no feed",
+          "description": "Qual post pegar da lista (ex: 1 = segundo post)",
+          "required": false,
+          "default": 0
+        }
+      }
+    },
+    {
       "key": "PostCarousel",
       "title": "Lista de Posts",
       "description": "Lista vertical numerada de posts",
@@ -1363,6 +1427,13 @@
           "title": "Mostrar categoria",
           "required": false,
           "default": true
+        },
+        "homeSection": {
+          "type": "string",
+          "format": "text",
+          "title": "homeSection",
+          "description": "Valor da coluna home_section (trending, destaque, editor)",
+          "required": false
         },
         "viewAllHref": {
           "type": "string",
@@ -1442,6 +1513,13 @@
           "required": false,
           "default": true
         },
+        "homeSection": {
+          "type": "string",
+          "format": "text",
+          "title": "homeSection",
+          "description": "Valor da coluna home_section (trending, destaque, editor, banner)",
+          "required": false
+        },
         "viewAllHref": {
           "type": "string",
           "format": "text",
@@ -1453,7 +1531,7 @@
     {
       "key": "PostGridWithSidebar",
       "title": "Grade + Lista Lateral",
-      "description": "Posts em grid (2/3) com lista numerada lateral (1/3)",
+      "description": "Posts em grid (2/3) com lista lateral (1/3)",
       "group": "Home",
       "path": "sections/PostGridWithSidebar",
       "props": {
@@ -1502,6 +1580,17 @@
           "required": false,
           "default": true
         },
+        "gridLayout": {
+          "type": "string",
+          "format": "select",
+          "title": "Layout do card",
+          "required": false,
+          "default": "vertical",
+          "options": [
+            "vertical",
+            "horizontal"
+          ]
+        },
         "sidebarTitle": {
           "type": "string",
           "format": "text",
@@ -1535,10 +1624,91 @@
           "required": false,
           "default": 5
         },
+        "sidebarNumbered": {
+          "type": "boolean",
+          "title": "Mostrar numeros na sidebar",
+          "required": false,
+          "default": true
+        },
+        "gridHomeSection": {
+          "type": "string",
+          "format": "text",
+          "title": "homeSection do grid",
+          "description": "Valor da coluna home_section (trending, destaque, editor, banner)",
+          "required": false
+        },
+        "sidebarHomeSection": {
+          "type": "string",
+          "format": "text",
+          "title": "homeSection da sidebar",
+          "required": false
+        },
         "gridViewAllHref": {
           "type": "string",
           "format": "text",
           "title": "Link \"Ver todos\" do grid",
+          "required": false
+        },
+        "sidebarViewAllHref": {
+          "type": "string",
+          "format": "text",
+          "title": "Link \"Ver todos\" da sidebar",
+          "required": false
+        }
+      }
+    },
+    {
+      "key": "PostHighlight",
+      "title": "Destaque da Semana",
+      "description": "Hero com overlay na imagem + lista lateral de posts",
+      "group": "Home",
+      "path": "sections/PostHighlight",
+      "props": {
+        "title": {
+          "type": "string",
+          "format": "text",
+          "title": "Titulo da secao",
+          "required": false,
+          "default": "Destaque da Semana"
+        },
+        "mode": {
+          "type": "string",
+          "format": "select",
+          "title": "Modo",
+          "required": false,
+          "default": "editor-picks",
+          "options": [
+            "recent",
+            "trending",
+            "popular",
+            "editor-picks",
+            "manual"
+          ]
+        },
+        "manualSlugs": {
+          "type": "string",
+          "format": "text",
+          "title": "Slugs manuais",
+          "description": "Slugs separados por virgula (modo manual)",
+          "required": false
+        },
+        "sideCount": {
+          "type": "number",
+          "title": "Posts laterais",
+          "required": false,
+          "default": 3
+        },
+        "homeSection": {
+          "type": "string",
+          "format": "text",
+          "title": "homeSection",
+          "description": "Valor da coluna home_section (destaque, trending, editor)",
+          "required": false
+        },
+        "viewAllHref": {
+          "type": "string",
+          "format": "text",
+          "title": "Link \"Ver todos\"",
           "required": false
         }
       }

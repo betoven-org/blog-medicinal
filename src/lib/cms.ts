@@ -289,12 +289,12 @@ function createClient() {
         category?: string;
         author?: number | string;
         featured?: boolean;
-        search?: string;
         homeSection?: string;
+        search?: string;
         draft?: boolean;
       },
     ): Promise<PaginatedResult<PostListItem>> {
-      const { limit = 10, page = 1, category, author, featured, search, homeSection, draft } =
+      const { limit = 10, page = 1, category, author, featured, homeSection, search, draft } =
         opts ?? {};
 
       const result = await request<PaginatedResult<PostListItem>>("/posts", {
@@ -306,8 +306,8 @@ function createClient() {
           category,
           author: author !== undefined ? author : undefined,
           featured: featured ? "true" : undefined,
-          search,
           homeSection,
+          search,
         },
       });
 

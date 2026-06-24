@@ -12,6 +12,9 @@ import PostGridWithSidebar from "@/components/sections/PostGridWithSidebar";
 import CategoryBar from "@/components/sections/CategoryBar";
 import ProductShowcase from "@/components/sections/ProductShowcase";
 import WhatsAppCTA from "@/components/sections/WhatsAppCTA";
+import PostHighlight from "@/components/sections/PostHighlight";
+import PostBanner from "@/components/sections/PostBanner";
+import CategoryPosts from "@/components/sections/CategoryPosts";
 import Footer from "@/components/sections/Footer";
 import Header from "@/components/sections/Header";
 
@@ -68,6 +71,9 @@ const SECTION_MAP: Record<string, React.ComponentType<any>> = {
   CategoryBar,
   ProductShowcase,
   WhatsAppCTA,
+  PostHighlight,
+  PostBanner,
+  CategoryPosts,
   // Institucional
   FAQ,
   Testimonials,

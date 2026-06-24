@@ -4,7 +4,7 @@ import type { PostMode, PostCard } from "@/lib/loaders";
 
 /**
  * @title Grade + Lista Lateral
- * @description Posts em grid (2/3) com lista numerada lateral (1/3)
+ * @description Posts em grid (2/3) com lista lateral (1/3)
  * @group Home
  */
 export interface Props {
@@ -32,6 +32,11 @@ export interface Props {
   /** @default true */
   gridShowCategory?: boolean;
 
+  /** @title Layout do card */
+  /** @options vertical,horizontal */
+  /** @default vertical */
+  gridLayout?: "vertical" | "horizontal";
+
   /** @title Titulo da lista */
   sidebarTitle: string;
 
@@ -48,8 +53,22 @@ export interface Props {
   /** @default 5 */
   sidebarLimit?: number;
 
+  /** @title Mostrar numeros na sidebar */
+  /** @default true */
+  sidebarNumbered?: boolean;
+
+  /** @title homeSection do grid */
+  /** @description Valor da coluna home_section (trending, destaque, editor, banner) */
+  gridHomeSection?: string;
+
+  /** @title homeSection da sidebar */
+  sidebarHomeSection?: string;
+
   /** @title Link "Ver todos" do grid */
   gridViewAllHref?: string;
+
+  /** @title Link "Ver todos" da sidebar */
+  sidebarViewAllHref?: string;
 }
 
 export default async function PostGridWithSidebar({
@@ -59,18 +78,23 @@ export default async function PostGridWithSidebar({
   gridLimit = 4,
   gridColumns = 2,
   gridShowCategory = true,
+  gridLayout = "vertical",
   sidebarTitle,
   sidebarMode = "trending",
   sidebarManualSlugs,
   sidebarLimit = 5,
+  sidebarNumbered = true,
+  gridHomeSection,
+  sidebarHomeSection,
   gridViewAllHref,
+  sidebarViewAllHref,
 }: Props) {
   const gridSlugs = gridManualSlugs?.split(",").map((s) => s.trim()).filter(Boolean);
   const sidebarSlugs = sidebarManualSlugs?.split(",").map((s) => s.trim()).filter(Boolean);
 
   const [gridPosts, sidebarPosts] = await Promise.all([
-    getPostsByMode(gridMode as PostMode, gridLimit, gridSlugs),
-    getPostsByMode(sidebarMode as PostMode, sidebarLimit, sidebarSlugs),
+    getPostsByMode(gridMode as PostMode, gridLimit, gridSlugs, gridHomeSection),
+    getPostsByMode(sidebarMode as PostMode, sidebarLimit, sidebarSlugs, sidebarHomeSection),
   ]);
 
   if (gridPosts.length === 0 && sidebarPosts.length === 0) return null;
@@ -99,9 +123,13 @@ export default async function PostGridWithSidebar({
             </div>
 
             <div className={`grid grid-cols-1 gap-4 ${colsClass}`}>
-              {gridPosts.map((post) => (
-                <GridCard key={post.id} post={post} showCategory={gridShowCategory} />
-              ))}
+              {gridPosts.map((post) =>
+                gridLayout === "horizontal" ? (
+                  <HorizontalCard key={post.id} post={post} showCategory={gridShowCategory} />
+                ) : (
+                  <VerticalCard key={post.id} post={post} showCategory={gridShowCategory} />
+                )
+              )}
             </div>
           </div>
 
@@ -112,35 +140,62 @@ export default async function PostGridWithSidebar({
               <h2 className="text-lg font-bold uppercase tracking-wide text-gray-900">
                 {sidebarTitle}
               </h2>
+              {sidebarViewAllHref && (
+                <a
+                  href={sidebarViewAllHref}
+                  className="ml-auto text-sm font-medium text-[#0d61ac] hover:underline"
+                >
+                  Ver todos
+                </a>
+              )}
             </div>
 
             <div className="rounded-xl border border-gray-200 bg-white p-4">
               <ol role="list">
-                {sidebarPosts.map((post, i) => (
-                  <li
-                    key={post.id}
-                    className={`flex gap-4 py-3 ${i < sidebarPosts.length - 1 ? "border-b border-gray-100" : ""}`}
-                  >
-                    <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center text-xl font-bold text-[#0d61ac]/20">
-                      {i + 1}
-                    </span>
-                    <a href={`/posts/${post.slug}`} className="group min-w-0 flex-1">
-                      {post.categoryName && (
-                        <p className="text-xs font-semibold uppercase tracking-wide text-[#0d61ac]">
-                          {post.categoryName}
-                        </p>
+                {sidebarPosts.map((post, i) => {
+                  const date = post.publishedAt
+                    ? new Date(post.publishedAt).toLocaleDateString("pt-BR", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      })
+                    : null;
+                  return (
+                    <li
+                      key={post.id}
+                      className={`flex gap-4 py-3 ${i < sidebarPosts.length - 1 ? "border-b border-gray-100" : ""}`}
+                    >
+                      {sidebarNumbered && (
+                        <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center text-xl font-bold text-[#0d61ac]/20">
+                          {i + 1}
+                        </span>
                       )}
-                      <h3 className="mt-0.5 text-sm font-semibold leading-snug text-gray-900 line-clamp-2 transition-colors group-hover:text-[#0d61ac]">
-                        {post.title}
-                      </h3>
-                      {post.readingTimeMinutes != null && (
-                        <p className="mt-1 text-xs text-gray-500">
-                          {post.readingTimeMinutes} min
-                        </p>
-                      )}
-                    </a>
-                  </li>
-                ))}
+                      <a href={`/posts/${post.slug}`} className="group min-w-0 flex-1">
+                        <h3 className="text-sm font-semibold leading-snug text-gray-900 line-clamp-2 transition-colors group-hover:text-[#0d61ac]">
+                          {post.title}
+                        </h3>
+                        {sidebarNumbered ? (
+                          <>
+                            {post.categoryName && (
+                              <p className="text-xs font-semibold uppercase tracking-wide text-[#0d61ac] mt-1">
+                                {post.categoryName}
+                              </p>
+                            )}
+                            {post.readingTimeMinutes != null && (
+                              <p className="mt-1 text-xs text-gray-500">
+                                {post.readingTimeMinutes} min
+                              </p>
+                            )}
+                          </>
+                        ) : (
+                          <p className="mt-1 text-xs text-gray-500">
+                            {[post.authorName, date].filter(Boolean).join(" · ")}
+                          </p>
+                        )}
+                      </a>
+                    </li>
+                  );
+                })}
               </ol>
             </div>
           </aside>
@@ -150,9 +205,9 @@ export default async function PostGridWithSidebar({
   );
 }
 
-/* ── Grid Card ────────────────────────────────────────────────────────── */
+/* ── Vertical Card (default) ─────────────────────────────────────────── */
 
-function GridCard({ post, showCategory }: { post: PostCard; showCategory: boolean }) {
+function VerticalCard({ post, showCategory }: { post: PostCard; showCategory: boolean }) {
   const imageUrl = post.heroImageUrl ?? post.coverUrl;
 
   return (
@@ -188,6 +243,48 @@ function GridCard({ post, showCategory }: { post: PostCard; showCategory: boolea
             .filter(Boolean)
             .join(" · ")}
         </p>
+      </a>
+    </article>
+  );
+}
+
+/* ── Horizontal Card ─────────────────────────────────────────────────── */
+
+function HorizontalCard({ post, showCategory }: { post: PostCard; showCategory: boolean }) {
+  const imageUrl = post.heroImageUrl ?? post.coverUrl;
+
+  return (
+    <article>
+      <a href={`/posts/${post.slug}`} className="group flex gap-4 py-3 border-b border-gray-100 last:border-0">
+        {imageUrl ? (
+          <Image
+            src={imageUrl}
+            alt={post.title}
+            width={160}
+            height={120}
+            sizes="160px"
+            quality={60}
+            className="w-28 h-20 sm:w-40 sm:h-28 rounded-lg object-cover flex-shrink-0"
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-28 h-20 sm:w-40 sm:h-28 rounded-lg bg-gray-100 flex-shrink-0" />
+        )}
+        <div className="min-w-0 flex-1 flex flex-col justify-center">
+          {showCategory && post.categoryName && (
+            <p className="text-xs font-semibold uppercase tracking-wide text-[#0d61ac] mb-1">
+              {post.categoryName}
+            </p>
+          )}
+          <h3 className="text-sm font-semibold text-gray-900 line-clamp-2 transition-colors group-hover:text-[#0d61ac]">
+            {post.title}
+          </h3>
+          {post.excerpt && (
+            <p className="mt-1 text-xs text-gray-500 line-clamp-2">
+              {post.excerpt}
+            </p>
+          )}
+        </div>
       </a>
     </article>
   );

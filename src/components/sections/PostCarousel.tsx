@@ -30,6 +30,10 @@ export interface Props {
   /** @default true */
   showCategory?: boolean;
 
+  /** @title homeSection */
+  /** @description Valor da coluna home_section (trending, destaque, editor) */
+  homeSection?: string;
+
   /** @title Link "Ver todos" */
   viewAllHref?: string;
 }
@@ -43,6 +47,7 @@ export default async function PostList({
   manualSlugs,
   limit = 5,
   showCategory = true,
+  homeSection,
   viewAllHref,
 }: Props) {
   const parsedSlugs =
@@ -53,7 +58,7 @@ export default async function PostList({
           .filter(Boolean)
       : undefined;
 
-  const posts = await getPostsByMode(mode, limit, parsedSlugs);
+  const posts = await getPostsByMode(mode, limit, parsedSlugs, homeSection);
 
   if (!posts.length) return null;
 
