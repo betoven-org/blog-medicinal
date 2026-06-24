@@ -87,13 +87,15 @@ export default function Newsletter({
     const textColor = isDark ? "text-white" : "text-gray-900";
     const descColor = isDark ? "text-white/80" : "text-gray-600";
     return (
-      <section
-        className={`w-full py-10 px-6 bg-gray-50 text-center ${textColor}`}
-        style={bgStyle}
-      >
-        <h2 className="text-xl font-bold mb-2">{title}</h2>
-        {description && <p className={`${descColor} mb-6 max-w-lg mx-auto text-sm`}>{description}</p>}
-        {form}
+      <section className="w-full">
+        <div
+          className={`max-w-7xl mx-auto px-4 py-10 rounded-xl text-center ${textColor}`}
+          style={bgStyle}
+        >
+          <h2 className="text-xl font-bold mb-2">{title}</h2>
+          {description && <p className={`${descColor} mb-6 max-w-lg mx-auto text-sm`}>{description}</p>}
+          {form}
+        </div>
       </section>
     );
   }
