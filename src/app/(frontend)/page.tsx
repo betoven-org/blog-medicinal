@@ -131,8 +131,32 @@ export default async function HomePage() {
       component: "LandingPageShowcase",
       props: {},
     };
+    const smartBlock: SectionBlock = {
+      id: "smart-products",
+      component: "SmartProductShowcase",
+      props: { limit: 8 },
+    };
     const blocks = [...sectionBlocks];
+    // LP showcase after hero (second fold)
     blocks.splice(heroIdx >= 0 ? heroIdx + 1 : 1, 0, lpBlock);
+    // Smart products BEFORE ProductShowcase
+    const productIdx = blocks.findIndex((b) => b.component === "ProductShowcase");
+    blocks.splice(productIdx >= 0 ? productIdx : blocks.length - 1, 0, smartBlock);
+    // Move ProductShowcase after the next fold (second PostGridWithSidebar)
+    const currentProductIdx = blocks.findIndex((b) => b.component === "ProductShowcase");
+    if (currentProductIdx >= 0) {
+      const [productBlock] = blocks.splice(currentProductIdx, 1);
+      // Find the second PostGridWithSidebar (the one after ProductShowcase's old position)
+      let gridCount = 0;
+      let insertAfter = blocks.length - 2;
+      for (let i = 0; i < blocks.length; i++) {
+        if (blocks[i].component === "PostGridWithSidebar") {
+          gridCount++;
+          if (gridCount === 2) { insertAfter = i; break; }
+        }
+      }
+      blocks.splice(insertAfter + 1, 0, productBlock);
+    }
     return (
       <>
         <h1 className="sr-only">Medicinal na Web — Portal de Saude e Bem-estar</h1>

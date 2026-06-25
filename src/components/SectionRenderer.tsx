@@ -46,6 +46,7 @@ import Alert from "@/components/sections/Alert";
 
 // Home
 import LandingPageShowcase from "@/components/sections/LandingPageShowcase";
+import SmartProductShowcase from "@/components/sections/SmartProductShowcase";
 import WeatherBar from "@/components/sections/WeatherBar";
 
 // Landing Page
@@ -74,6 +75,7 @@ const SECTION_MAP: Record<string, React.ComponentType<any>> = {
   ProductShowcase,
   WhatsAppCTA,
   LandingPageShowcase,
+  SmartProductShowcase,
   WeatherBar,
   PostHighlight,
   PostBanner,

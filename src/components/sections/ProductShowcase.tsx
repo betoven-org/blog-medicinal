@@ -1,9 +1,10 @@
 import Image from "next/image";
 import { cms } from "@/lib/cms";
+import { ProductCarouselWrapper } from "./ProductCarouselWrapper";
 
 /**
  * @title Vitrine de Produtos
- * @description Grade de produtos da farmacia
+ * @description Carrossel de produtos da farmacia
  * @group Home
  */
 export interface Props {
@@ -13,7 +14,7 @@ export interface Props {
 
   /** @title Modo */
   /** @options all,featured,category,manual */
-  /** @default featured */
+  /** @default all */
   mode?: "all" | "featured" | "category" | "manual";
 
   /** @title Slug da categoria */
@@ -25,12 +26,8 @@ export interface Props {
   manualSlugs?: string;
 
   /** @title Limite */
-  /** @default 4 */
+  /** @default 12 */
   limit?: number;
-
-  /** @title Colunas */
-  /** @default 4 */
-  columns?: number;
 
   /** @title Link "Ver todos" */
   /** @default /produtos */
@@ -48,12 +45,6 @@ type ProductCard = {
   description: string | null;
   imageUrl: string | null;
   imageAlt: string | null;
-};
-
-const COLUMNS_CLASS: Record<number, string> = {
-  2: "sm:grid-cols-2",
-  3: "sm:grid-cols-2 lg:grid-cols-3",
-  4: "sm:grid-cols-2 lg:grid-cols-4",
 };
 
 async function fetchProducts(
@@ -89,7 +80,6 @@ async function fetchProducts(
 
     case "category": {
       if (!categorySlug) return [];
-      // Get category ID first
       const categories = await cms.productCategories.list();
       const cat = categories.docs.find((c) => c.slug === categorySlug);
       if (!cat) return [];
@@ -106,7 +96,6 @@ async function fetchProducts(
 
     case "manual": {
       if (!parsedSlugs?.length) return [];
-      // Fetch all and filter by slugs
       const result = await cms.products.list({ limit: 50 });
       const slugSet = new Set(parsedSlugs);
       return result.docs
@@ -127,14 +116,29 @@ async function fetchProducts(
   }
 }
 
-interface ProductCardItemProps {
-  product: ProductCard;
-  showDescription: boolean;
-}
+export default async function ProductShowcase({
+  title = "Nossos Produtos",
+  mode = "all",
+  categorySlug,
+  manualSlugs,
+  limit = 12,
+  viewAllHref = "/produtos",
+  showDescription = false,
+}: Props) {
+  const parsedSlugs = manualSlugs
+    ?.split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
 
-function ProductCardItem({ product, showDescription }: ProductCardItemProps) {
-  return (
-    <article className="group rounded-xl border border-gray-200 bg-white p-4 transition-all hover:border-[#0d61ac]/30 hover:shadow-md">
+  const items = await fetchProducts(mode, limit, parsedSlugs, categorySlug);
+
+  if (items.length === 0) return null;
+
+  const cards = items.map((product) => (
+    <article
+      key={product.id}
+      className="w-[260px] shrink-0 snap-start group rounded-xl border border-gray-200 bg-white p-4 transition-all hover:border-[#0d61ac]/30 hover:shadow-md"
+    >
       <a href={`/${product.slug}/p`} className="block">
         <div className="flex items-center justify-center rounded-lg bg-[#f8f9fa] p-4">
           {product.imageUrl ? (
@@ -144,11 +148,11 @@ function ProductCardItem({ product, showDescription }: ProductCardItemProps) {
               width={300}
               height={300}
               sizes="300px"
-              className="h-80 w-80 object-contain mix-blend-multiply transition-transform duration-300 group-hover:scale-105"
+              className="h-56 w-56 object-contain mix-blend-multiply transition-transform duration-300 group-hover:scale-105"
               loading="lazy"
             />
           ) : (
-            <div className="flex h-80 w-80 items-center justify-center text-gray-300" aria-hidden="true">
+            <div className="flex h-56 w-56 items-center justify-center text-gray-300" aria-hidden="true">
               <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
                 <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
@@ -176,63 +180,14 @@ function ProductCardItem({ product, showDescription }: ProductCardItemProps) {
         </span>
       </a>
     </article>
-  );
-}
-
-export default async function ProductShowcase({
-  title = "Nossos Produtos",
-  mode = "featured",
-  categorySlug,
-  manualSlugs,
-  limit = 4,
-  columns = 4,
-  viewAllHref = "/produtos",
-  showDescription = false,
-}: Props) {
-  const parsedSlugs = manualSlugs
-    ?.split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
-
-  const items = await fetchProducts(mode, limit, parsedSlugs, categorySlug);
-
-  if (items.length === 0) return null;
-
-  const columnsClass = COLUMNS_CLASS[columns] ?? COLUMNS_CLASS[4];
+  ));
 
   return (
-    <section
-      aria-labelledby="product-showcase-heading"
-      className="border-t border-gray-200"
-    >
+    <section aria-labelledby="product-showcase-heading" className="border-t border-gray-200">
       <div className="mx-auto max-w-7xl w-full px-4 py-8">
-        <div className="mb-6 flex items-center gap-3">
-          <div className="h-6 w-1 rounded-full bg-[#0d61ac]" aria-hidden="true" />
-          <h2
-            id="product-showcase-heading"
-            className="text-lg font-bold uppercase tracking-wide text-gray-900"
-          >
-            {title}
-          </h2>
-          {viewAllHref && (
-            <a
-              href={viewAllHref}
-              className="ml-auto shrink-0 text-sm font-medium text-[#0d61ac] hover:underline"
-            >
-              Ver todos
-            </a>
-          )}
-        </div>
-
-        <div className={`grid grid-cols-1 gap-4 ${columnsClass}`}>
-          {items.map((product) => (
-            <ProductCardItem
-              key={product.id}
-              product={product}
-              showDescription={showDescription}
-            />
-          ))}
-        </div>
+        <ProductCarouselWrapper title={title} viewAllHref={viewAllHref}>
+          {cards}
+        </ProductCarouselWrapper>
       </div>
     </section>
   );
