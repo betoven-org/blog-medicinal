@@ -8,10 +8,6 @@ import { useState } from "react";
  * @group Landing Page
  */
 export interface Props {
-  /** @title Slug do Produto */
-  /** @description Preencha para puxar FAQ do produto automaticamente quando Items estiver vazio */
-  productSlug?: string;
-
   /** @title Titulo */
   /** @default Perguntas Frequentes */
   title?: string;
@@ -29,22 +25,29 @@ export interface Props {
     /** @format textarea */
     answer: string;
   }[];
-}
 
-// ---------------------------------------------------------------------------
-// Accordion item — client-side interactivity
-// ---------------------------------------------------------------------------
+  /** @title Slug do Produto */
+  /** @description Preencha para puxar FAQ do produto automaticamente quando Items estiver vazio */
+  productSlug?: string;
+
+  /** @title Largura total */
+  /** @default false */
+  fullWidth?: boolean;
+}
 
 function LpFAQItem({
   question,
   answer,
   index,
+  open,
+  onToggle,
 }: {
   question: string;
   answer: string;
   index: number;
+  open: boolean;
+  onToggle: () => void;
 }) {
-  const [open, setOpen] = useState(false);
   const id = `lp-faq-answer-${index}`;
 
   return (
@@ -52,7 +55,7 @@ function LpFAQItem({
       <button
         type="button"
         className="flex w-full items-center justify-between gap-4 py-5 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0d61ac] focus-visible:ring-offset-2"
-        onClick={() => setOpen((o) => !o)}
+        onClick={onToggle}
         aria-expanded={open}
         aria-controls={id}
       >
@@ -92,27 +95,13 @@ function LpFAQItem({
   );
 }
 
-// ---------------------------------------------------------------------------
-// Main section — NOTE: "use client" at the top because LpFAQItem uses useState.
-// Product data is fetched server-side via the parent page/loader and passed as props.
-// If productSlug is provided without items, the section expects items to have been
-// resolved upstream (via the page loader). For direct use in PageBuilder, items
-// should be filled manually or the manifest should pre-fetch them.
-//
-// For sections that need both server fetch + client state, pattern is:
-//   - Page/loader fetches product and passes resolved items as props
-//   - OR: items are filled in the CMS editor directly
-// ---------------------------------------------------------------------------
-
 export default function LpFAQ({
   title = "Perguntas Frequentes",
   subtitle,
   items,
+  fullWidth = false,
 }: Props) {
-  // Note: productSlug fallback is intentionally not implemented here because
-  // "use client" prevents async server fetching. The CMS editor should pre-fill
-  // items, or the page loader should resolve them before passing to the section.
-  // See: LpFAQLoader (server wrapper) below if auto-fetch is needed.
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   const resolvedItems = items ?? [];
 
@@ -146,7 +135,7 @@ export default function LpFAQ({
         .lp-faq-wrap { animation: lp-faq-fade 0.5s ease both; }
       `}</style>
 
-      <div className="lp-faq-wrap mx-auto max-w-3xl">
+      <div className={`lp-faq-wrap mx-auto ${fullWidth ? "max-w-7xl" : "max-w-3xl"}`}>
         <div className="mb-10 text-center">
           <h2
             id="lp-faq-heading"
@@ -166,6 +155,8 @@ export default function LpFAQ({
               index={i}
               question={item.question}
               answer={item.answer}
+              open={openIndex === i}
+              onToggle={() => setOpenIndex(openIndex === i ? null : i)}
             />
           ))}
         </div>
