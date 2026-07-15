@@ -107,7 +107,7 @@ const SECTION_MAP: Record<string, React.ComponentType<any>> = {
   LpHero,
   LpBenefits,
   LpTestimonials,
-  LpFAQLoader,
+  LpFAQ: LpFAQLoader,
   LpCTA,
   LpFeatureDetail,
   LpSocialProof,
