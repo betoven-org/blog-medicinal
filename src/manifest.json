@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-15T22:53:45.187Z",
+  "generatedAt": "2026-07-15T23:01:26.269Z",
   "sections": [
     {
       "key": "Accordion",
@@ -725,13 +725,13 @@
           "type": "string",
           "format": "image",
           "title": "Imagem",
-          "required": true
+          "required": false
         },
         "imageAlt": {
           "type": "string",
           "format": "text",
           "title": "Texto alternativo da imagem",
-          "required": true
+          "required": false
         },
         "imagePosition": {
           "type": "string",

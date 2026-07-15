@@ -16,9 +16,9 @@ export interface Props {
 
   /** @title Imagem */
   /** @format image */
-  image: string;
+  image?: string;
   /** @title Texto alternativo da imagem */
-  imageAlt: string;
+  imageAlt?: string;
   /** @title Posicao da imagem */
   /** @options esquerda,direita */
   /** @default esquerda */
@@ -53,25 +53,28 @@ export default function ImageText({
       style={{ ...(backgroundColor ? { backgroundColor } : {}), ...(textColor ? { color: textColor } : {}) }}
     >
       <div
-        className={`mx-auto flex max-w-7xl flex-col items-center gap-8 px-4 md:flex-row md:gap-12 ${
-          imagePosition === "direita" ? "md:flex-row-reverse" : ""
+        className={`mx-auto flex max-w-7xl flex-col items-center gap-8 px-4 ${
+          image ? `md:flex-row md:gap-12 ${imagePosition === "direita" ? "md:flex-row-reverse" : ""}` : ""
         }`}
       >
-        <div className="w-full md:w-1/2">
-          <img
-            src={image}
-            alt={imageAlt}
-            width={600}
-            height={400}
-            className="w-full rounded-lg object-cover"
-            loading="lazy"
-          />
-        </div>
+        {image && (
+          <div className="w-full md:w-1/2">
+            <img
+              src={image}
+              alt={imageAlt || ""}
+              width={600}
+              height={400}
+              className="w-full rounded-lg object-cover"
+              loading="lazy"
+            />
+          </div>
+        )}
 
-        <div className="w-full md:w-1/2">
+        <div className={image ? "w-full md:w-1/2" : "w-full"}>
           <h2 className="text-3xl font-bold md:text-4xl">{title}</h2>
           <div
             className="mt-4 prose prose-lg max-w-none"
+            style={textColor ? { color: textColor } : undefined}
             dangerouslySetInnerHTML={{ __html: text }}
           />
         </div>
