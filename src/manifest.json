@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-24T21:35:11.055Z",
+  "generatedAt": "2026-07-15T22:50:38.627Z",
   "sections": [
     {
       "key": "Accordion",
@@ -150,6 +150,36 @@
           "title": "Descricao",
           "required": false
         },
+        "textColor": {
+          "type": "string",
+          "format": "color",
+          "title": "Cor do texto",
+          "required": false
+        },
+        "backgroundImage": {
+          "type": "string",
+          "format": "image",
+          "title": "Imagem de fundo",
+          "required": false
+        },
+        "backgroundColor": {
+          "type": "string",
+          "format": "color",
+          "title": "Cor de fundo",
+          "required": false
+        },
+        "style": {
+          "type": "string",
+          "format": "select",
+          "title": "Estilo",
+          "required": false,
+          "default": "dark",
+          "options": [
+            "light",
+            "dark",
+            "brand"
+          ]
+        },
         "buttonText": {
           "type": "string",
           "format": "text",
@@ -169,23 +199,17 @@
           "required": false,
           "default": false
         },
-        "backgroundImage": {
+        "buttonColor": {
           "type": "string",
-          "format": "image",
-          "title": "Imagem de fundo",
+          "format": "color",
+          "title": "Cor do botao",
           "required": false
         },
-        "style": {
+        "buttonTextColor": {
           "type": "string",
-          "format": "select",
-          "title": "Estilo",
-          "required": false,
-          "default": "dark",
-          "options": [
-            "light",
-            "dark",
-            "brand"
-          ]
+          "format": "color",
+          "title": "Cor do texto do botao",
+          "required": false
         }
       }
     },
@@ -548,10 +572,10 @@
           "title": "Conteudo",
           "required": false
         },
-        "backgroundImage": {
+        "textColor": {
           "type": "string",
-          "format": "image",
-          "title": "Imagem de fundo",
+          "format": "color",
+          "title": "Cor do texto",
           "required": false
         },
         "align": {
@@ -564,6 +588,24 @@
             "centro",
             "direita"
           ]
+        },
+        "backgroundImage": {
+          "type": "string",
+          "format": "image",
+          "title": "Imagem de fundo",
+          "required": false
+        },
+        "backgroundColor": {
+          "type": "string",
+          "format": "color",
+          "title": "Cor de fundo",
+          "required": false
+        },
+        "dark": {
+          "type": "boolean",
+          "title": "Fundo escuro",
+          "required": false,
+          "default": false
         },
         "cta": {
           "type": "object",
@@ -589,11 +631,17 @@
             }
           }
         },
-        "dark": {
-          "type": "boolean",
-          "title": "Fundo escuro",
-          "required": false,
-          "default": false
+        "buttonColor": {
+          "type": "string",
+          "format": "color",
+          "title": "Cor do botao",
+          "required": false
+        },
+        "buttonTextColor": {
+          "type": "string",
+          "format": "color",
+          "title": "Cor do texto do botao",
+          "required": false
         }
       }
     },
@@ -929,13 +977,6 @@
       "group": "Landing Page",
       "path": "sections/LpFAQ",
       "props": {
-        "productSlug": {
-          "type": "string",
-          "format": "text",
-          "title": "Slug do Produto",
-          "description": "Preencha para puxar FAQ do produto automaticamente quando Items estiver vazio",
-          "required": false
-        },
         "title": {
           "type": "string",
           "format": "text",
@@ -971,6 +1012,19 @@
               }
             }
           }
+        },
+        "productSlug": {
+          "type": "string",
+          "format": "text",
+          "title": "Slug do Produto",
+          "description": "Preencha para puxar FAQ do produto automaticamente quando Items estiver vazio",
+          "required": false
+        },
+        "fullWidth": {
+          "type": "boolean",
+          "title": "Largura total",
+          "required": false,
+          "default": false
         }
       }
     },
@@ -1814,7 +1868,7 @@
     {
       "key": "ProductShowcase",
       "title": "Vitrine de Produtos",
-      "description": "Grade de produtos da farmacia",
+      "description": "Carrossel de produtos da farmacia",
       "group": "Home",
       "path": "sections/ProductShowcase",
       "props": {
@@ -1830,7 +1884,7 @@
           "format": "select",
           "title": "Modo",
           "required": false,
-          "default": "featured",
+          "default": "all",
           "options": [
             "all",
             "featured",
@@ -1856,13 +1910,7 @@
           "type": "number",
           "title": "Limite",
           "required": false,
-          "default": 4
-        },
-        "columns": {
-          "type": "number",
-          "title": "Colunas",
-          "required": false,
-          "default": 4
+          "default": 12
         },
         "viewAllHref": {
           "type": "string",
@@ -1909,6 +1957,21 @@
             "medium",
             "wide"
           ]
+        }
+      }
+    },
+    {
+      "key": "SmartProductShowcase",
+      "title": "Vitrine Inteligente",
+      "description": "Carrossel de produtos recomendados com base na temperatura e horario do usuario",
+      "group": "Home",
+      "path": "sections/SmartProductShowcase",
+      "props": {
+        "limit": {
+          "type": "number",
+          "title": "Limite de produtos",
+          "required": false,
+          "default": 8
         }
       }
     },
