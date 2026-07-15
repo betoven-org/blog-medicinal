@@ -10,6 +10,10 @@ export interface Props {
   /** @title Texto */
   /** @format rich-text */
   text: string;
+  /** @title Cor do texto */
+  /** @format color */
+  textColor?: string;
+
   /** @title Imagem */
   /** @format image */
   image: string;
@@ -19,6 +23,10 @@ export interface Props {
   /** @options esquerda,direita */
   /** @default esquerda */
   imagePosition?: "esquerda" | "direita";
+
+  /** @title Cor de fundo */
+  /** @format color */
+  backgroundColor?: string;
   /** @title Estilo */
   /** @options light,dark */
   /** @default light */
@@ -28,15 +36,22 @@ export interface Props {
 export default function ImageText({
   title,
   text,
+  textColor,
   image,
   imageAlt,
   imagePosition = "esquerda",
+  backgroundColor,
   style = "light",
 }: Props) {
-  const bgStyle = style === "dark" ? "bg-gray-900 text-white" : "bg-white text-gray-900";
+  const bgStyle = !backgroundColor && !textColor
+    ? (style === "dark" ? "bg-gray-900 text-white" : "bg-white text-gray-900")
+    : "";
 
   return (
-    <section className={`w-full py-16 md:py-24 ${bgStyle}`}>
+    <section
+      className={`w-full py-16 md:py-24 ${bgStyle}`}
+      style={{ ...(backgroundColor ? { backgroundColor } : {}), ...(textColor ? { color: textColor } : {}) }}
+    >
       <div
         className={`mx-auto flex max-w-7xl flex-col items-center gap-8 px-4 md:flex-row md:gap-12 ${
           imagePosition === "direita" ? "md:flex-row-reverse" : ""

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-15T22:50:38.627Z",
+  "generatedAt": "2026-07-15T22:53:45.187Z",
   "sections": [
     {
       "key": "Accordion",
@@ -715,6 +715,12 @@
           "title": "Texto",
           "required": true
         },
+        "textColor": {
+          "type": "string",
+          "format": "color",
+          "title": "Cor do texto",
+          "required": false
+        },
         "image": {
           "type": "string",
           "format": "image",
@@ -737,6 +743,12 @@
             "esquerda",
             "direita"
           ]
+        },
+        "backgroundColor": {
+          "type": "string",
+          "format": "color",
+          "title": "Cor de fundo",
+          "required": false
         },
         "style": {
           "type": "string",
