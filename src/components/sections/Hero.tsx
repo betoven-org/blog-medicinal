@@ -19,6 +19,14 @@ export interface Props {
   /** @format rich-text */
   content?: RichText;
 
+  /** @title Cor do texto */
+  /** @format color */
+  textColor?: string;
+
+  /** @title Alinhamento */
+  /** @options esquerda,centro,direita */
+  align?: "esquerda" | "centro" | "direita";
+
   /** @title Imagem de fundo */
   backgroundImage?: ImageWidget;
 
@@ -26,21 +34,9 @@ export interface Props {
   /** @format color */
   backgroundColor?: string;
 
-  /** @title Cor do texto */
-  /** @format color */
-  textColor?: string;
-
-  /** @title Cor do botao */
-  /** @format color */
-  buttonColor?: string;
-
-  /** @title Cor do texto do botao */
-  /** @format color */
-  buttonTextColor?: string;
-
-  /** @title Alinhamento */
-  /** @options esquerda,centro,direita */
-  align?: "esquerda" | "centro" | "direita";
+  /** @title Fundo escuro */
+  /** @default false */
+  dark?: boolean;
 
   /** @title Botao CTA */
   cta?: {
@@ -52,9 +48,13 @@ export interface Props {
     newTab?: boolean;
   };
 
-  /** @title Fundo escuro */
-  /** @default false */
-  dark?: boolean;
+  /** @title Cor do botao */
+  /** @format color */
+  buttonColor?: string;
+
+  /** @title Cor do texto do botao */
+  /** @format color */
+  buttonTextColor?: string;
 }
 
 export default function Hero({ title, subtitle, content, backgroundImage, backgroundColor, textColor, buttonColor, buttonTextColor, align = "centro", cta, dark }: Props) {

@@ -10,6 +10,21 @@ export interface Props {
   /** @title Descricao */
   /** @format textarea */
   description?: string;
+  /** @title Cor do texto */
+  /** @format color */
+  textColor?: string;
+
+  /** @title Imagem de fundo */
+  /** @format image */
+  backgroundImage?: string;
+  /** @title Cor de fundo */
+  /** @format color */
+  backgroundColor?: string;
+  /** @title Estilo */
+  /** @options light,dark,brand */
+  /** @default dark */
+  style?: "light" | "dark" | "brand";
+
   /** @title Texto do botao */
   /** @default Saiba mais */
   buttonText?: string;
@@ -19,25 +34,12 @@ export interface Props {
   /** @title Abrir em nova aba */
   /** @default false */
   buttonNewTab?: boolean;
-  /** @title Imagem de fundo */
-  /** @format image */
-  backgroundImage?: string;
-  /** @title Cor de fundo */
-  /** @format color */
-  backgroundColor?: string;
-  /** @title Cor do texto */
-  /** @format color */
-  textColor?: string;
   /** @title Cor do botao */
   /** @format color */
   buttonColor?: string;
   /** @title Cor do texto do botao */
   /** @format color */
   buttonTextColor?: string;
-  /** @title Estilo */
-  /** @options light,dark,brand */
-  /** @default dark */
-  style?: "light" | "dark" | "brand";
 }
 
 export default function CTA(props: Props & { buttonUrl?: string; subtitle?: string; variant?: string }) {
