@@ -26,6 +26,18 @@ export interface Props {
   /** @format color */
   backgroundColor?: string;
 
+  /** @title Cor do texto */
+  /** @format color */
+  textColor?: string;
+
+  /** @title Cor do botao */
+  /** @format color */
+  buttonColor?: string;
+
+  /** @title Cor do texto do botao */
+  /** @format color */
+  buttonTextColor?: string;
+
   /** @title Alinhamento */
   /** @options esquerda,centro,direita */
   align?: "esquerda" | "centro" | "direita";
@@ -45,7 +57,7 @@ export interface Props {
   dark?: boolean;
 }
 
-export default function Hero({ title, subtitle, content, backgroundImage, backgroundColor, align = "centro", cta, dark }: Props) {
+export default function Hero({ title, subtitle, content, backgroundImage, backgroundColor, textColor, buttonColor, buttonTextColor, align = "centro", cta, dark }: Props) {
   const justifyClass = align === "esquerda" ? "justify-start" : align === "direita" ? "justify-end" : "justify-center";
   const textAlign = align === "esquerda" ? "text-left" : align === "direita" ? "text-right" : "text-center";
   const itemsAlign = align === "esquerda" ? "items-start" : align === "direita" ? "items-end" : "items-center";
@@ -61,8 +73,8 @@ export default function Hero({ title, subtitle, content, backgroundImage, backgr
 
   return (
     <section
-      className={`relative flex min-h-[400px] items-center ${justifyClass} px-6 py-20 ${dark || backgroundImage ? "text-white" : "text-gray-900"} ${!backgroundColor && !backgroundImage ? (dark ? "bg-gray-900" : "bg-white") : ""}`}
-      style={Object.keys(sectionStyle).length > 0 ? sectionStyle : undefined}
+      className={`relative flex min-h-[400px] items-center ${justifyClass} px-6 py-20 ${!textColor ? (dark || backgroundImage ? "text-white" : "text-gray-900") : ""} ${!backgroundColor && !backgroundImage ? (dark ? "bg-gray-900" : "bg-white") : ""}`}
+      style={{ ...sectionStyle, ...(textColor ? { color: textColor } : {}) }}
     >
       {backgroundImage && <div className="absolute inset-0 bg-black/40" />}
       <div className={`relative z-10 mx-auto flex max-w-3xl flex-col ${itemsAlign} ${textAlign}`}>
@@ -74,7 +86,8 @@ export default function Hero({ title, subtitle, content, backgroundImage, backgr
             href={cta.href}
             target={cta.newTab ? "_blank" : undefined}
             rel={cta.newTab ? "noopener noreferrer" : undefined}
-            className="mt-8 inline-block rounded-lg bg-[#0d61ac] px-6 py-3 font-semibold text-white hover:bg-[#0b5499]"
+            className={`mt-8 inline-block rounded-lg px-6 py-3 font-semibold ${!buttonColor ? "bg-[#0d61ac] hover:bg-[#0b5499]" : ""} ${!buttonTextColor ? "text-white" : ""}`}
+            style={{ ...(buttonColor ? { backgroundColor: buttonColor } : {}), ...(buttonTextColor ? { color: buttonTextColor } : {}) }}
           >
             {cta.label}
           </a>
