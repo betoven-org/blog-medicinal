@@ -22,6 +22,18 @@ export interface Props {
   /** @title Imagem de fundo */
   /** @format image */
   backgroundImage?: string;
+  /** @title Cor de fundo */
+  /** @format color */
+  backgroundColor?: string;
+  /** @title Cor do texto */
+  /** @format color */
+  textColor?: string;
+  /** @title Cor do botao */
+  /** @format color */
+  buttonColor?: string;
+  /** @title Cor do texto do botao */
+  /** @format color */
+  buttonTextColor?: string;
   /** @title Estilo */
   /** @options light,dark,brand */
   /** @default dark */
@@ -34,6 +46,10 @@ export default function CTA(props: Props & { buttonUrl?: string; subtitle?: stri
     buttonText = "Saiba mais",
     buttonNewTab = false,
     backgroundImage,
+    backgroundColor,
+    textColor,
+    buttonColor,
+    buttonTextColor,
   } = props;
   const description = props.description || props.subtitle;
   const buttonHref = props.buttonHref || props.buttonUrl || "#";
@@ -52,7 +68,8 @@ export default function CTA(props: Props & { buttonUrl?: string; subtitle?: stri
 
   return (
     <section
-      className={`relative w-full py-16 md:py-24 ${bgStyles[style]}`}
+      className={`relative w-full py-16 md:py-24 ${!backgroundColor && !textColor ? bgStyles[style] : ""}`}
+      style={{ ...(backgroundColor ? { backgroundColor } : {}), ...(textColor ? { color: textColor } : {}) }}
     >
       {backgroundImage && (
         <div
@@ -76,7 +93,8 @@ export default function CTA(props: Props & { buttonUrl?: string; subtitle?: stri
           href={buttonHref}
           target={buttonNewTab ? "_blank" : undefined}
           rel={buttonNewTab ? "noopener noreferrer" : undefined}
-          className="mt-6 inline-flex items-center gap-2 rounded-md bg-[#0d61ac] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#0a4f90]"
+          className={`mt-6 inline-flex items-center gap-2 rounded-md px-5 py-2.5 text-sm font-medium transition-colors ${!buttonColor ? "bg-[#0d61ac] hover:bg-[#0a4f90]" : ""} ${!buttonTextColor ? "text-white" : ""}`}
+          style={{ ...(buttonColor ? { backgroundColor: buttonColor } : {}), ...(buttonTextColor ? { color: buttonTextColor } : {}) }}
         >
           {buttonText}
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
