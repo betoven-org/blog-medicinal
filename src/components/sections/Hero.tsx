@@ -22,6 +22,10 @@ export interface Props {
   /** @title Imagem de fundo */
   backgroundImage?: ImageWidget;
 
+  /** @title Cor de fundo */
+  /** @format color */
+  backgroundColor?: string;
+
   /** @title Alinhamento */
   /** @options esquerda,centro,direita */
   align?: "esquerda" | "centro" | "direita";
@@ -41,16 +45,27 @@ export interface Props {
   dark?: boolean;
 }
 
-export default function Hero({ title, subtitle, content, backgroundImage, align = "centro", cta, dark }: Props) {
+export default function Hero({ title, subtitle, content, backgroundImage, backgroundColor, align = "centro", cta, dark }: Props) {
+  const justifyClass = align === "esquerda" ? "justify-start" : align === "direita" ? "justify-end" : "justify-center";
   const textAlign = align === "esquerda" ? "text-left" : align === "direita" ? "text-right" : "text-center";
+  const itemsAlign = align === "esquerda" ? "items-start" : align === "direita" ? "items-end" : "items-center";
+
+  const sectionStyle: React.CSSProperties = {};
+  if (backgroundImage) {
+    sectionStyle.backgroundImage = `url(${backgroundImage})`;
+    sectionStyle.backgroundSize = "cover";
+    sectionStyle.backgroundPosition = "center";
+  } else if (backgroundColor) {
+    sectionStyle.backgroundColor = backgroundColor;
+  }
 
   return (
     <section
-      className={`relative flex min-h-[400px] items-center justify-center px-6 py-20 ${dark ? "bg-gray-900 text-white" : "bg-white text-gray-900"}`}
-      style={backgroundImage ? { backgroundImage: `url(${backgroundImage})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
+      className={`relative flex min-h-[400px] items-center ${justifyClass} px-6 py-20 ${dark || backgroundImage ? "text-white" : "text-gray-900"} ${!backgroundColor && !backgroundImage ? (dark ? "bg-gray-900" : "bg-white") : ""}`}
+      style={Object.keys(sectionStyle).length > 0 ? sectionStyle : undefined}
     >
       {backgroundImage && <div className="absolute inset-0 bg-black/40" />}
-      <div className={`relative z-10 mx-auto max-w-3xl ${textAlign}`}>
+      <div className={`relative z-10 mx-auto flex max-w-3xl flex-col ${itemsAlign} ${textAlign}`}>
         <h1 className="text-4xl font-bold lg:text-5xl">{title}</h1>
         {subtitle && <p className="mt-4 text-lg opacity-80">{subtitle}</p>}
         {content && <div className="prose mt-6" dangerouslySetInnerHTML={{ __html: content }} />}
