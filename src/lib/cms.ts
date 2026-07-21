@@ -208,6 +208,121 @@ const REVALIDATE = {
 } as const;
 
 // ---------------------------------------------------------------------------
+// Supabase PostgREST fallback (when CMS individual endpoints are down)
+// ---------------------------------------------------------------------------
+
+function createSupabaseFallback() {
+  const supabaseUrl = process.env.SUPABASE_URL || "";
+  const supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || "";
+
+  if (!supabaseUrl || !supabaseKey) return null;
+
+  async function query<T>(table: string, params: string): Promise<T | null> {
+    try {
+      const res = await fetch(`${supabaseUrl}/rest/v1/${table}?${params}`, {
+        headers: {
+          apikey: supabaseKey,
+          Authorization: `Bearer ${supabaseKey}`,
+        },
+        next: { revalidate: 60 },
+      });
+      if (!res.ok) return null;
+      return (await res.json()) as T;
+    } catch {
+      return null;
+    }
+  }
+
+  return {
+    async getPostBySlug(slug: string): Promise<Post | null> {
+      type Row = Record<string, unknown> & { categories?: { id: string; name: string; slug: string } | null };
+      const rows = await query<Row[]>(
+        "articles",
+        `slug=eq.${encodeURIComponent(slug)}&select=*,categories(id,name,slug)&limit=1`,
+      );
+      if (!rows || rows.length === 0) return null;
+      const r = rows[0];
+      const publishedAt = (r.published_date as string) || (r.published_at as string) || null;
+      return {
+        id: r.id as number,
+        title: r.title as string,
+        slug: r.slug as string,
+        excerpt: (r.excerpt as string) || null,
+        content: (r.content as string) || null,
+        coverUrl: (r.cover_image_url as string) || null,
+        status: (r.status as string) || "published",
+        featured: (r.featured as boolean) || false,
+        publishedAt: publishedAt ? `${publishedAt}`.replace(/T.*/, " 00:00:00") : null,
+        readingTimeMinutes: (r.reading_time_minutes as number) || null,
+        metaTitle: (r.meta_title as string) || null,
+        metaDescription: (r.meta_description as string) || null,
+        focusKeyword: (r.focus_keyword as string) || null,
+        secondaryKeywords: (r.secondary_keywords as string) || null,
+        seoScore: (r.seo_score as number) || null,
+        ogTitle: (r.og_title as string) || null,
+        ogDescription: (r.og_description as string) || null,
+        ogImageUrl: (r.og_image_url as string) || null,
+        schemaType: (r.schema_type as string) || null,
+        canonicalUrl: (r.canonical_url as string) || null,
+        wordCount: (r.word_count as number) || null,
+        noindex: null,
+        nofollow: null,
+        createdAt: (r.created_at as string) || null,
+        updatedAt: (r.updated_at as string) || null,
+        category: r.categories
+          ? { id: r.categories.id as unknown as number, name: r.categories.name, slug: r.categories.slug }
+          : null,
+        author: r.author_name
+          ? { id: 0, name: r.author_name as string, slug: "", bio: null, avatar: null }
+          : null,
+        heroImage: (r.cover_image_url as string)
+          ? {
+              url: r.cover_image_url as string,
+              alt: (r.cover_image_alt as string) || null,
+              sizes: {
+                thumbnail: { url: r.cover_image_url as string },
+                card: { url: r.cover_image_url as string },
+                hero: { url: r.cover_image_url as string },
+              },
+            }
+          : null,
+        tags: [],
+      };
+    },
+
+    async getProductBySlug(slug: string): Promise<Product | null> {
+      type Row = Record<string, unknown>;
+      const rows = await query<Row[]>(
+        "products",
+        `slug=eq.${encodeURIComponent(slug)}&select=*&limit=1`,
+      );
+      if (!rows || rows.length === 0) return null;
+      const r = rows[0];
+      const product: Product & Record<string, unknown> = {
+        id: r.id as number,
+        name: (r.title as string) || "",
+        slug: r.slug as string,
+        description: (r.excerpt as string) || null,
+        brand: null,
+        isKit: null,
+        featured: null,
+        publishedAt: (r.published_at as string) || null,
+        category: null,
+        image: (r.cover_image_url as string)
+          ? { url: r.cover_image_url as string, alt: (r.cover_image_alt as string) || null, thumbnailUrl: null }
+          : null,
+        // Extended fields used by product detail page
+        content: (r.content as string) ? { _html: r.content as string } : null,
+        faq: r.faq || [],
+        embalagem_mockup: r.embalagem_mockup || null,
+        redirect_to: r.redirect_to || null,
+      };
+      return product;
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Client factory
 // ---------------------------------------------------------------------------
 
@@ -218,6 +333,7 @@ function createClient() {
   );
   const apiKey = process.env.CMS_API_KEY || "";
   const previewSecret = process.env.CMS_PREVIEW_SECRET || "";
+  const fallback = createSupabaseFallback();
 
   async function request<T>(
     path: string,
@@ -328,10 +444,13 @@ function createClient() {
       slug: string,
       opts?: { draft?: boolean },
     ): Promise<Post | null> {
-      return request<Post>(`/posts/${encodeURIComponent(slug)}`, {
+      const result = await request<Post>(`/posts/${encodeURIComponent(slug)}`, {
         revalidate: REVALIDATE.POST_SINGLE,
         draft: opts?.draft,
       });
+      if (result) return result;
+      // Fallback: query Supabase directly
+      return fallback?.getPostBySlug(slug) ?? null;
     },
 
     async featured(opts?: { draft?: boolean }): Promise<PostListItem | null> {
@@ -469,9 +588,12 @@ function createClient() {
     },
 
     async getBySlug(slug: string): Promise<Product | null> {
-      return request<Product>(`/products/${encodeURIComponent(slug)}`, {
+      const result = await request<Product>(`/products/${encodeURIComponent(slug)}`, {
         revalidate: REVALIDATE.PRODUCTS,
       });
+      if (result) return result;
+      // Fallback: query Supabase directly
+      return fallback?.getProductBySlug(slug) ?? null;
     },
   };
 
