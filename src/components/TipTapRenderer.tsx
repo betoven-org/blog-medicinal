@@ -146,6 +146,12 @@ function inlineMarkdown(text: string): string {
 export function TipTapRenderer({ content }: { content: any }) {
   if (!content) return null;
 
+  // Handle raw markdown string (Supabase fallback)
+  if (typeof content === "string") {
+    const html = markdownToHtml(content);
+    return <div dangerouslySetInnerHTML={{ __html: html }} />;
+  }
+
   // Handle markdown content from Supabase (_html field)
   if (content._html && typeof content._html === "string") {
     const html = markdownToHtml(content._html);

@@ -316,6 +316,20 @@ function createSupabaseFallback() {
         faq: r.faq || [],
         embalagem_mockup: r.embalagem_mockup || null,
         redirect_to: r.redirect_to || null,
+        // SEO fields used by generateMetadata
+        metaTitle: (r.meta_title as string) || null,
+        metaDescription: (r.meta_description as string) || null,
+        seoDescription: (r.meta_description as string) || null,
+        ogTitle: (r.og_title as string) || null,
+        ogDescription: (r.og_description as string) || null,
+        ogImageUrl: (r.og_image_url as string) || null,
+        focusKeyword: (r.focus_keyword as string) || null,
+        secondaryKeywords: r.secondary_keywords || null,
+        schemaType: (r.schema_type as string) || null,
+        canonicalUrl: (r.canonical_url as string) || null,
+        wordCount: (r.word_count as number) || null,
+        readingTimeMinutes: (r.reading_time_minutes as number) || null,
+        recommendationTags: r.recommendation_tags || [],
       };
       return product;
     },
