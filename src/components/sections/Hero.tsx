@@ -8,6 +8,8 @@ type RichText = string;
  * @group Conteudo
  */
 export interface Props {
+  // --- Conteudo ---
+
   /** @title Titulo */
   title: string;
 
@@ -19,13 +21,13 @@ export interface Props {
   /** @format rich-text */
   content?: RichText;
 
-  /** @title Cor do texto */
-  /** @format color */
-  textColor?: string;
+  // --- Layout ---
 
   /** @title Alinhamento */
   /** @options esquerda,centro,direita */
   align?: "esquerda" | "centro" | "direita";
+
+  // --- Fundo ---
 
   /** @title Imagem de fundo */
   backgroundImage?: ImageWidget;
@@ -38,6 +40,22 @@ export interface Props {
   /** @default false */
   dark?: boolean;
 
+  // --- Cores ---
+
+  /** @title Cor do texto */
+  /** @format color */
+  textColor?: string;
+
+  /** @title Cor do botao */
+  /** @format color */
+  buttonColor?: string;
+
+  /** @title Cor do texto do botao */
+  /** @format color */
+  buttonTextColor?: string;
+
+  // --- CTA ---
+
   /** @title Botao CTA */
   cta?: {
     /** @title Texto do botao */
@@ -47,14 +65,6 @@ export interface Props {
     /** @title Abrir em nova aba */
     newTab?: boolean;
   };
-
-  /** @title Cor do botao */
-  /** @format color */
-  buttonColor?: string;
-
-  /** @title Cor do texto do botao */
-  /** @format color */
-  buttonTextColor?: string;
 }
 
 export default function Hero({ title, subtitle, content, backgroundImage, backgroundColor, textColor, buttonColor, buttonTextColor, align = "centro", cta, dark }: Props) {
