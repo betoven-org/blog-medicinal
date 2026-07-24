@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Script from "next/script";
 import { cms } from "@/lib/cms";
 import type { SectionBlock } from "@/lib/cms";
-import { SectionRenderer } from "@/components/SectionRenderer";
+import { LivePreviewWrapper } from "@/components/LivePreviewWrapper";
 
 const CMS_URL = process.env.CMS_URL || "https://cms.brasa.tech";
 
@@ -44,7 +44,7 @@ export default async function PreviewPage({ params }: PageProps) {
 
   return (
     <>
-      <SectionRenderer blocks={blocks} />
+      <LivePreviewWrapper initialBlocks={blocks} />
       <Script src={`${CMS_URL}/brasa-editor.js`} strategy="afterInteractive" />
     </>
   );

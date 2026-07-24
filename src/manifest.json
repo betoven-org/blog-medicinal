@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-15T23:01:26.269Z",
+  "generatedAt": "2026-07-24T11:17:05.862Z",
   "sections": [
     {
       "key": "Accordion",
@@ -150,36 +150,6 @@
           "title": "Descricao",
           "required": false
         },
-        "textColor": {
-          "type": "string",
-          "format": "color",
-          "title": "Cor do texto",
-          "required": false
-        },
-        "backgroundImage": {
-          "type": "string",
-          "format": "image",
-          "title": "Imagem de fundo",
-          "required": false
-        },
-        "backgroundColor": {
-          "type": "string",
-          "format": "color",
-          "title": "Cor de fundo",
-          "required": false
-        },
-        "style": {
-          "type": "string",
-          "format": "select",
-          "title": "Estilo",
-          "required": false,
-          "default": "dark",
-          "options": [
-            "light",
-            "dark",
-            "brand"
-          ]
-        },
         "buttonText": {
           "type": "string",
           "format": "text",
@@ -199,38 +169,51 @@
           "required": false,
           "default": false
         },
-        "buttonColor": {
+        "backgroundImage": {
           "type": "string",
-          "format": "color",
-          "title": "Cor do botao",
+          "format": "image",
+          "title": "Imagem de fundo",
           "required": false
         },
-        "buttonTextColor": {
+        "style": {
           "type": "string",
-          "format": "color",
-          "title": "Cor do texto do botao",
-          "required": false
+          "format": "select",
+          "title": "Estilo",
+          "required": false,
+          "default": "dark",
+          "options": [
+            "light",
+            "dark",
+            "brand"
+          ]
         }
       }
     },
     {
-      "key": "CategoryPosts",
-      "title": "Posts por Categoria",
-      "description": "Colunas com posts agrupados por categoria",
+      "key": "CategoryBar",
+      "title": "Barra de Categorias",
+      "description": "Navegacao rapida por categorias",
       "group": "Home",
-      "path": "sections/CategoryPosts",
+      "path": "sections/CategoryBar",
       "props": {
-        "categoryCount": {
-          "type": "number",
-          "title": "Numero de categorias",
+        "title": {
+          "type": "string",
+          "format": "text",
+          "title": "Titulo",
           "required": false,
-          "default": 3
+          "default": "Categorias"
         },
-        "postsPerCategory": {
-          "type": "number",
-          "title": "Posts por categoria",
+        "showAll": {
+          "type": "boolean",
+          "title": "Mostrar todas",
           "required": false,
-          "default": 3
+          "default": true
+        },
+        "limit": {
+          "type": "number",
+          "title": "Limite",
+          "required": false,
+          "default": 10
         }
       }
     },
@@ -572,10 +555,10 @@
           "title": "Conteudo",
           "required": false
         },
-        "textColor": {
+        "backgroundImage": {
           "type": "string",
-          "format": "color",
-          "title": "Cor do texto",
+          "format": "image",
+          "title": "Imagem de fundo",
           "required": false
         },
         "align": {
@@ -588,24 +571,6 @@
             "centro",
             "direita"
           ]
-        },
-        "backgroundImage": {
-          "type": "string",
-          "format": "image",
-          "title": "Imagem de fundo",
-          "required": false
-        },
-        "backgroundColor": {
-          "type": "string",
-          "format": "color",
-          "title": "Cor de fundo",
-          "required": false
-        },
-        "dark": {
-          "type": "boolean",
-          "title": "Fundo escuro",
-          "required": false,
-          "default": false
         },
         "cta": {
           "type": "object",
@@ -631,17 +596,11 @@
             }
           }
         },
-        "buttonColor": {
-          "type": "string",
-          "format": "color",
-          "title": "Cor do botao",
-          "required": false
-        },
-        "buttonTextColor": {
-          "type": "string",
-          "format": "color",
-          "title": "Cor do texto do botao",
-          "required": false
+        "dark": {
+          "type": "boolean",
+          "title": "Fundo escuro",
+          "required": false,
+          "default": false
         }
       }
     },
@@ -715,23 +674,17 @@
           "title": "Texto",
           "required": true
         },
-        "textColor": {
-          "type": "string",
-          "format": "color",
-          "title": "Cor do texto",
-          "required": false
-        },
         "image": {
           "type": "string",
           "format": "image",
           "title": "Imagem",
-          "required": false
+          "required": true
         },
         "imageAlt": {
           "type": "string",
           "format": "text",
           "title": "Texto alternativo da imagem",
-          "required": false
+          "required": true
         },
         "imagePosition": {
           "type": "string",
@@ -744,12 +697,6 @@
             "direita"
           ]
         },
-        "backgroundColor": {
-          "type": "string",
-          "format": "color",
-          "title": "Cor de fundo",
-          "required": false
-        },
         "style": {
           "type": "string",
           "format": "select",
@@ -760,28 +707,6 @@
             "light",
             "dark"
           ]
-        }
-      }
-    },
-    {
-      "key": "LandingPageShowcase",
-      "title": "Vitrine de Landing Pages",
-      "description": "Exibe campanhas/LPs com destaque na marcada como featured e grid nas demais",
-      "group": "Home",
-      "path": "sections/LandingPageShowcase",
-      "props": {
-        "title": {
-          "type": "string",
-          "format": "text",
-          "title": "Titulo da secao",
-          "required": false,
-          "default": "Guias Especiais"
-        },
-        "limit": {
-          "type": "number",
-          "title": "Limite de LPs",
-          "required": false,
-          "default": 10
         }
       }
     },
@@ -989,6 +914,13 @@
       "group": "Landing Page",
       "path": "sections/LpFAQ",
       "props": {
+        "productSlug": {
+          "type": "string",
+          "format": "text",
+          "title": "Slug do Produto",
+          "description": "Preencha para puxar FAQ do produto automaticamente quando Items estiver vazio",
+          "required": false
+        },
         "title": {
           "type": "string",
           "format": "text",
@@ -1024,19 +956,6 @@
               }
             }
           }
-        },
-        "productSlug": {
-          "type": "string",
-          "format": "text",
-          "title": "Slug do Produto",
-          "description": "Preencha para puxar FAQ do produto automaticamente quando Items estiver vazio",
-          "required": false
-        },
-        "fullWidth": {
-          "type": "boolean",
-          "title": "Largura total",
-          "required": false,
-          "default": false
         }
       }
     },
@@ -1373,12 +1292,6 @@
           "required": false,
           "default": "Inscrever"
         },
-        "showName": {
-          "type": "boolean",
-          "title": "Mostrar campo nome",
-          "required": false,
-          "default": false
-        },
         "style": {
           "type": "string",
           "format": "select",
@@ -1400,52 +1313,9 @@
       }
     },
     {
-      "key": "PostBanner",
-      "title": "Banner de Post",
-      "description": "Post em destaque com imagem a esquerda e texto a direita",
-      "group": "Home",
-      "path": "sections/PostBanner",
-      "props": {
-        "mode": {
-          "type": "string",
-          "format": "select",
-          "title": "Modo",
-          "required": false,
-          "default": "recent",
-          "options": [
-            "recent",
-            "trending",
-            "popular",
-            "editor-picks",
-            "manual"
-          ]
-        },
-        "manualSlug": {
-          "type": "string",
-          "format": "text",
-          "title": "Slug do post (modo manual)",
-          "required": false
-        },
-        "homeSection": {
-          "type": "string",
-          "format": "text",
-          "title": "homeSection",
-          "description": "Valor da coluna home_section (banner, destaque, trending)",
-          "required": false
-        },
-        "offset": {
-          "type": "number",
-          "title": "Posicao no feed",
-          "description": "Qual post pegar da lista (ex: 1 = segundo post)",
-          "required": false,
-          "default": 0
-        }
-      }
-    },
-    {
       "key": "PostCarousel",
       "title": "Lista de Posts",
-      "description": "Lista numerada de posts (vertical ou horizontal)",
+      "description": "Lista vertical numerada de posts",
       "group": "Home",
       "path": "sections/PostCarousel",
       "props": {
@@ -1472,8 +1342,7 @@
             "trending",
             "popular",
             "editor-picks",
-            "manual",
-            "homeSection"
+            "manual"
           ]
         },
         "manualSlugs": {
@@ -1494,24 +1363,6 @@
           "title": "Mostrar categoria",
           "required": false,
           "default": true
-        },
-        "layout": {
-          "type": "string",
-          "format": "select",
-          "title": "Layout",
-          "required": false,
-          "default": "vertical",
-          "options": [
-            "vertical",
-            "horizontal"
-          ]
-        },
-        "homeSection": {
-          "type": "string",
-          "format": "text",
-          "title": "homeSection",
-          "description": "Valor da coluna home_section (trending, destaque, editor)",
-          "required": false
         },
         "viewAllHref": {
           "type": "string",
@@ -1591,19 +1442,6 @@
           "required": false,
           "default": true
         },
-        "homeSection": {
-          "type": "string",
-          "format": "text",
-          "title": "homeSection",
-          "description": "Valor da coluna home_section (trending, destaque, editor, banner)",
-          "required": false
-        },
-        "showBorder": {
-          "type": "boolean",
-          "title": "Mostrar borda superior",
-          "required": false,
-          "default": true
-        },
         "viewAllHref": {
           "type": "string",
           "format": "text",
@@ -1615,7 +1453,7 @@
     {
       "key": "PostGridWithSidebar",
       "title": "Grade + Lista Lateral",
-      "description": "Posts em grid (2/3) com lista lateral (1/3)",
+      "description": "Posts em grid (2/3) com lista numerada lateral (1/3)",
       "group": "Home",
       "path": "sections/PostGridWithSidebar",
       "props": {
@@ -1664,17 +1502,6 @@
           "required": false,
           "default": true
         },
-        "gridLayout": {
-          "type": "string",
-          "format": "select",
-          "title": "Layout do card",
-          "required": false,
-          "default": "vertical",
-          "options": [
-            "vertical",
-            "horizontal"
-          ]
-        },
         "sidebarTitle": {
           "type": "string",
           "format": "text",
@@ -1708,91 +1535,10 @@
           "required": false,
           "default": 5
         },
-        "sidebarNumbered": {
-          "type": "boolean",
-          "title": "Mostrar numeros na sidebar",
-          "required": false,
-          "default": true
-        },
-        "gridHomeSection": {
-          "type": "string",
-          "format": "text",
-          "title": "homeSection do grid",
-          "description": "Valor da coluna home_section (trending, destaque, editor, banner)",
-          "required": false
-        },
-        "sidebarHomeSection": {
-          "type": "string",
-          "format": "text",
-          "title": "homeSection da sidebar",
-          "required": false
-        },
         "gridViewAllHref": {
           "type": "string",
           "format": "text",
           "title": "Link \"Ver todos\" do grid",
-          "required": false
-        },
-        "sidebarViewAllHref": {
-          "type": "string",
-          "format": "text",
-          "title": "Link \"Ver todos\" da sidebar",
-          "required": false
-        }
-      }
-    },
-    {
-      "key": "PostHighlight",
-      "title": "Destaque da Semana",
-      "description": "Hero com overlay na imagem + lista lateral de posts",
-      "group": "Home",
-      "path": "sections/PostHighlight",
-      "props": {
-        "title": {
-          "type": "string",
-          "format": "text",
-          "title": "Titulo da secao",
-          "required": false,
-          "default": "Destaque da Semana"
-        },
-        "mode": {
-          "type": "string",
-          "format": "select",
-          "title": "Modo",
-          "required": false,
-          "default": "editor-picks",
-          "options": [
-            "recent",
-            "trending",
-            "popular",
-            "editor-picks",
-            "manual"
-          ]
-        },
-        "manualSlugs": {
-          "type": "string",
-          "format": "text",
-          "title": "Slugs manuais",
-          "description": "Slugs separados por virgula (modo manual)",
-          "required": false
-        },
-        "sideCount": {
-          "type": "number",
-          "title": "Posts laterais",
-          "required": false,
-          "default": 3
-        },
-        "homeSection": {
-          "type": "string",
-          "format": "text",
-          "title": "homeSection",
-          "description": "Valor da coluna home_section (destaque, trending, editor)",
-          "required": false
-        },
-        "viewAllHref": {
-          "type": "string",
-          "format": "text",
-          "title": "Link \"Ver todos\"",
           "required": false
         }
       }
@@ -1880,7 +1626,7 @@
     {
       "key": "ProductShowcase",
       "title": "Vitrine de Produtos",
-      "description": "Carrossel de produtos da farmacia",
+      "description": "Grade de produtos da farmacia",
       "group": "Home",
       "path": "sections/ProductShowcase",
       "props": {
@@ -1896,7 +1642,7 @@
           "format": "select",
           "title": "Modo",
           "required": false,
-          "default": "all",
+          "default": "featured",
           "options": [
             "all",
             "featured",
@@ -1922,7 +1668,13 @@
           "type": "number",
           "title": "Limite",
           "required": false,
-          "default": 12
+          "default": 4
+        },
+        "columns": {
+          "type": "number",
+          "title": "Colunas",
+          "required": false,
+          "default": 4
         },
         "viewAllHref": {
           "type": "string",
@@ -1969,21 +1721,6 @@
             "medium",
             "wide"
           ]
-        }
-      }
-    },
-    {
-      "key": "SmartProductShowcase",
-      "title": "Vitrine Inteligente",
-      "description": "Carrossel de produtos recomendados com base na temperatura e horario do usuario",
-      "group": "Home",
-      "path": "sections/SmartProductShowcase",
-      "props": {
-        "limit": {
-          "type": "number",
-          "title": "Limite de produtos",
-          "required": false,
-          "default": 8
         }
       }
     },
@@ -2323,22 +2060,6 @@
             "4:3",
             "1:1"
           ]
-        }
-      }
-    },
-    {
-      "key": "WeatherBar",
-      "title": "Barra de Temperatura",
-      "description": "Mostra a temperatura local do usuario com geolocalizacao",
-      "group": "Global",
-      "path": "sections/WeatherBar",
-      "props": {
-        "buttonText": {
-          "type": "string",
-          "format": "text",
-          "title": "Texto do botao",
-          "required": false,
-          "default": "Ver temperatura local"
         }
       }
     },
