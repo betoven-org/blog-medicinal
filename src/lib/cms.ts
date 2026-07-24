@@ -15,6 +15,7 @@ export type SectionBlock = {
   props: Record<string, unknown>;
   loaderData?: unknown;
   deferred?: boolean;
+  hidden?: boolean;
 };
 
 export type Post = {

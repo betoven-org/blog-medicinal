@@ -1,7 +1,10 @@
 import { notFound } from "next/navigation";
+import Script from "next/script";
 import { cms } from "@/lib/cms";
 import type { SectionBlock } from "@/lib/cms";
 import { SectionRenderer } from "@/components/SectionRenderer";
+
+const CMS_URL = process.env.CMS_URL || "https://cms.brasa.tech";
 
 // No cache — always fetch fresh data from CMS
 export const dynamic = "force-dynamic";
@@ -39,5 +42,10 @@ export default async function PreviewPage({ params }: PageProps) {
     );
   }
 
-  return <SectionRenderer blocks={blocks} />;
+  return (
+    <>
+      <SectionRenderer blocks={blocks} />
+      <Script src={`${CMS_URL}/brasa-editor.js`} strategy="afterInteractive" />
+    </>
+  );
 }
