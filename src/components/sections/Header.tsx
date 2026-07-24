@@ -20,6 +20,9 @@ export interface Props {
   /** @title Mostrar categorias */
   /** @default true */
   showCategories?: boolean;
+  /** @title Mostrar botao CTA */
+  /** @default true */
+  showCta?: boolean;
 
   // --- CTA ---
 
@@ -31,9 +34,33 @@ export interface Props {
   /** @format url */
   /** @default https://loja.medicinalnaweb.com.br */
   ctaUrl?: string;
-  /** @title Mostrar botao CTA */
+
+  // --- WhatsApp ---
+
+  /** @title Texto do botao WhatsApp */
+  /** @default Fale Conosco */
+  whatsappText?: string;
+  /** @title Mensagem padrao do WhatsApp */
+  /** @description Mensagem pre-preenchida ao abrir o WhatsApp */
+  whatsappMessage?: string;
+
+  // --- Aparencia ---
+
+  /** @title Header fixo (sticky) */
   /** @default true */
-  showCta?: boolean;
+  sticky?: boolean;
+  /** @title Cor de fundo */
+  /** @format color */
+  backgroundColor?: string;
+
+  // --- Logo ---
+
+  /** @title Largura do logo (px) */
+  /** @default 160 */
+  logoWidth?: number;
+  /** @title Altura do logo (px) */
+  /** @default 32 */
+  logoHeight?: number;
 }
 
 export default async function Header(props: Props) {

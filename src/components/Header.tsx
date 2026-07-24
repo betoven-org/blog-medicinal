@@ -62,9 +62,15 @@ type HeaderProps = {
   showSocial?: boolean;
   showWhatsApp?: boolean;
   showCategories?: boolean;
+  showCta?: boolean;
   ctaLabel?: string;
   ctaUrl?: string;
-  showCta?: boolean;
+  whatsappText?: string;
+  whatsappMessage?: string;
+  sticky?: boolean;
+  backgroundColor?: string;
+  logoWidth?: number;
+  logoHeight?: number;
 };
 
 export async function Header({
@@ -72,9 +78,15 @@ export async function Header({
   showSocial = true,
   showWhatsApp = true,
   showCategories = true,
+  showCta = true,
   ctaLabel = "Loja Virtual",
   ctaUrl = "https://loja.medicinalnaweb.com.br",
-  showCta = true,
+  whatsappText = "Fale Conosco",
+  whatsappMessage,
+  sticky = true,
+  backgroundColor,
+  logoWidth = 160,
+  logoHeight = 32,
 }: HeaderProps = {}) {
   const [settings, productCategoriesResult, campanhasResult] = await Promise.all([
     getSiteSettings(),
@@ -106,13 +118,16 @@ export async function Header({
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white">
+    <header
+      className={`${sticky ? "sticky top-0" : ""} z-50`}
+      style={{ backgroundColor: backgroundColor || "#ffffff" }}
+    >
       {/* Linha 1: Logo + Busca + Sociais */}
       <div className="border-b">
         <div className="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4">
           {/* Logo */}
           <Link href="/" className="flex shrink-0 items-center" aria-label={`${siteName} — Ir para a página inicial`}>
-            <Image src={logoUrl} alt={siteName} width={160} height={32} loading="eager" />
+            <Image src={logoUrl} alt={siteName} width={logoWidth} height={logoHeight} loading="eager" />
           </Link>
 
           {/* Busca global — oculta em mobile */}
@@ -137,13 +152,13 @@ export async function Header({
             )}
             {showWhatsApp && (
               <a
-                href={`https://wa.me/${whatsappNumber}`}
+                href={`https://wa.me/${whatsappNumber}${whatsappMessage ? `?text=${encodeURIComponent(whatsappMessage)}` : ""}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-1.5 rounded-md bg-[#0d61ac] px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[#0a4f90]"
               >
                 <IconWhatsApp size={14} />
-                Fale Conosco
+                {whatsappText}
               </a>
             )}
           </div>
