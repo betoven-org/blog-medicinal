@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-24T11:17:05.862Z",
+  "generatedAt": "2026-07-24T20:17:31.871Z",
   "sections": [
     {
       "key": "Accordion",
@@ -111,12 +111,6 @@
           "title": "Cor de fundo",
           "required": false
         },
-        "href": {
-          "type": "string",
-          "format": "text",
-          "title": "Link",
-          "required": false
-        },
         "height": {
           "type": "string",
           "format": "select",
@@ -128,6 +122,12 @@
             "medio",
             "grande"
           ]
+        },
+        "href": {
+          "type": "string",
+          "format": "text",
+          "title": "Link",
+          "required": false
         }
       }
     },
@@ -150,6 +150,48 @@
           "title": "Descricao",
           "required": false
         },
+        "backgroundImage": {
+          "type": "string",
+          "format": "image",
+          "title": "Imagem de fundo",
+          "required": false
+        },
+        "backgroundColor": {
+          "type": "string",
+          "format": "color",
+          "title": "Cor de fundo",
+          "required": false
+        },
+        "style": {
+          "type": "string",
+          "format": "select",
+          "title": "Estilo",
+          "required": false,
+          "default": "dark",
+          "options": [
+            "light",
+            "dark",
+            "brand"
+          ]
+        },
+        "textColor": {
+          "type": "string",
+          "format": "color",
+          "title": "Cor do texto",
+          "required": false
+        },
+        "buttonColor": {
+          "type": "string",
+          "format": "color",
+          "title": "Cor do botao",
+          "required": false
+        },
+        "buttonTextColor": {
+          "type": "string",
+          "format": "color",
+          "title": "Cor do texto do botao",
+          "required": false
+        },
         "buttonText": {
           "type": "string",
           "format": "text",
@@ -168,52 +210,27 @@
           "title": "Abrir em nova aba",
           "required": false,
           "default": false
-        },
-        "backgroundImage": {
-          "type": "string",
-          "format": "image",
-          "title": "Imagem de fundo",
-          "required": false
-        },
-        "style": {
-          "type": "string",
-          "format": "select",
-          "title": "Estilo",
-          "required": false,
-          "default": "dark",
-          "options": [
-            "light",
-            "dark",
-            "brand"
-          ]
         }
       }
     },
     {
-      "key": "CategoryBar",
-      "title": "Barra de Categorias",
-      "description": "Navegacao rapida por categorias",
+      "key": "CategoryPosts",
+      "title": "Posts por Categoria",
+      "description": "Colunas com posts agrupados por categoria",
       "group": "Home",
-      "path": "sections/CategoryBar",
+      "path": "sections/CategoryPosts",
       "props": {
-        "title": {
-          "type": "string",
-          "format": "text",
-          "title": "Titulo",
-          "required": false,
-          "default": "Categorias"
-        },
-        "showAll": {
-          "type": "boolean",
-          "title": "Mostrar todas",
-          "required": false,
-          "default": true
-        },
-        "limit": {
+        "categoryCount": {
           "type": "number",
-          "title": "Limite",
+          "title": "Numero de categorias",
           "required": false,
-          "default": 10
+          "default": 3
+        },
+        "postsPerCategory": {
+          "type": "number",
+          "title": "Posts por categoria",
+          "required": false,
+          "default": 3
         }
       }
     },
@@ -415,11 +432,133 @@
           "required": false,
           "default": true
         },
+        "showAbout": {
+          "type": "boolean",
+          "title": "Mostrar link \"Sobre\"",
+          "required": false,
+          "default": true
+        },
         "showPrivacy": {
           "type": "boolean",
           "title": "Mostrar politica de privacidade",
           "required": false,
           "default": true
+        },
+        "footerText": {
+          "type": "string",
+          "format": "textarea",
+          "title": "Texto institucional",
+          "description": "Sobrescreve o texto do footer das configuracoes",
+          "required": false
+        },
+        "copyrightText": {
+          "type": "string",
+          "format": "text",
+          "title": "Texto de copyright",
+          "description": "Sobrescreve o copyright das configuracoes",
+          "required": false
+        },
+        "newsletterTitle": {
+          "type": "string",
+          "format": "text",
+          "title": "Titulo da newsletter",
+          "description": "Sobrescreve o titulo das configuracoes",
+          "required": false
+        },
+        "newsletterDescription": {
+          "type": "string",
+          "format": "textarea",
+          "title": "Descricao da newsletter",
+          "description": "Sobrescreve a descricao das configuracoes",
+          "required": false
+        },
+        "newsletterConsentText": {
+          "type": "string",
+          "format": "textarea",
+          "title": "Texto de consentimento",
+          "description": "Sobrescreve o consentimento das configuracoes",
+          "required": false
+        },
+        "aboutLabel": {
+          "type": "string",
+          "format": "text",
+          "title": "Label do link Sobre",
+          "required": false,
+          "default": "Sobre"
+        },
+        "aboutHref": {
+          "type": "string",
+          "format": "text",
+          "title": "URL do link Sobre",
+          "required": false,
+          "default": "/sobre"
+        },
+        "privacyLabel": {
+          "type": "string",
+          "format": "text",
+          "title": "Label do link Privacidade",
+          "required": false,
+          "default": "Politica de Privacidade"
+        },
+        "privacyHref": {
+          "type": "string",
+          "format": "text",
+          "title": "URL do link Privacidade",
+          "required": false,
+          "default": "/politica-de-privacidade"
+        },
+        "extraLinks": {
+          "type": "array",
+          "title": "Links extras",
+          "description": "Links adicionais exibidos no rodape",
+          "required": false,
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string",
+                "format": "text",
+                "title": "Texto",
+                "required": true
+              },
+              "href": {
+                "type": "string",
+                "format": "url",
+                "title": "URL",
+                "required": true
+              },
+              "newTab": {
+                "type": "boolean",
+                "title": "Abrir em nova aba",
+                "required": false,
+                "default": false
+              }
+            }
+          }
+        },
+        "backgroundColor": {
+          "type": "string",
+          "format": "color",
+          "title": "Cor de fundo",
+          "required": false
+        },
+        "textColor": {
+          "type": "string",
+          "format": "color",
+          "title": "Cor do texto",
+          "required": false
+        },
+        "logoWidth": {
+          "type": "number",
+          "title": "Largura do logo (px)",
+          "required": false,
+          "default": 140
+        },
+        "logoHeight": {
+          "type": "number",
+          "title": "Altura do logo (px)",
+          "required": false,
+          "default": 28
         }
       }
     },
@@ -507,6 +646,12 @@
           "required": false,
           "default": true
         },
+        "showCta": {
+          "type": "boolean",
+          "title": "Mostrar botao CTA",
+          "required": false,
+          "default": true
+        },
         "ctaLabel": {
           "type": "string",
           "format": "text",
@@ -522,11 +667,43 @@
           "required": false,
           "default": "https://loja.medicinalnaweb.com.br"
         },
-        "showCta": {
+        "whatsappText": {
+          "type": "string",
+          "format": "text",
+          "title": "Texto do botao WhatsApp",
+          "required": false,
+          "default": "Fale Conosco"
+        },
+        "whatsappMessage": {
+          "type": "string",
+          "format": "text",
+          "title": "Mensagem padrao do WhatsApp",
+          "description": "Mensagem pre-preenchida ao abrir o WhatsApp",
+          "required": false
+        },
+        "sticky": {
           "type": "boolean",
-          "title": "Mostrar botao CTA",
+          "title": "Header fixo (sticky)",
           "required": false,
           "default": true
+        },
+        "backgroundColor": {
+          "type": "string",
+          "format": "color",
+          "title": "Cor de fundo",
+          "required": false
+        },
+        "logoWidth": {
+          "type": "number",
+          "title": "Largura do logo (px)",
+          "required": false,
+          "default": 160
+        },
+        "logoHeight": {
+          "type": "number",
+          "title": "Altura do logo (px)",
+          "required": false,
+          "default": 32
         }
       }
     },
@@ -555,12 +732,6 @@
           "title": "Conteudo",
           "required": false
         },
-        "backgroundImage": {
-          "type": "string",
-          "format": "image",
-          "title": "Imagem de fundo",
-          "required": false
-        },
         "align": {
           "type": "string",
           "format": "select",
@@ -571,6 +742,42 @@
             "centro",
             "direita"
           ]
+        },
+        "backgroundImage": {
+          "type": "string",
+          "format": "image",
+          "title": "Imagem de fundo",
+          "required": false
+        },
+        "backgroundColor": {
+          "type": "string",
+          "format": "color",
+          "title": "Cor de fundo",
+          "required": false
+        },
+        "dark": {
+          "type": "boolean",
+          "title": "Fundo escuro",
+          "required": false,
+          "default": false
+        },
+        "textColor": {
+          "type": "string",
+          "format": "color",
+          "title": "Cor do texto",
+          "required": false
+        },
+        "buttonColor": {
+          "type": "string",
+          "format": "color",
+          "title": "Cor do botao",
+          "required": false
+        },
+        "buttonTextColor": {
+          "type": "string",
+          "format": "color",
+          "title": "Cor do texto do botao",
+          "required": false
         },
         "cta": {
           "type": "object",
@@ -595,12 +802,6 @@
               "required": false
             }
           }
-        },
-        "dark": {
-          "type": "boolean",
-          "title": "Fundo escuro",
-          "required": false,
-          "default": false
         }
       }
     },
@@ -678,13 +879,13 @@
           "type": "string",
           "format": "image",
           "title": "Imagem",
-          "required": true
+          "required": false
         },
         "imageAlt": {
           "type": "string",
           "format": "text",
           "title": "Texto alternativo da imagem",
-          "required": true
+          "required": false
         },
         "imagePosition": {
           "type": "string",
@@ -697,6 +898,18 @@
             "direita"
           ]
         },
+        "textColor": {
+          "type": "string",
+          "format": "color",
+          "title": "Cor do texto",
+          "required": false
+        },
+        "backgroundColor": {
+          "type": "string",
+          "format": "color",
+          "title": "Cor de fundo",
+          "required": false
+        },
         "style": {
           "type": "string",
           "format": "select",
@@ -707,6 +920,28 @@
             "light",
             "dark"
           ]
+        }
+      }
+    },
+    {
+      "key": "LandingPageShowcase",
+      "title": "Vitrine de Landing Pages",
+      "description": "Exibe campanhas/LPs com destaque na marcada como featured e grid nas demais",
+      "group": "Home",
+      "path": "sections/LandingPageShowcase",
+      "props": {
+        "title": {
+          "type": "string",
+          "format": "text",
+          "title": "Titulo da secao",
+          "required": false,
+          "default": "Guias Especiais"
+        },
+        "limit": {
+          "type": "number",
+          "title": "Limite de LPs",
+          "required": false,
+          "default": 10
         }
       }
     },
@@ -914,13 +1149,6 @@
       "group": "Landing Page",
       "path": "sections/LpFAQ",
       "props": {
-        "productSlug": {
-          "type": "string",
-          "format": "text",
-          "title": "Slug do Produto",
-          "description": "Preencha para puxar FAQ do produto automaticamente quando Items estiver vazio",
-          "required": false
-        },
         "title": {
           "type": "string",
           "format": "text",
@@ -956,6 +1184,19 @@
               }
             }
           }
+        },
+        "productSlug": {
+          "type": "string",
+          "format": "text",
+          "title": "Slug do Produto",
+          "description": "Preencha para puxar FAQ do produto automaticamente quando Items estiver vazio",
+          "required": false
+        },
+        "fullWidth": {
+          "type": "boolean",
+          "title": "Largura total",
+          "required": false,
+          "default": false
         }
       }
     },
@@ -1292,6 +1533,12 @@
           "required": false,
           "default": "Inscrever"
         },
+        "showName": {
+          "type": "boolean",
+          "title": "Mostrar campo nome",
+          "required": false,
+          "default": false
+        },
         "style": {
           "type": "string",
           "format": "select",
@@ -1313,9 +1560,52 @@
       }
     },
     {
+      "key": "PostBanner",
+      "title": "Banner de Post",
+      "description": "Post em destaque com imagem a esquerda e texto a direita",
+      "group": "Home",
+      "path": "sections/PostBanner",
+      "props": {
+        "mode": {
+          "type": "string",
+          "format": "select",
+          "title": "Modo",
+          "required": false,
+          "default": "recent",
+          "options": [
+            "recent",
+            "trending",
+            "popular",
+            "editor-picks",
+            "manual"
+          ]
+        },
+        "manualSlug": {
+          "type": "string",
+          "format": "text",
+          "title": "Slug do post (modo manual)",
+          "required": false
+        },
+        "homeSection": {
+          "type": "string",
+          "format": "text",
+          "title": "homeSection",
+          "description": "Valor da coluna home_section (banner, destaque, trending)",
+          "required": false
+        },
+        "offset": {
+          "type": "number",
+          "title": "Posicao no feed",
+          "description": "Qual post pegar da lista (ex: 1 = segundo post)",
+          "required": false,
+          "default": 0
+        }
+      }
+    },
+    {
       "key": "PostCarousel",
       "title": "Lista de Posts",
-      "description": "Lista vertical numerada de posts",
+      "description": "Lista numerada de posts (vertical ou horizontal)",
       "group": "Home",
       "path": "sections/PostCarousel",
       "props": {
@@ -1342,7 +1632,8 @@
             "trending",
             "popular",
             "editor-picks",
-            "manual"
+            "manual",
+            "homeSection"
           ]
         },
         "manualSlugs": {
@@ -1350,6 +1641,13 @@
           "format": "text",
           "title": "Slugs manuais",
           "description": "Slugs separados por virgula (modo manual)",
+          "required": false
+        },
+        "homeSection": {
+          "type": "string",
+          "format": "text",
+          "title": "homeSection",
+          "description": "Valor da coluna home_section (trending, destaque, editor)",
           "required": false
         },
         "limit": {
@@ -1363,6 +1661,17 @@
           "title": "Mostrar categoria",
           "required": false,
           "default": true
+        },
+        "layout": {
+          "type": "string",
+          "format": "select",
+          "title": "Layout",
+          "required": false,
+          "default": "vertical",
+          "options": [
+            "vertical",
+            "horizontal"
+          ]
         },
         "viewAllHref": {
           "type": "string",
@@ -1412,6 +1721,13 @@
           "description": "Slugs separados por virgula (modo manual)",
           "required": false
         },
+        "homeSection": {
+          "type": "string",
+          "format": "text",
+          "title": "homeSection",
+          "description": "Valor da coluna home_section (trending, destaque, editor, banner)",
+          "required": false
+        },
         "limit": {
           "type": "number",
           "title": "Limite de posts",
@@ -1423,6 +1739,18 @@
           "title": "Colunas",
           "required": false,
           "default": 3
+        },
+        "showBorder": {
+          "type": "boolean",
+          "title": "Mostrar borda superior",
+          "required": false,
+          "default": true
+        },
+        "viewAllHref": {
+          "type": "string",
+          "format": "text",
+          "title": "Link \"Ver todos\"",
+          "required": false
         },
         "showCategory": {
           "type": "boolean",
@@ -1441,19 +1769,13 @@
           "title": "Mostrar tempo de leitura",
           "required": false,
           "default": true
-        },
-        "viewAllHref": {
-          "type": "string",
-          "format": "text",
-          "title": "Link \"Ver todos\"",
-          "required": false
         }
       }
     },
     {
       "key": "PostGridWithSidebar",
       "title": "Grade + Lista Lateral",
-      "description": "Posts em grid (2/3) com lista numerada lateral (1/3)",
+      "description": "Posts em grid (2/3) com lista lateral (1/3)",
       "group": "Home",
       "path": "sections/PostGridWithSidebar",
       "props": {
@@ -1502,6 +1824,30 @@
           "required": false,
           "default": true
         },
+        "gridLayout": {
+          "type": "string",
+          "format": "select",
+          "title": "Layout do card",
+          "required": false,
+          "default": "vertical",
+          "options": [
+            "vertical",
+            "horizontal"
+          ]
+        },
+        "gridHomeSection": {
+          "type": "string",
+          "format": "text",
+          "title": "homeSection do grid",
+          "description": "Valor da coluna home_section (trending, destaque, editor, banner)",
+          "required": false
+        },
+        "gridViewAllHref": {
+          "type": "string",
+          "format": "text",
+          "title": "Link \"Ver todos\" do grid",
+          "required": false
+        },
         "sidebarTitle": {
           "type": "string",
           "format": "text",
@@ -1535,10 +1881,78 @@
           "required": false,
           "default": 5
         },
-        "gridViewAllHref": {
+        "sidebarNumbered": {
+          "type": "boolean",
+          "title": "Mostrar numeros na sidebar",
+          "required": false,
+          "default": true
+        },
+        "sidebarHomeSection": {
           "type": "string",
           "format": "text",
-          "title": "Link \"Ver todos\" do grid",
+          "title": "homeSection da sidebar",
+          "required": false
+        },
+        "sidebarViewAllHref": {
+          "type": "string",
+          "format": "text",
+          "title": "Link \"Ver todos\" da sidebar",
+          "required": false
+        }
+      }
+    },
+    {
+      "key": "PostHighlight",
+      "title": "Destaque da Semana",
+      "description": "Hero com overlay na imagem + lista lateral de posts",
+      "group": "Home",
+      "path": "sections/PostHighlight",
+      "props": {
+        "title": {
+          "type": "string",
+          "format": "text",
+          "title": "Titulo da secao",
+          "required": false,
+          "default": "Destaque da Semana"
+        },
+        "mode": {
+          "type": "string",
+          "format": "select",
+          "title": "Modo",
+          "required": false,
+          "default": "editor-picks",
+          "options": [
+            "recent",
+            "trending",
+            "popular",
+            "editor-picks",
+            "manual"
+          ]
+        },
+        "manualSlugs": {
+          "type": "string",
+          "format": "text",
+          "title": "Slugs manuais",
+          "description": "Slugs separados por virgula (modo manual)",
+          "required": false
+        },
+        "homeSection": {
+          "type": "string",
+          "format": "text",
+          "title": "homeSection",
+          "description": "Valor da coluna home_section (destaque, trending, editor)",
+          "required": false
+        },
+        "sideCount": {
+          "type": "number",
+          "title": "Posts laterais",
+          "required": false,
+          "default": 3
+        },
+        "viewAllHref": {
+          "type": "string",
+          "format": "text",
+          "title": "Link \"Ver todos\"",
           "required": false
         }
       }
@@ -1626,7 +2040,7 @@
     {
       "key": "ProductShowcase",
       "title": "Vitrine de Produtos",
-      "description": "Grade de produtos da farmacia",
+      "description": "Carrossel de produtos da farmacia",
       "group": "Home",
       "path": "sections/ProductShowcase",
       "props": {
@@ -1642,7 +2056,7 @@
           "format": "select",
           "title": "Modo",
           "required": false,
-          "default": "featured",
+          "default": "all",
           "options": [
             "all",
             "featured",
@@ -1668,13 +2082,7 @@
           "type": "number",
           "title": "Limite",
           "required": false,
-          "default": 4
-        },
-        "columns": {
-          "type": "number",
-          "title": "Colunas",
-          "required": false,
-          "default": 4
+          "default": 12
         },
         "viewAllHref": {
           "type": "string",
@@ -1721,6 +2129,21 @@
             "medium",
             "wide"
           ]
+        }
+      }
+    },
+    {
+      "key": "SmartProductShowcase",
+      "title": "Vitrine Inteligente",
+      "description": "Carrossel de produtos recomendados com base na temperatura e horario do usuario",
+      "group": "Home",
+      "path": "sections/SmartProductShowcase",
+      "props": {
+        "limit": {
+          "type": "number",
+          "title": "Limite de produtos",
+          "required": false,
+          "default": 8
         }
       }
     },
@@ -2060,6 +2483,22 @@
             "4:3",
             "1:1"
           ]
+        }
+      }
+    },
+    {
+      "key": "WeatherBar",
+      "title": "Barra de Temperatura",
+      "description": "Mostra a temperatura local do usuario com geolocalizacao",
+      "group": "Global",
+      "path": "sections/WeatherBar",
+      "props": {
+        "buttonText": {
+          "type": "string",
+          "format": "text",
+          "title": "Texto do botao",
+          "required": false,
+          "default": "Ver temperatura local"
         }
       }
     },
