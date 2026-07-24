@@ -9,11 +9,15 @@ import { formatDate } from "@/lib/formatDate";
  * @group Home
  */
 export interface Props {
+  // --- Conteudo ---
+
   /** @title Titulo da secao */
   title: string;
 
   /** @title Subtitulo */
   subtitle?: string;
+
+  // --- Selecao ---
 
   /** @title Modo */
   /** @options recent,trending,popular,editor-picks,manual */
@@ -24,13 +28,28 @@ export interface Props {
   /** @description Slugs separados por virgula (modo manual) */
   manualSlugs?: string;
 
+  /** @title homeSection */
+  /** @description Valor da coluna home_section (trending, destaque, editor, banner) */
+  homeSection?: string;
+
   /** @title Limite de posts */
   /** @default 6 */
   limit?: number;
 
+  // --- Layout ---
+
   /** @title Colunas */
   /** @default 3 */
   columns?: number;
+
+  /** @title Mostrar borda superior */
+  /** @default true */
+  showBorder?: boolean;
+
+  /** @title Link "Ver todos" */
+  viewAllHref?: string;
+
+  // --- Exibicao ---
 
   /** @title Mostrar categoria */
   /** @default true */
@@ -43,17 +62,6 @@ export interface Props {
   /** @title Mostrar tempo de leitura */
   /** @default true */
   showReadingTime?: boolean;
-
-  /** @title homeSection */
-  /** @description Valor da coluna home_section (trending, destaque, editor, banner) */
-  homeSection?: string;
-
-  /** @title Mostrar borda superior */
-  /** @default true */
-  showBorder?: boolean;
-
-  /** @title Link "Ver todos" */
-  viewAllHref?: string;
 }
 
 const COLUMNS_CLASS: Record<number, string> = {

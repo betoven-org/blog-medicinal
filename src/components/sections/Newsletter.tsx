@@ -5,6 +5,8 @@
  */
 
 export interface Props {
+  // --- Conteudo ---
+
   /** @title Titulo */
   /** @default Assine nossa newsletter */
   title?: string;
@@ -14,9 +16,15 @@ export interface Props {
   /** @title Texto do botao */
   /** @default Inscrever */
   buttonText?: string;
+
+  // --- Campos ---
+
   /** @title Mostrar campo nome */
   /** @default false */
   showName?: boolean;
+
+  // --- Aparencia ---
+
   /** @title Estilo */
   /** @options inline,card,fullwidth */
   /** @default card */

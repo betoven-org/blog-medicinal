@@ -5,11 +5,16 @@
  */
 
 export interface Props {
+  // --- Conteudo ---
+
   /** @title Titulo */
   title?: string;
   /** @title Descricao */
   /** @format textarea */
   description?: string;
+
+  // --- Video ---
+
   /** @title URL do video */
   /** @format url */
   videoUrl: string;

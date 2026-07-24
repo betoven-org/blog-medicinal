@@ -7,9 +7,13 @@ import { cms } from "@/lib/cms";
  * @group Landing Page
  */
 export interface Props {
+  // --- Produto ---
+
   /** @title Slug do Produto */
   /** @description Preencha para puxar beneficios do produto automaticamente */
   productSlug?: string;
+
+  // --- Conteudo ---
 
   /** @title Titulo da secao */
   /** @default Por que escolher? */
@@ -18,6 +22,8 @@ export interface Props {
   /** @title Subtitulo */
   /** @format textarea */
   subtitle?: string;
+
+  // --- Itens ---
 
   /** @title Itens de beneficio */
   items?: {
@@ -30,6 +36,8 @@ export interface Props {
     /** @format textarea */
     description: string;
   }[];
+
+  // --- Layout ---
 
   /** @title Colunas */
   /** @options 2,3,4 */

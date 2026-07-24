@@ -5,14 +5,15 @@
  */
 
 export interface Props {
+  // --- Conteudo ---
+
   /** @title Titulo */
   title: string;
   /** @title Texto */
   /** @format rich-text */
   text: string;
-  /** @title Cor do texto */
-  /** @format color */
-  textColor?: string;
+
+  // --- Imagem ---
 
   /** @title Imagem */
   /** @format image */
@@ -24,6 +25,11 @@ export interface Props {
   /** @default esquerda */
   imagePosition?: "esquerda" | "direita";
 
+  // --- Aparencia ---
+
+  /** @title Cor do texto */
+  /** @format color */
+  textColor?: string;
   /** @title Cor de fundo */
   /** @format color */
   backgroundColor?: string;

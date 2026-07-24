@@ -8,6 +8,8 @@ import type { PostMode, PostCard } from "@/lib/loaders";
  * @group Home
  */
 export interface Props {
+  // --- Grid ---
+
   /** @title Titulo do grid */
   gridTitle: string;
 
@@ -37,6 +39,15 @@ export interface Props {
   /** @default vertical */
   gridLayout?: "vertical" | "horizontal";
 
+  /** @title homeSection do grid */
+  /** @description Valor da coluna home_section (trending, destaque, editor, banner) */
+  gridHomeSection?: string;
+
+  /** @title Link "Ver todos" do grid */
+  gridViewAllHref?: string;
+
+  // --- Sidebar ---
+
   /** @title Titulo da lista */
   sidebarTitle: string;
 
@@ -57,15 +68,8 @@ export interface Props {
   /** @default true */
   sidebarNumbered?: boolean;
 
-  /** @title homeSection do grid */
-  /** @description Valor da coluna home_section (trending, destaque, editor, banner) */
-  gridHomeSection?: string;
-
   /** @title homeSection da sidebar */
   sidebarHomeSection?: string;
-
-  /** @title Link "Ver todos" do grid */
-  gridViewAllHref?: string;
 
   /** @title Link "Ver todos" da sidebar */
   sidebarViewAllHref?: string;

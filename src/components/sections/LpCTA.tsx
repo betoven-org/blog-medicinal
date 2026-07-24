@@ -4,9 +4,13 @@
  * @group Landing Page
  */
 export interface Props {
+  // --- Produto ---
+
   /** @title Slug do Produto */
   /** @description Opcional — preenchido automaticamente no futuro */
   productSlug?: string;
+
+  // --- Conteudo ---
 
   /** @title Titulo */
   /** @default Pronto para experimentar? */
@@ -16,6 +20,8 @@ export interface Props {
   /** @format textarea */
   subtitle?: string;
 
+  // --- CTA ---
+
   /** @title Texto do botao */
   /** @default Falar pelo WhatsApp */
   ctaText?: string;
@@ -23,6 +29,8 @@ export interface Props {
   /** @title Link do botao */
   /** @format url */
   ctaUrl?: string;
+
+  // --- Aparencia ---
 
   /** @title Variante visual */
   /** @options default,gradient,dark */

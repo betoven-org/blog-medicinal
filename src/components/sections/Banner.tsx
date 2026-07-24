@@ -8,11 +8,15 @@ type Color = string;
  * @group Marketing
  */
 export interface Props {
+  // --- Imagem ---
+
   /** @title Imagem */
   image: ImageWidget;
 
   /** @title Alt da imagem */
   alt: string;
+
+  // --- Conteudo ---
 
   /** @title Titulo */
   title?: string;
@@ -21,17 +25,21 @@ export interface Props {
   /** @format textarea */
   description?: string;
 
+  // --- Aparencia ---
+
   /** @title Cor de fundo */
   /** @format color */
   backgroundColor?: Color;
-
-  /** @title Link */
-  href?: string;
 
   /** @title Altura */
   /** @options pequeno,medio,grande */
   /** @default medio */
   height?: "pequeno" | "medio" | "grande";
+
+  // --- Link ---
+
+  /** @title Link */
+  href?: string;
 }
 
 export default function Banner({ image, alt, title, description, backgroundColor, href, height = "medio" }: Props) {

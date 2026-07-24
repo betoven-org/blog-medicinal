@@ -8,12 +8,16 @@ import { useState } from "react";
  * @group Institucional
  */
 export interface Props {
+  // --- Conteudo ---
+
   /** @title Titulo */
   /** @default Entre em Contato */
   title?: string;
 
   /** @title Subtitulo */
   subtitle?: string;
+
+  // --- Configuracao ---
 
   /** @title Email destino */
   email: string;
@@ -25,6 +29,8 @@ export interface Props {
   /** @title Mostrar campo assunto */
   /** @default true */
   showSubject?: boolean;
+
+  // --- Feedback ---
 
   /** @title Texto do botao */
   /** @default Enviar */

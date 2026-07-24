@@ -7,6 +7,8 @@ import Image from "next/image";
  * @group Home
  */
 export interface Props {
+  // --- Selecao ---
+
   /** @title Modo de selecao */
   /** @options featured,manual */
   /** @default featured */
@@ -15,6 +17,8 @@ export interface Props {
   /** @title Slug do post (modo manual) */
   /** @description Informe o slug do post para exibir manualmente */
   manualSlug?: string;
+
+  // --- Exibicao ---
 
   /** @title Mostrar categoria */
   /** @default true */
@@ -27,6 +31,8 @@ export interface Props {
   /** @title Mostrar tempo de leitura */
   /** @default true */
   showReadingTime?: boolean;
+
+  // --- Layout ---
 
   /** @title Posts laterais */
   /** @default 4 */

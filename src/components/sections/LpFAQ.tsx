@@ -8,6 +8,8 @@ import { useState } from "react";
  * @group Landing Page
  */
 export interface Props {
+  // --- Conteudo ---
+
   /** @title Titulo */
   /** @default Perguntas Frequentes */
   title?: string;
@@ -15,6 +17,8 @@ export interface Props {
   /** @title Subtitulo */
   /** @format textarea */
   subtitle?: string;
+
+  // --- Itens ---
 
   /** @title Perguntas e Respostas */
   /** @description Se vazio e productSlug preenchido, usa o FAQ do produto */
@@ -26,9 +30,13 @@ export interface Props {
     answer: string;
   }[];
 
+  // --- Produto ---
+
   /** @title Slug do Produto */
   /** @description Preencha para puxar FAQ do produto automaticamente quando Items estiver vazio */
   productSlug?: string;
+
+  // --- Layout ---
 
   /** @title Largura total */
   /** @default false */

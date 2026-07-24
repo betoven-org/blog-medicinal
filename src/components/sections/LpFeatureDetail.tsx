@@ -10,12 +10,16 @@ type RichText = string;
  * @group Landing Page
  */
 export interface Props {
+  // --- Conteudo ---
+
   /** @title Titulo */
   title: string;
 
   /** @title Descricao */
   /** @format rich-text */
   description?: RichText;
+
+  // --- Imagem ---
 
   /** @title Imagem */
   /** @format image */
@@ -24,10 +28,14 @@ export interface Props {
   /** @title Texto alternativo da imagem */
   imageAlt?: string;
 
+  // --- Layout ---
+
   /** @title Layout */
   /** @options image-left,image-right */
   /** @default image-left */
   layout?: "image-left" | "image-right";
+
+  // --- Badge ---
 
   /** @title Exibir badge */
   /** @default false */

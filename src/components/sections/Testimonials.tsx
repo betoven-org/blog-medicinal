@@ -7,15 +7,21 @@ type ImageWidget = string;
  * @group Institucional
  */
 export interface Props {
+  // --- Conteudo ---
+
   /** @title Titulo */
   title: string;
 
   /** @title Subtitulo */
   subtitle?: string;
 
+  // --- Layout ---
+
   /** @title Colunas */
   /** @default 3 */
   columns?: number;
+
+  // --- Itens ---
 
   /** @title Depoimentos */
   items: {

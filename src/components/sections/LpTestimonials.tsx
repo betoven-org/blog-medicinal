@@ -9,6 +9,8 @@ type ImageWidget = string;
  * @group Landing Page
  */
 export interface Props {
+  // --- Conteudo ---
+
   /** @title Titulo */
   /** @default O que nossos clientes dizem */
   title?: string;
@@ -16,6 +18,8 @@ export interface Props {
   /** @title Subtitulo */
   /** @format textarea */
   subtitle?: string;
+
+  // --- Itens ---
 
   /** @title Depoimentos */
   items: {
@@ -33,6 +37,8 @@ export interface Props {
     /** @format image */
     avatar?: ImageWidget;
   }[];
+
+  // --- Aparencia ---
 
   /** @title Variante visual */
   /** @options cards,minimal */

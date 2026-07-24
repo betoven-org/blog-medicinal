@@ -10,9 +10,13 @@ type ImageWidget = string;
  * @group Landing Page
  */
 export interface Props {
+  // --- Produto ---
+
   /** @title Slug do Produto */
   /** @description Preencha para puxar nome e imagem do produto automaticamente */
   productSlug?: string;
+
+  // --- Conteudo ---
 
   /** @title Titulo Principal */
   /** @description Deixe vazio para usar o nome do produto */
@@ -24,6 +28,8 @@ export interface Props {
   /** @format textarea */
   subheadline?: string;
 
+  // --- CTA ---
+
   /** @title Texto do CTA */
   /** @default Fale com o Farmaceutico */
   ctaText?: string;
@@ -31,6 +37,8 @@ export interface Props {
   /** @title Link do CTA */
   /** @format url */
   ctaUrl?: string;
+
+  // --- Aparencia ---
 
   /** @title Imagem de fundo */
   /** @format image */

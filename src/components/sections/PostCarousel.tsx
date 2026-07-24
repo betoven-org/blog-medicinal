@@ -7,11 +7,15 @@ import type { PostMode } from "@/lib/loaders";
  * @group Home
  */
 export interface Props {
+  // --- Conteudo ---
+
   /** @title Titulo da secao */
   title: string;
 
   /** @title Subtitulo */
   subtitle?: string;
+
+  // --- Selecao ---
 
   /** @title Modo */
   /** @options recent,trending,popular,editor-picks,manual,homeSection */
@@ -22,9 +26,15 @@ export interface Props {
   /** @description Slugs separados por virgula (modo manual) */
   manualSlugs?: string;
 
+  /** @title homeSection */
+  /** @description Valor da coluna home_section (trending, destaque, editor) */
+  homeSection?: string;
+
   /** @title Limite de posts */
   /** @default 5 */
   limit?: number;
+
+  // --- Exibicao ---
 
   /** @title Mostrar categoria */
   /** @default true */
@@ -34,10 +44,6 @@ export interface Props {
   /** @options vertical,horizontal */
   /** @default vertical */
   layout?: "vertical" | "horizontal";
-
-  /** @title homeSection */
-  /** @description Valor da coluna home_section (trending, destaque, editor) */
-  homeSection?: string;
 
   /** @title Link "Ver todos" */
   viewAllHref?: string;

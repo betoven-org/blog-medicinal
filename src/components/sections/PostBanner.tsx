@@ -8,6 +8,8 @@ import type { PostMode } from "@/lib/loaders";
  * @group Home
  */
 export interface Props {
+  // --- Selecao ---
+
   /** @title Modo */
   /** @options recent,trending,popular,editor-picks,manual */
   /** @default recent */
@@ -19,6 +21,8 @@ export interface Props {
   /** @title homeSection */
   /** @description Valor da coluna home_section (banner, destaque, trending) */
   homeSection?: string;
+
+  // --- Layout ---
 
   /** @title Posicao no feed */
   /** @description Qual post pegar da lista (ex: 1 = segundo post) */

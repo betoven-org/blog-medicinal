@@ -8,9 +8,13 @@ import { ProductCarouselWrapper } from "./ProductCarouselWrapper";
  * @group Home
  */
 export interface Props {
+  // --- Conteudo ---
+
   /** @title Titulo da secao */
   /** @default Nossos Produtos */
   title?: string;
+
+  // --- Selecao ---
 
   /** @title Modo */
   /** @options all,featured,category,manual */
@@ -28,6 +32,8 @@ export interface Props {
   /** @title Limite */
   /** @default 12 */
   limit?: number;
+
+  // --- Exibicao ---
 
   /** @title Link "Ver todos" */
   /** @default /produtos */

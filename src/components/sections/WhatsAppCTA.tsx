@@ -6,6 +6,8 @@ import { cms } from "@/lib/cms";
  * @group Home
  */
 export interface Props {
+  // --- Conteudo ---
+
   /** @title Titulo */
   /** @default Fale com um Farmaceutico */
   title?: string;
@@ -14,6 +16,8 @@ export interface Props {
   /** @default Tire suas duvidas sobre manipulados, suplementos e tratamentos personalizados com nossa equipe. */
   description?: string;
 
+  // --- WhatsApp ---
+
   /** @title Texto do botao */
   /** @default Iniciar conversa */
   buttonText?: string;
@@ -21,6 +25,8 @@ export interface Props {
   /** @title Mensagem padrao do WhatsApp */
   /** @default Ola! Gostaria de saber mais sobre os produtos manipulados. */
   defaultMessage?: string;
+
+  // --- Aparencia ---
 
   /** @title Estilo */
   /** @options light,dark,brand */

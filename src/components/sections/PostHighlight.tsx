@@ -8,9 +8,13 @@ import type { PostMode } from "@/lib/loaders";
  * @group Home
  */
 export interface Props {
+  // --- Conteudo ---
+
   /** @title Titulo da secao */
   /** @default Destaque da Semana */
   title?: string;
+
+  // --- Selecao ---
 
   /** @title Modo */
   /** @options recent,trending,popular,editor-picks,manual */
@@ -21,13 +25,15 @@ export interface Props {
   /** @description Slugs separados por virgula (modo manual) */
   manualSlugs?: string;
 
-  /** @title Posts laterais */
-  /** @default 3 */
-  sideCount?: number;
-
   /** @title homeSection */
   /** @description Valor da coluna home_section (destaque, trending, editor) */
   homeSection?: string;
+
+  // --- Layout ---
+
+  /** @title Posts laterais */
+  /** @default 3 */
+  sideCount?: number;
 
   /** @title Link "Ver todos" */
   viewAllHref?: string;

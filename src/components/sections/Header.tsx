@@ -6,6 +6,8 @@ import { Header as HeaderComponent } from "@/components/Header";
  * @group Global
  */
 export interface Props {
+  // --- Visibilidade ---
+
   /** @title Mostrar busca */
   /** @default true */
   showSearch?: boolean;
@@ -18,6 +20,9 @@ export interface Props {
   /** @title Mostrar categorias */
   /** @default true */
   showCategories?: boolean;
+
+  // --- CTA ---
+
   /** @title Texto do botao CTA */
   /** @description Texto exibido no botao de acao do header */
   /** @default Loja Virtual */

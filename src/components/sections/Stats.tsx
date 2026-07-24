@@ -4,8 +4,12 @@
  * @group Institucional
  */
 export interface Props {
+  // --- Conteudo ---
+
   /** @title Titulo */
   title?: string;
+
+  // --- Layout ---
 
   /** @title Colunas */
   /** @default 4 */
@@ -16,6 +20,8 @@ export interface Props {
    * @options light,dark,brand
    */
   style?: string;
+
+  // --- Itens ---
 
   /** @title Itens */
   items: {

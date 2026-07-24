@@ -9,9 +9,13 @@ type ImageWidget = string;
  * @group Landing Page
  */
 export interface Props {
+  // --- Conteudo ---
+
   /** @title Titulo da secao */
   /** @default Numeros que comprovam */
   title?: string;
+
+  // --- Stats ---
 
   /** @title Stats / Numeros */
   stats?: {
@@ -24,6 +28,8 @@ export interface Props {
     /** @title Legenda */
     label: string;
   }[];
+
+  // --- Logos ---
 
   /** @title Exibir logos */
   /** @default false */
