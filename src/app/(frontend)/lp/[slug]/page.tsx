@@ -13,17 +13,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const page = await cms.pages.get(`lp-${slug}`);
   if (!page) return {};
 
-  const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/+$/, "");
-
   return {
     title: page.metaTitle || page.title,
     description: page.metaDescription || undefined,
-    alternates: { canonical: `${baseUrl}/lp/${slug}` },
+    alternates: { canonical: `/lp/${slug}` },
     openGraph: {
       title: page.ogTitle || page.metaTitle || page.title,
       description: page.ogDescription || page.metaDescription || undefined,
       type: "website",
-      url: `${baseUrl}/lp/${slug}`,
+      url: `/lp/${slug}`,
       images: page.ogImageUrl ? [{ url: page.ogImageUrl }] : [],
     },
   };

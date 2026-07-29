@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 
 import { cms } from "@/lib/cms";
+import { getSiteUrl } from "@/lib/utils";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { TipTapRenderer, markdownToHtml } from "@/components/TipTapRenderer";
 import { ProductGallery } from "@/components/ProductGallery";
@@ -40,7 +41,6 @@ export async function generateMetadata({
 
   if (!product) return { title: "Produto nao encontrado" };
 
-  const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/+$/, "");
   const title = product.name;
   const p = product as any;
   const desc = p.seoDescription || product.description || undefined;
@@ -48,7 +48,7 @@ export async function generateMetadata({
   return {
     title,
     description: desc,
-    alternates: { canonical: `${baseUrl}/${slug}/p` },
+    alternates: { canonical: `/${slug}/p` },
     openGraph: {
       title,
       description: desc,
@@ -124,7 +124,7 @@ export default async function ProductPage({ params }: PageProps) {
   ];
 
   // JSON-LD
-  const productUrl = `${(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/+$/, "")}/${slug}/p`;
+  const productUrl = `${getSiteUrl()}/${slug}/p`;
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",

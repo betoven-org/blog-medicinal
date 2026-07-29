@@ -7,7 +7,7 @@ import { CategoryBadge } from "@/components/CategoryBadge";
 import { ArticleCard } from "@/components/ArticleCard";
 import { formatDate } from "@/lib/formatDate";
 import { getPostBySlug, getRelatedPosts, getLatestPosts } from "@/lib/queries";
-import { resolveRelation } from "@/lib/utils";
+import { resolveRelation, getSiteUrl } from "@/lib/utils";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -17,7 +17,6 @@ export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
   const post = await getPostBySlug(slug);
   if (!post) return { title: "Post nao encontrado" };
-  const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/+$/, "");
   const heroImage = typeof post.heroImage === "object" ? post.heroImage : null;
   const ogImageUrl = post.ogImageUrl || post.coverUrl || heroImage?.url || null;
   const title = post.metaTitle || post.title;
@@ -26,7 +25,7 @@ export async function generateMetadata({ params }: Props) {
     title,
     description,
     keywords: post.secondaryKeywords || post.focusKeyword || undefined,
-    alternates: { canonical: post.canonicalUrl || `${baseUrl}/posts/${post.slug}` },
+    alternates: { canonical: post.canonicalUrl || `/posts/${post.slug}` },
     openGraph: {
       title: post.ogTitle || title,
       description: post.ogDescription || description,
@@ -61,7 +60,7 @@ export default async function PostPage({ params }: Props) {
   const post = await getPostBySlug(slug);
   if (!post) notFound();
 
-  const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/+$/, "");
+  const baseUrl = getSiteUrl();
   const postUrl = `${baseUrl}/posts/${post.slug}`;
   const heroImage = resolveRelation(post.heroImage);
   const category = resolveRelation(post.category);

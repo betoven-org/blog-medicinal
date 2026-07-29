@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { cms } from "@/lib/cms";
+import { getSiteUrl } from "@/lib/utils";
 
 const DEFAULT_ROBOTS = `User-agent: *
 Allow: /
@@ -7,7 +8,7 @@ Disallow: /admin
 Disallow: /api`;
 
 export async function GET() {
-  const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/+$/, "");
+  const baseUrl = getSiteUrl();
   const settings = await cms.settings.get();
 
   // The SDK returns a structured settings object; robotsTxt is not directly in it.

@@ -25,7 +25,6 @@ import { SectionRenderer } from "@/components/SectionRenderer";
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = ((await getSiteSettings()) || {}) as any;
-  const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/+$/, "");
   return {
     title:
       settings.seoTitle || "Medicinal na Web | Portal de Saude e Bem-estar",
@@ -33,13 +32,13 @@ export async function generateMetadata(): Promise<Metadata> {
       settings.seoDescription ||
       "Portal de saude, suplementos naturais, fitoterapia e bem-estar.",
     keywords: settings.seoKeywords || "saude, suplementos, fitoterapia",
-    alternates: { canonical: baseUrl },
+    alternates: { canonical: "/" },
     openGraph: {
       title: settings.seoTitle || "Medicinal na Web",
       description:
         settings.seoDescription || "Portal de saude e bem-estar.",
       type: "website",
-      url: baseUrl,
+      url: "/",
       siteName: settings.siteName || "Medicinal na Web",
     },
     twitter: {
