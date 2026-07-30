@@ -95,17 +95,28 @@ export async function Header({
   backgroundColor,
   logoWidth = 160,
   logoHeight = 32,
-  navLinks = [],
+  navLinks: navLinksProp,
 }: HeaderProps = {}) {
+  // Fetch settings + global sections header config from CMS
+  const [settings, globalSections] = await Promise.all([
+    getSiteSettings(),
+    cms.globalSections.get(),
+  ]);
+
+  // navLinks: props override > CMS global sections > empty
+  const navLinks: NavLink[] =
+    navLinksProp ??
+    (globalSections?.header?.props?.navLinks as NavLink[] | undefined) ??
+    [];
+
   // Resolve navLinks: static links render as-is, collection links auto-populate
   const collectionSlugs = [
-    ...new Set((navLinks ?? []).filter((l) => l.collection).map((l) => l.collection!)),
+    ...new Set(navLinks.filter((l) => l.collection).map((l) => l.collection!)),
   ];
 
-  const [settings, ...collectionResults] = await Promise.all([
-    getSiteSettings(),
-    ...collectionSlugs.map((slug) => cms.collections.list(slug, { limit: 50 })),
-  ]);
+  const collectionResults = await Promise.all(
+    collectionSlugs.map((slug) => cms.collections.list(slug, { limit: 50 })),
+  );
 
   const collectionData = new Map<string, { label: string; url: string }[]>();
   collectionSlugs.forEach((slug, i) => {

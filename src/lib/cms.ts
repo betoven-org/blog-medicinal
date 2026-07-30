@@ -648,6 +648,23 @@ function createClient() {
   };
 
   // -------------------------------------------------------------------------
+  // Global Sections
+  // -------------------------------------------------------------------------
+
+  const globalSections = {
+    async get(): Promise<{
+      header?: { id: string; component: string; props: Record<string, unknown> } | null;
+      footer?: { id: string; component: string; props: Record<string, unknown> } | null;
+    }> {
+      const result = await request<{
+        header?: { id: string; component: string; props: Record<string, unknown> } | null;
+        footer?: { id: string; component: string; props: Record<string, unknown> } | null;
+      }>("/global-sections", { revalidate: REVALIDATE.SETTINGS });
+      return result ?? { header: null, footer: null };
+    },
+  };
+
+  // -------------------------------------------------------------------------
   // Public API
   // -------------------------------------------------------------------------
 
@@ -660,6 +677,7 @@ function createClient() {
     products,
     productCategories,
     collections,
+    globalSections,
   };
 }
 
