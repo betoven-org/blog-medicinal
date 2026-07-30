@@ -37,12 +37,14 @@ export function CategoryMenu({ categories, landingPages = [] }: Props) {
   return (
     <nav aria-label="Categorias de produtos">
       <div className="flex flex-wrap items-center gap-1.5 py-2.5">
-        <Link
-          href="/produtos"
-          className="rounded-full bg-[#0d61ac] px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[#0a4f8c]"
-        >
-          Ver Todos os Produtos
-        </Link>
+        {categories.length > 0 && (
+          <Link
+            href="/produtos"
+            className="rounded-full bg-[#0d61ac] px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[#0a4f8c]"
+          >
+            Ver Todos os Produtos
+          </Link>
+        )}
         {categories.map((cat) => {
           const isActive = pathname === `/produtos/${cat.slug}`;
           return (

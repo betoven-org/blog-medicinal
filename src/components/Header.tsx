@@ -211,8 +211,8 @@ export async function Header({
         </div>
       </div>
 
-      {/* Linha 2: Menu de categorias — oculto em mobile */}
-      {showCategories && (
+      {/* Linha 2: Menu de categorias — oculto em mobile, só renderiza se tiver conteúdo */}
+      {showCategories && (categoriesWithProducts.length > 0 || landingPages.length > 0) && (
         <div className="hidden border-b md:block">
           <div className="mx-auto max-w-7xl px-4">
             <CategoryMenu categories={categoriesWithProducts} landingPages={landingPages} />
