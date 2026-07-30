@@ -57,6 +57,13 @@ function ensureAbsoluteUrl(url: string): string {
   return `https://${url}`;
 }
 
+type NavLink = {
+  label: string;
+  url: string;
+  highlight?: boolean;
+  collection?: string;
+};
+
 type HeaderProps = {
   showSearch?: boolean;
   showSocial?: boolean;
@@ -71,6 +78,7 @@ type HeaderProps = {
   backgroundColor?: string;
   logoWidth?: number;
   logoHeight?: number;
+  navLinks?: NavLink[];
 };
 
 export async function Header({
@@ -87,27 +95,43 @@ export async function Header({
   backgroundColor,
   logoWidth = 160,
   logoHeight = 32,
+  navLinks = [],
 }: HeaderProps = {}) {
-  const [settings, productCategoriesResult, campanhasResult] = await Promise.all([
+  // Resolve navLinks: static links render as-is, collection links auto-populate
+  const collectionSlugs = [
+    ...new Set((navLinks ?? []).filter((l) => l.collection).map((l) => l.collection!)),
+  ];
+
+  const [settings, ...collectionResults] = await Promise.all([
     getSiteSettings(),
-    cms.collections.list("categorias-produto"),
-    cms.collections.list("campanhas"),
+    ...collectionSlugs.map((slug) => cms.collections.list(slug, { limit: 50 })),
   ]);
 
-  const categoriesWithProducts = productCategoriesResult.docs
-    .filter((item) => item.status === "published")
-    .map((item) => ({
-      id: item.id,
-      name: (item.data?.name as string) || item.slug,
-      slug: item.slug,
-    }));
+  const collectionData = new Map<string, { label: string; url: string }[]>();
+  collectionSlugs.forEach((slug, i) => {
+    const items = collectionResults[i]?.docs ?? [];
+    collectionData.set(
+      slug,
+      items
+        .filter((item) => item.status === "published")
+        .map((item) => ({
+          label: (item.data?.title as string) || (item.data?.name as string) || item.slug,
+          url: `/${slug}/${item.slug}`,
+        })),
+    );
+  });
 
-  const landingPages = campanhasResult.docs
-    .filter((item) => item.status === "published")
-    .map((item) => ({
-      title: (item.data?.title as string) || item.slug,
-      slug: item.slug,
-    }));
+  // Build resolved nav links
+  type ResolvedLink = { label: string; url: string; highlight?: boolean };
+  const resolvedNavLinks: ResolvedLink[] = [];
+  for (const link of navLinks ?? []) {
+    if (link.collection) {
+      const items = collectionData.get(link.collection) ?? [];
+      resolvedNavLinks.push(...items.map((item) => ({ ...item, highlight: link.highlight })));
+    } else if (link.label && link.url) {
+      resolvedNavLinks.push({ label: link.label, url: link.url, highlight: link.highlight });
+    }
+  }
 
   const s = settings as any;
   const logoUrl = s?.logo?.url ?? "/logo.svg";
@@ -205,19 +229,18 @@ export async function Header({
           {/* Hamburger — visivel so em mobile */}
           <div className="ml-auto md:hidden">
             <MobileMenu
-              categories={categoriesWithProducts}
-              landingPages={landingPages}
+              navLinks={resolvedNavLinks}
               socials={socials}
             />
           </div>
         </div>
       </div>
 
-      {/* Linha 2: Menu de categorias — oculto em mobile, só renderiza se tiver conteúdo */}
-      {showCategories && (categoriesWithProducts.length > 0 || landingPages.length > 0) && (
+      {/* Linha 2: Menu de navegacao — oculto em mobile */}
+      {showCategories && resolvedNavLinks.length > 0 && (
         <div className="hidden border-b md:block">
           <div className="mx-auto max-w-7xl px-4">
-            <CategoryMenu categories={categoriesWithProducts} landingPages={landingPages} />
+            <CategoryMenu navLinks={resolvedNavLinks} />
           </div>
         </div>
       )}
