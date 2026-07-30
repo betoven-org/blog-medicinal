@@ -103,11 +103,16 @@ export async function Header({
     cms.globalSections.get(),
   ]);
 
-  // navLinks: props override > CMS global sections > empty
+  // navLinks: props override > CMS global sections > defaults
+  const DEFAULT_NAV_LINKS: NavLink[] = [
+    { label: "Maca Peruana", url: "/campanhas/maca-peruana" },
+    { label: "Morosil", url: "/campanhas/morosil" },
+  ];
+
   const navLinks: NavLink[] =
     navLinksProp ??
     (globalSections?.header?.props?.navLinks as NavLink[] | undefined) ??
-    [];
+    DEFAULT_NAV_LINKS;
 
   // Resolve navLinks: static links render as-is, collection links auto-populate
   const collectionSlugs = [
