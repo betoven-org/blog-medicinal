@@ -90,15 +90,17 @@ export async function Header({
 }: HeaderProps = {}) {
   const [settings, productCategoriesResult, campanhasResult] = await Promise.all([
     getSiteSettings(),
-    cms.productCategories.list(),
+    cms.collections.list("categorias-produto"),
     cms.collections.list("campanhas"),
   ]);
 
-  const categoriesWithProducts = productCategoriesResult.docs.map((cat) => ({
-    id: cat.id,
-    name: cat.name,
-    slug: cat.slug,
-  }));
+  const categoriesWithProducts = productCategoriesResult.docs
+    .filter((item) => item.status === "published")
+    .map((item) => ({
+      id: item.id,
+      name: (item.data?.name as string) || item.slug,
+      slug: item.slug,
+    }));
 
   const landingPages = campanhasResult.docs
     .filter((item) => item.status === "published")
